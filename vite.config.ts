@@ -13,6 +13,83 @@ import { phosphorIconOptimizer } from "./vite-icon-optimizer";
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const projectRoot = process.env.PROJECT_ROOT || __dirname;
 
+// ✅ Funções auxiliares para reduzir complexidade cognitiva (S3776)
+// Verifica se módulo pertence a grupo de React core
+function isReactCoreModule(id: string): boolean {
+  return (
+    id.includes("node_modules/react") ||
+    id.includes("node_modules/react-dom") ||
+    id.includes("node_modules/scheduler") ||
+    id.includes("@phosphor-icons/react")
+  );
+}
+
+// Verifica se módulo pertence a utilitários CSS
+function isCssUtilModule(id: string): boolean {
+  return (
+    id.includes("clsx") || id.includes("class-variance-authority") || id.includes("tailwind-merge")
+  );
+}
+
+// Verifica se módulo pertence a Tiptap Editor
+function getTiptapChunkName(id: string): string | undefined {
+  if (id.includes("@tiptap") && id.includes("extension-table")) {
+    return "editor-table";
+  }
+  if (id.includes("@tiptap") && id.includes("extension-image")) {
+    return "editor-media";
+  }
+  if (id.includes("@tiptap/starter-kit")) {
+    return "editor-core";
+  }
+  return undefined;
+}
+
+// Mapeamento de dependências para chunks (simplifica manualChunks)
+const VENDOR_CHUNK_MAP = new Map<string, string>([
+  ["@radix-ui", "ui-vendor"],
+  ["framer-motion", "animation"],
+  ["three", "three"],
+  ["@dnd-kit", "dnd"],
+  ["pdf", "files"],
+  ["file-upload", "files"],
+  ["date-fns", "date-utils"],
+  ["@sentry", "sentry"],
+  ["sonner", "toasts"],
+  ["sample-data", "sample-data"],
+  ["recharts", "charts-vendor"],
+  ["DashboardCharts", "dashboard-charts"],
+]);
+
+// Determina nome do chunk baseado no ID do módulo
+function determineChunkName(id: string): string | undefined {
+  // React core (prioridade alta)
+  if (isReactCoreModule(id)) {
+    return "react-vendor";
+  }
+
+  // CSS utilities (prioridade alta)
+  if (isCssUtilModule(id)) {
+    return "css-utils";
+  }
+
+  // Tiptap Editor (múltiplas condições)
+  const tiptapChunk = getTiptapChunkName(id);
+  if (tiptapChunk) {
+    return tiptapChunk;
+  }
+
+  // Verificar mapeamento de vendors
+  for (const [pattern, chunkName] of VENDOR_CHUNK_MAP.entries()) {
+    if (id.includes(pattern)) {
+      return chunkName;
+    }
+  }
+
+  // Default: deixa Vite/Rollup decidir
+  return undefined;
+}
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
@@ -230,100 +307,10 @@ export default defineConfig({
         chunkFileNames: "assets/[name]-[hash].js",
         entryFileNames: "assets/[name]-[hash].js",
         assetFileNames: "assets/[name]-[hash][extname]",
+        // ✅ Refatorado para reduzir complexidade cognitiva (S3776)
+        // Complexidade reduzida de 15+ para 1 usando função auxiliar
         manualChunks(id) {
-          // React core + Phosphor Icons - crítico, carrega primeiro
-          // ✅ FIX: Phosphor Icons incluído aqui para evitar dependência circular
-          // O erro "Cannot set properties of undefined (setting 'Activity')"
-          // acontecia porque editor-vendor era importado antes do React estar pronto
-          if (
-            id.includes("node_modules/react") ||
-            id.includes("node_modules/react-dom") ||
-            id.includes("node_modules/scheduler") ||
-            id.includes("@phosphor-icons/react")
-          ) {
-            return "react-vendor";
-          }
-
-          // ⚠️ REMOVIDO: editor-vendor separado causava dependência circular
-          // Tiptap/ProseMirror agora é bundled naturalmente com MinutasManager (lazy)
-          // Isso evita que react-vendor precise importar de editor-vendor
-
-          // Radix UI components - separar em chunks menores
-          if (id.includes("@radix-ui")) {
-            return "ui-vendor";
-          }
-
-          // Framer Motion - lazy loaded
-          if (id.includes("framer-motion")) {
-            return "animation";
-          }
-
-          // Three.js - lazy loaded, pesado
-          if (id.includes("three")) {
-            return "three";
-          }
-
-          // DnD Kit (drag and drop para Kanban) - lazy loaded
-          if (id.includes("@dnd-kit")) {
-            return "dnd";
-          }
-
-          // PDF e upload de arquivos - lazy loaded
-          if (id.includes("pdf") || id.includes("file-upload")) {
-            return "files";
-          }
-
-          // Date utilities - usado frequentemente
-          if (id.includes("date-fns")) {
-            return "date-utils";
-          }
-
-          // CSS utilities - crítico
-          if (
-            id.includes("clsx") ||
-            id.includes("class-variance-authority") ||
-            id.includes("tailwind-merge")
-          ) {
-            return "css-utils";
-          }
-
-          // Sentry - lazy loaded com delay
-          if (id.includes("@sentry")) {
-            return "sentry";
-          }
-
-          // Sonner toasts - usado frequentemente
-          if (id.includes("sonner")) {
-            return "toasts";
-          }
-
-          // Sample data (apenas desenvolvimento/demo)
-          if (id.includes("sample-data")) {
-            return "sample-data";
-          }
-
-          // ✅ NOVO: Split DashboardCharts em sub-chunks (REDUZ 396KB → ~150KB inicial)
-          if (id.includes("recharts")) {
-            // Separar Recharts do bundle de DashboardCharts
-            return "charts-vendor";
-          }
-          if (id.includes("DashboardCharts")) {
-            return "dashboard-charts";
-          }
-
-          // ✅ NOVO: Split Tiptap Editor por extensões
-          if (id.includes("@tiptap") && id.includes("extension-table")) {
-            return "editor-table"; // Lazy load tabelas
-          }
-          if (id.includes("@tiptap") && id.includes("extension-image")) {
-            return "editor-media"; // Lazy load imagens
-          }
-          if (id.includes("@tiptap/starter-kit")) {
-            return "editor-core"; // Core sempre carregado
-          }
-
-          // default: deixa o Vite/rollup decidir
-          return undefined;
+          return determineChunkName(id);
         },
       },
     },

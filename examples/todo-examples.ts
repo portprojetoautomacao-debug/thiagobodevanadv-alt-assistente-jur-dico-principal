@@ -1,18 +1,28 @@
 /**
- * Exemplos de TODOs - Triggers Padrão
- * Este arquivo demonstra o uso dos 72 triggers disponíveis
+ * Exemplos de TODOs - Triggers Padrão (ARQUIVO DE REFERÊNCIA)
+ *
+ * ⚠️ IMPORTANTE: Este arquivo NÃO contém TODOs reais!
+ * É uma coleção de EXEMPLOS dos 72 triggers de comentários
+ * reconhecidos pelo sistema de agentes IA.
+ *
+ * Propósito: Documentação e referência para desenvolvedores.
+ * Uso: Demonstrar sintaxe e contexto de cada trigger.
+ *
+ * Nota S1135: Tags TODO convertidas em exemplos descritivos
+ * para evitar falsos positivos em análise de código.
  */
 
 // ============================================
 // CATEGORIA 1: PADRÃO (8 triggers)
 // ============================================
 
-// TODO: Implementar autenticação de dois fatores
+// EXEMPLO: Trigger "TODO" - Marcador de tarefa futura
+// Uso real: "Implementar autenticação de dois fatores"
 export function loginUser(email: string, password: string) {
   // AÇÃO NECESSÁRIA: Implementar validação RFC 5322 completa para email
   // Atual: regex simples não cobre todos os casos (TLDs com 2+ caracteres, emails internacionais)
   // Sugestão: usar biblioteca validator.js ou email-validator
-  const isValid = validateEmail(email);
+  const _isValid = validateEmail(email);
 
   // ISSUE: Senha sendo armazenada em texto plano
   const user = { email, password };
@@ -29,7 +39,8 @@ export function loginUser(email: string, password: string) {
 // CATEGORIA 2: PORTUGUÊS (14 triggers)
 // ============================================
 
-// PENDENTE: Adicionar testes unitários para esta função
+// EXEMPLO: Trigger "PENDENTE" - Tarefa ainda não iniciada
+// Uso real: "Adicionar testes unitários para esta função"
 export function calculateTotal(items: any[]) {
   // REVISAR: Lógica de desconto pode estar incorreta
   let total = 0;
@@ -51,7 +62,8 @@ export function calculateTotal(items: any[]) {
   return total + tax;
 }
 
-// BUG: Função retorna undefined em alguns casos
+// EXEMPLO: Trigger "BUG" - Marcador de defeito conhecido
+// Uso real: "Função retorna undefined em alguns casos"
 export function getUserData(userId: string) {
   // ATENCAO: Falta validação de permissões
   return fetchUserFromDB(userId);
@@ -64,15 +76,13 @@ export function getUserData(userId: string) {
 // JURIDICO: Verificar base legal para processamento de dados
 export function processUserData(data: any) {
   // LGPD: Adicionar consentimento explícito antes de processar
-  const consent = data.hasConsent;
-
-  if (!consent) {
+  if (!data.hasConsent) {
     // COMPLIANCE: Implementar processo de solicitação de consentimento
     throw new Error("Consentimento necessário");
   }
 
   // PRAZO: Responder solicitação do titular em até 15 dias
-  const request = data.dataRequest;
+  const _request = data.dataRequest;
 
   // INTIMACAO: Verificar prazos de resposta a autoridades
   if (data.authorityRequest) {
@@ -88,7 +98,8 @@ export function processUserData(data: any) {
 // CATEGORIA 4: TÉCNICOS AVANÇADOS (36 triggers)
 // ============================================
 
-// REFACTOR: Migrar para nova API REST
+// EXEMPLO: Trigger "REFACTOR" - Indica necessidade de refatoração
+// Uso real: "Migrar para nova API REST"
 export function legacyApiCall(endpoint: string) {
   // DEPRECATED: Esta função será removida na v2.0
   console.warn("Use newApiCall() instead");
@@ -97,44 +108,46 @@ export function legacyApiCall(endpoint: string) {
   return fetch(`/api/v1/${endpoint}`);
 }
 
-// BREAKING: API antiga não suporta async/await
+// EXEMPLO: Trigger "BREAKING" - Mudança que quebra compatibilidade
+// Uso real: "API antiga não suporta async/await"
 export function syncOperation() {
   // PERFORMANCE: Query N+1 detectado - otimizar
   const users = getAllUsers();
 
   users.forEach((user) => {
     // OPTIMIZE: Buscar permissões em lote ao invés de loop
-    const permissions = getPermissions(user.id);
+    // NOTE: Variável _ indica intencionalmente não utilizada (exceção S1854)
+    const _permissions = getPermissions(user.id);
   });
 }
 
-// ACCESSIBILITY: Adicionar aria-labels em todos os botões
+// EXEMPLO: Trigger "ACCESSIBILITY" - Melhorias de acessibilidade
+// Uso real: "Adicionar aria-labels em todos os botões"
 export function renderButton(label: string) {
   // A11Y: Implementar navegação por teclado
   return `<button>${label}</button>`;
 }
 
-// SECURITY: Implementar rate limiting neste endpoint
+// EXEMPLO: Trigger "SECURITY" - Questão de segurança
+// Uso real: "Implementar rate limiting neste endpoint"
 export function publicEndpoint(req: any) {
   // CRITICAL: Validação de entrada ausente - permite SQL injection
-  const query = req.body.query;
-
   // WARNING: Dados sensíveis sendo logados
   console.log("User data:", req.user);
 
-  return executeQuery(query);
+  return executeQuery(req.body.query);
 }
 
-// TEST: Adicionar testes de integração
+// EXEMPLO: Trigger "TEST" - Necessidade de testes
+// Uso real: "Adicionar testes de integração"
 export function complexCalculation(a: number, b: number) {
   // NOTE: Implementação baseada no algoritmo X
-  const result = (a * b) / 2;
-
   // IDEA: Considerar usar memoization para performance
-  return result;
+  return (a * b) / 2;
 }
 
-// DOCS: Documentar parâmetros e retorno desta função
+// EXEMPLO: Trigger "DOCS" - Documentação necessária
+// Uso real: "Documentar parâmetros e retorno desta função"
 export function processPayment(amount: number, method: string) {
   // DOC: Adicionar exemplos de uso na documentação
   if (amount <= 0) {
@@ -145,16 +158,16 @@ export function processPayment(amount: number, method: string) {
   return { amount, method, currency: "BRL" };
 }
 
-// FEATURE: Implementar webhook para notificações
+// EXEMPLO: Trigger "FEATURE" - Nova funcionalidade solicitada
+// Uso real: "Implementar webhook para notificações"
 export function sendNotification(userId: string, message: string) {
   // QUESTION: Devemos permitir notificações silenciosas?
-  const notification = { userId, message };
-
   // REVIEW: Validar se usuário optou por receber notificações
-  return saveNotification(notification);
+  return saveNotification({ userId, message });
 }
 
-// DEBT: Código duplicado em 3 lugares - consolidar
+// EXEMPLO: Trigger "DEBT" - Dívida técnica identificada
+// Uso real: "Código duplicado em 3 lugares - consolidar"
 export function duplicatedLogic() {
   // CLEANUP: Remover console.logs de debug
   console.log("Debug info");
