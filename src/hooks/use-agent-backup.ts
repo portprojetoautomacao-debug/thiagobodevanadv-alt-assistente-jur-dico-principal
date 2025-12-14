@@ -178,6 +178,81 @@ export function useAgentBackup(options: BackupOptions) {
           localStorage.removeItem(key);
         }
       });
+    } catch {
+      console.warn("⚠️ Erro ao limpar localStorage");
+    }
+  }, []);
+
+  /**
+   * Helper: Tenta salvar dados mínimos no localStorage como fallback
+   */
+  const saveFallbackToLocalStorage = useCallback(
+    (backupData: BackupData): boolean => {
+      try {
+        const minimalData = {
+          timestamp: backupData.timestamp,
+          userId,
+          data: {
+            agents: agents.slice(0, 15),
+            taskQueue: Array.isArray(taskQueue) ? taskQueue.slice(0, 20) : [],
+          },
+        };
+        localStorage.setItem(`${BACKUP_KEY_PREFIX}:fallback`, JSON.stringify(minimalData));
+        return true;
+      } catch (localError) {
+        if (localError instanceof DOMException && localError.name === "QuotaExceededError") {
+          cleanLocalStorage();
+          console.warn("⚠️ localStorage cheio, limpeza realizada");
+        }
+        console.warn("⚠️ Falha ao salvar no localStorage", localError);
+        return false;
+      }
+    },
+    [userId, agents, taskQueue, cleanLocalStorage]
+  );
+
+  /**
+   * Helper: Processar fallback quando servidor falha
+   */
+  const handleServerFailureFallback = useCallback(
+    (backupData: BackupData): { success: boolean; error?: Error } => {
+      console.warn("⚠️ Servidor indisponível, backup local será tentado...");
+      setStorageType("local");
+
+      const localStorageSuccess = saveFallbackToLocalStorage(backupData);
+
+      if (!localStorageSuccess) {
+        return {
+          success: false,
+          error: new Error("Falha ao salvar backup: servidor indisponível e localStorage falhou"),
+        };
+      }
+
+      return { success: true };
+    },
+    [saveFallbackToLocalStorage]
+  );
+
+  /**
+   * Limpa dados antigos do localStorage para evitar QuotaExceededError (LEGACY)
+   */
+  const _legacyCleanLocalStorage = useCallback(() => {
+    try {
+      // Remover chaves antigas do sistema de backup anterior
+      const keysToRemove: string[] = [];
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key?.startsWith(BACKUP_KEY_PREFIX)) {
+          keysToRemove.push(key);
+        }
+      }
+
+      keysToRemove.forEach((key) => {
+        if (key !== LOCAL_CACHE_KEY) {
+          localStorage.removeItem(key);
+        }
+      });
 
       // Log de limpeza removido - poluía o console
     } catch {
@@ -220,46 +295,16 @@ export function useAgentBackup(options: BackupOptions) {
 
       if (serverSuccess) {
         setStorageType("server");
-        // 2. Salvar cache local (apenas metadados)
         saveToLocalCache(backupData);
-        // 3. Limpar dados antigos do localStorage
         cleanLocalStorage();
+        setLastBackup(backupData.timestamp);
       } else {
-        // Fallback: tentar localStorage se servidor falhar
-        console.warn("⚠️ Servidor indisponível, backup local será tentado...");
-        setStorageType("local");
-
-        let localStorageSuccess = false;
-        try {
-          // Salvar dados mínimos no localStorage
-          const minimalData = {
-            timestamp: backupData.timestamp,
-            userId,
-            data: {
-              agents: agents.slice(0, 15),
-              taskQueue: Array.isArray(taskQueue) ? taskQueue.slice(0, 20) : [],
-            },
-          };
-          localStorage.setItem(`${BACKUP_KEY_PREFIX}:fallback`, JSON.stringify(minimalData));
-          localStorageSuccess = true;
-        } catch (localError) {
-          if (localError instanceof DOMException && localError.name === "QuotaExceededError") {
-            cleanLocalStorage();
-            console.warn("⚠️ localStorage cheio, limpeza realizada");
-          }
-          console.warn("⚠️ Falha ao salvar no localStorage", localError);
+        const fallbackResult = handleServerFailureFallback(backupData);
+        if (!fallbackResult.success) {
+          return fallbackResult;
         }
-
-        // Se localStorage também falhou, retornar erro
-        if (!localStorageSuccess) {
-          return {
-            success: false,
-            error: new Error("Falha ao salvar backup: servidor indisponível e localStorage falhou"),
-          };
-        }
+        setLastBackup(backupData.timestamp);
       }
-
-      setLastBackup(backupData.timestamp);
       if (import.meta.env.DEV) {
         console.log("✅ Backup criado:", new Date(backupData.timestamp).toLocaleString());
       }

@@ -52,7 +52,7 @@ export default function ProcessosView() {
   // Get unique comarcas for filter
   const comarcas = useMemo(() => {
     const uniqueComarcas = Array.from(new Set((processes || []).map((p) => p.comarca)));
-    return uniqueComarcas.sort();
+    return uniqueComarcas.sort((a, b) => a.localeCompare(b, "pt-BR"));
   }, [processes]);
 
   const filteredProcesses = useMemo(() => {
@@ -82,13 +82,13 @@ export default function ProcessosView() {
     // Sort results
     switch (sortBy) {
       case "alpha":
-        results = [...results].sort((a, b) => a.titulo.localeCompare(b.titulo));
+        results = [...results].sort((a, b) => a.titulo.localeCompare(b.titulo, "pt-BR"));
         break;
       case "value":
         results = [...results].sort((a, b) => (b.valor || 0) - (a.valor || 0));
         break;
       case "status":
-        results = [...results].sort((a, b) => a.status.localeCompare(b.status));
+        results = [...results].sort((a, b) => a.status.localeCompare(b.status, "pt-BR"));
         break;
       case "recent":
       default:

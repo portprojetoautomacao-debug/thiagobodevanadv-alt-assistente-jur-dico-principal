@@ -106,12 +106,12 @@ export function initializeOpenTelemetry(): void {
 
     // Em desenvolvimento, mostrar instruções
     if (import.meta.env.DEV) {
-      console.log("\n" + "=".repeat(70));
+      console.log(`\n${"=".repeat(70)}`);
       console.log("🎯 TRACING ATIVADO - Como visualizar:");
       console.log("1. Abra o Command Palette (Ctrl+Shift+P)");
       console.log('2. Execute: "AI Toolkit: Open Trace Viewer"');
       console.log("3. Traces aparecerão automaticamente conforme você usa o sistema");
-      console.log("=".repeat(70) + "\n");
+      console.log(`${"=".repeat(70)}\n`);
     }
   } catch (error) {
     console.error("❌ [OpenTelemetry] Erro ao inicializar:", error);

@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs from 'node:fs';
 
 const SUMMARY_PATH = process.env.SUMMARY_PATH || 'coverage/coverage-summary.json';
 if (!fs.existsSync(SUMMARY_PATH)) {

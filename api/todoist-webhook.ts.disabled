@@ -6,7 +6,7 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { createHmac } from 'crypto';
+import { createHmac } from 'node:crypto';
 import { todoistAgent } from '../src/lib/agents/todoist-agent';
 import { initializeTodoistClient } from '../src/lib/todoist-integration';
 import { config } from '../src/lib/config';

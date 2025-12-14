@@ -1,38 +1,36 @@
-import { metricsCollector, getUnhealthyAgents } from "@/lib/agent-metrics";
-import { toast } from "sonner";
 import { useKV } from "@/hooks/use-kv";
+import { getUnhealthyAgents, metricsCollector } from "@/lib/agent-metrics";
 import {
-  type Agent,
-  type AgentTask,
-  type AgentTaskResult,
   canResumeAfterHuman,
   initializeAgents,
   shouldPauseForHuman,
+  type Agent,
+  type AgentTask,
+  type AgentTaskResult,
 } from "@/lib/agents";
+import { toast } from "sonner";
 // ✨ NOVO: Importar validadores Zod
-import {
-  validateAgent,
-  validateAgentTask,
-  type Agent as _AgentValidated,
-  type AgentTask as _AgentTaskValidated,
-} from "@/schemas/agent.schema";
 import { executeHybridTask, hasHybridVersion } from "@/lib/hybrid-agents-integration";
 import { processTaskWithRealAI, processTaskWithStreamingAI } from "@/lib/real-agent-client";
+import { validateAgentTask } from "@/schemas/agent.schema";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 // 🔵 NOVO: Importar Azure Application Insights
 import {
-  trackAgentTask,
-  trackAgentPerformance,
-  trackError,
   measurePerformance,
+  trackAgentPerformance,
+  trackAgentTask,
+  trackError,
 } from "@/lib/azure-insights";
 
 // 📊 NOVO: Importar tracing OpenTelemetry
-import { startAgentSpan, addEvent, setAttribute, endSpan } from "@/lib/tracing";
+import { addEvent, endSpan, setAttribute, startAgentSpan } from "@/lib/tracing";
 
 // 🔍 TRACING: Importar tracing OpenTelemetry
-import { tracingService } from "@/lib/tracing";
+
+// ===========================
+// Type Aliases
+// ===========================
 
 // Type alias for activity result (success, warning, or error)
 type ActivityResult = "success" | "warning" | "error";
@@ -95,7 +93,7 @@ function getAgentActivity(agent: Agent): string {
 function createStreamingCallbacks(
   agentId: string,
   setStreamingContent: React.Dispatch<React.SetStateAction<Record<string, string>>>,
-  setAgents: (fn: (current: Agent[] | null) => Agent[]) => void,
+  setAgents: (fn: (current: Array<Agent> | null) => Array<Agent>) => void,
   logActivity: (agentId: string, action: string, result: ActivityResult) => void
 ): StreamingCallbacks {
   return {
@@ -140,9 +138,9 @@ function handleTaskCompletion(
   task: AgentTask,
   result: AgentTask["result"],
   agentId: string,
-  setTaskQueue: StateSetter<AgentTask[]>,
-  setCompletedTasks: StateSetter<AgentTask[]>,
-  setAgents: StateSetter<Agent[]>,
+  setTaskQueue: StateSetter<Array<AgentTask>>,
+  setCompletedTasks: StateSetter<Array<AgentTask>>,
+  setAgents: StateSetter<Array<Agent>>,
   logActivity: ActivityLogger
 ): void {
   const completed: AgentTask = {
@@ -162,17 +160,16 @@ function handleTaskCompletion(
   logActivity(agentId, `Tarefa concluída: ${task.type}`, "success");
 
   // 🟡 NOVO: Enviar telemetria de tarefa concluída
-  trackAgentTask(agentId, {
-    taskId: task.id,
-    status: "completed",
-    type: task.type,
-    priority: task.priority,
-    durationMs: Date.now() - new Date(task.createdAt).getTime(),
-    result: result.success ? "success" : "error",
-  });
+  trackAgentTask(
+    agentId,
+    task.type,
+    result?.success ? "COMPLETED" : "FAILED",
+    Date.now() - new Date(task.createdAt).getTime(),
+    result?.success ? undefined : (result as Record<string, unknown>)?.error
+  );
 }
 
-type TaskQueueSetter = (fn: (current: AgentTask[] | null) => AgentTask[]) => void;
+type TaskQueueSetter = (fn: (current: Array<AgentTask> | null) => Array<AgentTask>) => void;
 
 /**
  * Handles task failure - extracted to reduce nesting (S2004)
@@ -193,7 +190,7 @@ function handleTaskFailure(
   logActivity(agentId, `Erro no processamento: ${task.type}`, "error");
 }
 
-function sortTasksByPriority(tasks: AgentTask[]): AgentTask[] {
+function sortTasksByPriority(tasks: Array<AgentTask>): Array<AgentTask> {
   const order: Record<string, number> = {
     critical: 0,
     high: 1,
@@ -203,19 +200,23 @@ function sortTasksByPriority(tasks: AgentTask[]): AgentTask[] {
   return tasks.sort((a, b) => order[a.priority] - order[b.priority]);
 }
 
-function updateAgentInList(agents: Agent[], agentId: string, updates: Partial<Agent>): Agent[] {
+function updateAgentInList(
+  agents: Array<Agent>,
+  agentId: string,
+  updates: Partial<Agent>
+): Array<Agent> {
   return agents.map((a) => (a.id === agentId ? { ...a, ...updates } : a));
 }
 
 function updateTaskInQueue(
-  tasks: AgentTask[],
+  tasks: Array<AgentTask>,
   taskId: string,
   updates: Partial<AgentTask>
-): AgentTask[] {
+): Array<AgentTask> {
   return tasks.map((t) => (t.id === taskId ? { ...t, ...updates } : t));
 }
 
-function getQueuedTasksForAgent(queue: AgentTask[], agentId: string): AgentTask[] {
+function getQueuedTasksForAgent(queue: Array<AgentTask>, agentId: string): Array<AgentTask> {
   return queue.filter(
     (t) => t.agentId === agentId && t.status === "queued" && canResumeAfterHuman(t)
   );
@@ -241,7 +242,190 @@ function clearOutdatedLocalStorage(): void {
  */
 const AGENTS_DATA_VERSION = 7;
 
-function getInitialAgents(): Agent[] {
+/**
+ * Executa tarefa do agente selecionando modo apropriado
+ * Reduz complexidade cognitiva ao extrair lógica de execução
+ */
+async function executeAgentTask(
+  agent: Agent,
+  task: AgentTask,
+  agentSpan: any,
+  useStreaming: boolean,
+  logActivity: (agentId: string, action: string, result: ActivityResult) => void,
+  setStreamingContent: React.Dispatch<React.SetStateAction<Record<string, string>>>,
+  setAgents: (fn: (current: Array<Agent> | null) => Array<Agent>) => void
+): Promise<AgentTaskResult> {
+  const hasHybrid = hasHybridVersion(agent.id);
+
+  // Adicionar evento sobre tipo de execução
+  addEvent(agentSpan, "execution.mode.selected", {
+    has_hybrid: hasHybrid,
+    use_streaming: useStreaming,
+  });
+
+  if (hasHybrid) {
+    // Usar arquitetura híbrida com fallback automático
+    setAttribute(agentSpan, "execution.mode", "hybrid");
+    const hybridResult = await executeHybridTask(agent.id, task, {
+      enableLangGraph: true,
+      enableTraditional: true,
+      coordinationMode: "fallback",
+      timeoutMs: 30_000,
+    });
+
+    // Adicionar métricas do resultado híbrido
+    setAttribute(agentSpan, "hybrid.mode_used", hybridResult.mode);
+    setAttribute(agentSpan, "hybrid.execution_time_ms", hybridResult.executionTime);
+    setAttribute(agentSpan, "hybrid.success", hybridResult.success);
+
+    // Converter e retornar resultado
+    return convertHybridToTaskResult(hybridResult, agent, logActivity);
+  }
+
+  if (useStreaming) {
+    // Fallback para agentes sem versão híbrida - usar streaming tradicional
+    const callbacks = createStreamingCallbacks(
+      agent.id,
+      setStreamingContent,
+      setAgents,
+      logActivity
+    );
+    return await processTaskWithStreamingAI(task, agent, callbacks);
+  }
+
+  // Fallback para processamento tradicional sem streaming
+  return await processTaskWithRealAI(task, agent);
+}
+
+/**
+ * Converte resultado híbrido para formato AgentTaskResult
+ * Reduz complexidade cognitiva ao extrair lógica de conversão complexa
+ */
+function convertHybridToTaskResult(
+  hybridResult: any,
+  agent: Agent,
+  logActivity: (agentId: string, action: string, result: ActivityResult) => void
+): AgentTaskResult {
+  const langGraphData = hybridResult.langGraphResult?.data;
+  const traditionalOutput = (hybridResult.traditionalResult as Record<string, unknown>)?.output;
+
+  const resultData: Record<string, unknown> =
+    (langGraphData && typeof langGraphData === "object"
+      ? (langGraphData as Record<string, unknown>)
+      : undefined) ||
+    (traditionalOutput && typeof traditionalOutput === "object"
+      ? (traditionalOutput as Record<string, unknown>)
+      : undefined) ||
+    {};
+
+  const taskResult = {
+    success: hybridResult.success,
+    data: resultData,
+    message: `Executado via ${hybridResult.mode}`,
+    processingTimeMs: hybridResult.executionTime,
+    confidence: hybridResult.success ? 0.95 : 0.5,
+    tokensUsed: 0, // Híbrido ainda não rastreia tokens
+  } satisfies AgentTaskResult;
+
+  // 🔵 AZURE: Track execução híbrida
+  trackAgentTask(
+    agent.id,
+    hybridResult.mode,
+    hybridResult.success ? "COMPLETED" : "FAILED",
+    hybridResult.executionTime,
+    hybridResult.success ? undefined : "Hybrid execution failed"
+  );
+
+  logActivity(
+    agent.id,
+    `Executado via ${hybridResult.mode} (${hybridResult.executionTime}ms)`,
+    hybridResult.success ? "success" : "error"
+  );
+
+  return taskResult;
+}
+
+/**
+ * Fetch logs do servidor com timeout
+ * Reduz complexidade cognitiva ao extrair lógica de fetch
+ */
+async function fetchServerLogs(
+  setServerLogs: React.Dispatch<React.SetStateAction<Array<AgentActionLog>>>
+): Promise<void> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 5000);
+
+  try {
+    const res = await fetch("/api/agents?action=logs", {
+      signal: controller.signal,
+      headers: { Accept: "application/json" },
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.logs && Array.isArray(data.logs)) {
+        setServerLogs(data.logs);
+      }
+    }
+    // Ignorar silenciosamente erros 401 em desenvolvimento
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+/**
+ * Fetch memória jurídica do servidor com timeout
+ * Reduz complexidade cognitiva ao extrair lógica de fetch
+ */
+async function fetchServerMemory(
+  setLegalMemory: React.Dispatch<React.SetStateAction<Array<MemoryItem>>>
+): Promise<void> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 5000);
+
+  try {
+    const res = await fetch("/api/agents?action=memory", {
+      signal: controller.signal,
+      headers: { Accept: "application/json" },
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.memory && Array.isArray(data.memory)) {
+        setLegalMemory(data.memory);
+      }
+    }
+    // Ignorar silenciosamente erros 401 em desenvolvimento
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+/**
+ * Valida estrutura de agentes armazenados
+ * Reduz complexidade cognitiva ao extrair validação aninhada
+ */
+function validateAndReturnAgents(parsed: unknown): Array<Agent> {
+  // Verificar se é array com 15 elementos
+  if (!Array.isArray(parsed) || parsed.length !== 15) {
+    console.log("[Agents] Estrutura inválida ou quantidade incorreta → reinicializando");
+    return initializeAgents();
+  }
+
+  // Validar estrutura básica dos agentes
+  const hasValidStructure = parsed.every(
+    (agent) => agent && typeof agent === "object" && agent.id && agent.name
+  );
+
+  if (!hasValidStructure) {
+    console.log("[Agents] Estrutura inválida → reinicializando");
+    return initializeAgents();
+  }
+
+  return parsed;
+}
+
+function getInitialAgents(): Array<Agent> {
   // Early return for server-side rendering
   if (globalThis.window === undefined) return initializeAgents();
 
@@ -261,21 +445,7 @@ function getInitialAgents(): Agent[] {
     // Handle stored agents
     if (storedAgents) {
       const parsed = JSON.parse(storedAgents);
-
-      // Return valid stored agents (verificar se é array E tem 15 elementos)
-      if (Array.isArray(parsed) && parsed.length === 15) {
-        // ✅ Validar estrutura básica dos agentes
-        const hasValidStructure = parsed.every(
-          (agent) => agent && typeof agent === "object" && agent.id && agent.name
-        );
-
-        if (hasValidStructure) {
-          return parsed;
-        }
-      }
-
-      console.log("[Agents] Estrutura inválida ou quantidade incorreta → reinicializando");
-      return initializeAgents();
+      return validateAndReturnAgents(parsed);
     }
   } catch (e) {
     console.error("[Agents] Erro ao carregar agentes:", e);
@@ -285,24 +455,24 @@ function getInitialAgents(): Agent[] {
 }
 
 export function useAutonomousAgents() {
-  const [_version, _setVersion] = useKV<number>("agents-data-version", AGENTS_DATA_VERSION);
+  useKV<number>("agents-data-version", AGENTS_DATA_VERSION);
 
-  const [agents, setAgents] = useKV<Agent[]>("autonomous-agents", getInitialAgents());
-  const [taskQueue, setTaskQueue] = useKV<AgentTask[]>("agent-task-queue", []);
-  const [completedTasks, setCompletedTasks] = useKV<AgentTask[]>("completed-agent-tasks", []);
+  const [agents, setAgents] = useKV<Array<Agent>>("autonomous-agents", getInitialAgents());
+  const [taskQueue, setTaskQueue] = useKV<Array<AgentTask>>("agent-task-queue", []);
+  const [completedTasks, setCompletedTasks] = useKV<Array<AgentTask>>("completed-agent-tasks", []);
   const [activityLog, setActivityLog] = useKV<
     Array<{
       id: string;
       agentId: string;
       timestamp: string;
       action: string;
-      result: "success" | "warning" | "error";
+      result: ActivityResult;
     }>
   >("agent-activity-log", []);
 
   // Estado para logs do servidor e memória jurídica
-  const [serverLogs, setServerLogs] = useState<AgentActionLog[]>([]);
-  const [legalMemory, setLegalMemory] = useState<MemoryItem[]>([]);
+  const [serverLogs, setServerLogs] = useState<Array<AgentActionLog>>([]);
+  const [legalMemory, setLegalMemory] = useState<Array<MemoryItem>>([]);
 
   // Estado para streaming em tempo real
   const [streamingContent, setStreamingContent] = useState<Record<string, string>>({});
@@ -330,58 +500,23 @@ export function useAutonomousAgents() {
     }
 
     // Se tiver quantidade errada, reinicializar (mas apenas uma vez)
-    if (agents.length !== 15) {
-      console.log(`[Agents] Quantidade incorreta (${agents.length}) → reinicializando para 15`);
-      isInitializingRef.current = true;
-      setAgents(initializeAgents());
-      setTimeout(() => {
-        isInitializingRef.current = false;
-      }, 100);
-    }
-  }, [agents?.length, setAgents]); // Dependência apenas do length, não do array completo
+    if (agents.length === 15) return;
+
+    console.log(`[Agents] Quantidade incorreta (${agents.length}) → reinicializando para 15`);
+    isInitializingRef.current = true;
+    setAgents(initializeAgents());
+    setTimeout(() => {
+      isInitializingRef.current = false;
+    }, 100);
+  }, [agents, setAgents]);
 
   // =============================
   // SYNC COM SERVIDOR (Logs e Memória)
   // =============================
   const fetchServerData = useCallback(async () => {
     try {
-      // Fetch logs com timeout
-      const logsController = new AbortController();
-      const logsTimeout = setTimeout(() => logsController.abort(), 5000);
-
-      const logsRes = await fetch("/api/agents?action=logs", {
-        signal: logsController.signal,
-        headers: { Accept: "application/json" },
-      });
-      clearTimeout(logsTimeout);
-
-      if (logsRes.ok) {
-        const data = await logsRes.json();
-        if (data.logs && Array.isArray(data.logs)) {
-          setServerLogs(data.logs);
-        }
-      } else if (logsRes.status === 401) {
-        // Em desenvolvimento, ignorar silenciosamente erros de autenticação
-      }
-
-      // Fetch memory com timeout
-      const memoryController = new AbortController();
-      const memoryTimeout = setTimeout(() => memoryController.abort(), 5000);
-
-      const memoryRes = await fetch("/api/agents?action=memory", {
-        signal: memoryController.signal,
-        headers: { Accept: "application/json" },
-      });
-      clearTimeout(memoryTimeout);
-
-      if (memoryRes.ok) {
-        const data = await memoryRes.json();
-        if (data.memory && Array.isArray(data.memory)) {
-          setLegalMemory(data.memory);
-        }
-      } else if (memoryRes.status === 401) {
-        // Em desenvolvimento, ignorar silenciosamente erros de autenticação
-      }
+      await fetchServerLogs(setServerLogs);
+      await fetchServerMemory(setLegalMemory);
     } catch (error) {
       // Silenciar erros de rede em dev (servidor pode não estar rodando)
       if (error instanceof Error && error.name !== "AbortError") {
@@ -400,8 +535,9 @@ export function useAutonomousAgents() {
       try {
         await fetchServerData();
         failureCount = 0; // Reset em sucesso
-      } catch {
+      } catch (error) {
         failureCount++;
+        console.warn("[Agents] Falha ao sincronizar com servidor (poll)", error);
         // Desabilita polling após 3 falhas consecutivas
         if (failureCount >= 3 && interval) {
           console.info("[Agents] Servidor indisponível - desabilitando polling automático");
@@ -415,7 +551,7 @@ export function useAutonomousAgents() {
     pollWithBackoff();
 
     // Poll periódico (apenas se servidor responder)
-    interval = setInterval(pollWithBackoff, 60000); // 60s
+    interval = setInterval(pollWithBackoff, 60_000); // 60s
 
     return () => {
       if (interval) clearInterval(interval);
@@ -427,21 +563,24 @@ export function useAutonomousAgents() {
   // =============================
 
   // Helper para adicionar tarefa à fila (reduz S2004 nesting)
-  const addTaskToQueue = useCallback((current: AgentTask[], task: AgentTask): AgentTask[] => {
-    // Validar tarefa com Zod
-    const validation = validateAgentTask(task);
+  const addTaskToQueue = useCallback(
+    (current: Array<AgentTask>, task: AgentTask): Array<AgentTask> => {
+      // Validar tarefa com Zod
+      const validation = validateAgentTask(task);
 
-    if (!validation.isValid || !validation.data) {
-      console.error("Validação de tarefa falhou:", validation.errors);
-      toast.error("Tarefa inválida. Verifique os campos obrigatórios.");
-      return current;
-    }
+      if (!validation.isValid || !validation.data) {
+        console.error("Validação de tarefa falhou:", validation.errors);
+        toast.error("Tarefa inválida. Verifique os campos obrigatórios.");
+        return current;
+      }
 
-    // Type assertion segura através de unknown - validated data tem a estrutura correta
-    const validatedTask = validation.data as unknown as AgentTask;
-    const updated = [...current, validatedTask];
-    return sortTasksByPriority(updated);
-  }, []);
+      // Type assertion segura através de unknown - validated data tem a estrutura correta
+      const validatedTask = validation.data as unknown as AgentTask;
+      const updated = [...current, validatedTask];
+      return sortTasksByPriority(updated);
+    },
+    []
+  );
 
   // ✨ MODIFICADO: addTask agora usa validação
   const addTask = useCallback(
@@ -453,28 +592,25 @@ export function useAutonomousAgents() {
 
   // Helper para criar log de atividade (reduz S2004 nesting)
   const createActivityLog = useCallback(
-    (agentId: string, action: string, result: "success" | "warning" | "error" = "success") => {
-      return {
-        id: crypto.randomUUID(),
-        agentId,
-        timestamp: new Date().toISOString(),
-        action,
-        result,
-      };
-    },
+    (agentId: string, action: string, result: ActivityResult = "success") => ({
+      id: crypto.randomUUID(),
+      agentId,
+      timestamp: new Date().toISOString(),
+      action,
+      result,
+    }),
     []
   );
 
   // Helper para adicionar log à lista (reduz S2004 nesting)
   const addLogToActivityList = useCallback(
-    (current: ActivityLogEntry[], log: ActivityLogEntry): ActivityLogEntry[] => {
-      return [log, ...(current || [])].slice(0, 100);
-    },
+    (current: Array<ActivityLogEntry>, log: ActivityLogEntry): Array<ActivityLogEntry> =>
+      [log, ...(current || [])].slice(0, 100),
     []
   );
 
   const logActivity = useCallback(
-    (agentId: string, action: string, result: "success" | "warning" | "error" = "success") => {
+    (agentId: string, action: string, result: ActivityResult = "success") => {
       setActivityLog((current) => {
         const log = createActivityLog(agentId, action, result);
         return addLogToActivityList(current || [], log);
@@ -483,45 +619,52 @@ export function useAutonomousAgents() {
     [setActivityLog, createActivityLog, addLogToActivityList]
   );
 
-  // =============================
-  // CORE: PROCESSAMENTO DE TAREFAS
-  // =============================
-  const processNextTask = useCallback(
-    async (agent: Agent) => {
-      if (processingRef.current.has(agent.id)) return;
-      if (!agent.enabled || agent.status === "paused") return;
+  const shouldSkipAgentProcessing = useCallback(
+    (agent: Agent) =>
+      processingRef.current.has(agent.id) || !agent.enabled || agent.status === "paused",
+    []
+  );
 
+  const setAgentIdle = useCallback(
+    (agentId: string) => {
+      setAgents((current) =>
+        updateAgentInList(current || [], agentId, {
+          status: "idle",
+          currentTask: undefined,
+        })
+      );
+    },
+    [setAgents]
+  );
+
+  const getNextTaskForProcessing = useCallback(
+    (agent: Agent): AgentTask | undefined => {
       const queue = getQueuedTasksForAgent(taskQueue || [], agent.id);
-
       if (queue.length === 0) {
-        setAgents((current) =>
-          updateAgentInList(current || [], agent.id, {
-            status: "idle",
-            currentTask: undefined,
-          })
-        );
-        return;
+        setAgentIdle(agent.id);
+        return undefined;
       }
+      return queue[0];
+    },
+    [taskQueue, setAgentIdle]
+  );
 
-      const task = queue[0];
+  const pauseForHumanIfNeeded = useCallback(
+    (agent: Agent, task: AgentTask): boolean => {
+      if (!shouldPauseForHuman(agent, task)) return false;
+      setAgents((current) =>
+        updateAgentInList(current || [], agent.id, {
+          status: "waiting_human",
+          currentTask: task,
+        })
+      );
+      return true;
+    },
+    [setAgents]
+  );
 
-      // Filtro de segurança → não regras de autonomia
-      if (shouldPauseForHuman(agent, task)) {
-        setAgents((current) =>
-          updateAgentInList(current || [], agent.id, {
-            status: "waiting_human",
-            currentTask: task,
-          })
-        );
-        return;
-      }
-
-      processingRef.current.add(agent.id);
-
-      // ✅ Registrar início da métrica
-      const startTime = Date.now();
-
-      // Status: Processing
+  const markTaskAsProcessing = useCallback(
+    (agent: Agent, task: AgentTask) => {
       setTaskQueue((current) =>
         updateTaskInQueue(current || [], task.id, {
           status: "processing",
@@ -535,105 +678,55 @@ export function useAutonomousAgents() {
           currentTask: task,
         })
       );
+    },
+    [setTaskQueue, setAgents]
+  );
+
+  // =============================
+  // CORE: PROCESSAMENTO DE TAREFAS
+  // =============================
+  const processNextTask = useCallback(
+    async (agent: Agent) => {
+      if (shouldSkipAgentProcessing(agent)) return;
+
+      const task = getNextTaskForProcessing(agent);
+      if (!task || pauseForHumanIfNeeded(agent, task)) return;
+
+      processingRef.current.add(agent.id);
+
+      // ✅ Registrar início da métrica
+      const startTime = Date.now();
+
+      markTaskAsProcessing(agent, task);
+
+      // 🔍 TRACING: Iniciar span para tarefa do agente (fora do try para uso no catch)
+      const agentSpan = startAgentSpan(agent.id, agent.name, {
+        attributes: {
+          "task.id": task.id,
+          "task.type": task.type,
+          "task.priority": task.priority,
+          "agent.status": agent.status,
+        },
+      });
 
       try {
-        // 🔍 TRACING: Iniciar span para tarefa do agente
-        const agentSpan = startAgentSpan(agent.id, agent.name, {
-          attributes: {
-            "task.id": task.id,
-            "task.type": task.type,
-            "task.priority": task.priority,
-            "agent.status": agent.status,
-          },
-        });
-
         // Adicionar evento de início
         addEvent(agentSpan, "task.started", {
-          "task.description": task.description,
           "task.data": JSON.stringify(task.data || {}).substring(0, 200),
         });
 
-        let result;
-
-        // 🔵 AZURE: Medir performance da execução da tarefa
-        result = await measurePerformance(
+        const result = await measurePerformance(
           `AgentTask_${task.type}`,
-          async () => {
-            // 🔥 NOVA INTEGRAÇÃO HÍBRIDA - Verifica se agente tem versão LangGraph
-            const hasHybrid = hasHybridVersion(agent.id);
-
-            // Adicionar evento sobre tipo de execução
-            addEvent(agentSpan, "execution.mode.selected", {
-              has_hybrid: hasHybrid,
-              use_streaming: useStreaming,
-            });
-
-            if (hasHybrid) {
-              // Usar arquitetura híbrida com fallback automático
-              setAttribute(agentSpan, "execution.mode", "hybrid");
-              const hybridResult = await executeHybridTask(agent.id, task, {
-                enableLangGraph: true,
-                enableTraditional: true,
-                coordinationMode: "fallback",
-                timeoutMs: 30000,
-              });
-
-              // Adicionar métricas do resultado híbrido
-              setAttribute(agentSpan, "hybrid.mode_used", hybridResult.mode);
-              setAttribute(agentSpan, "hybrid.execution_time_ms", hybridResult.executionTime);
-              setAttribute(agentSpan, "hybrid.success", hybridResult.success);
-
-              // Converter resultado híbrido para formato AgentTaskResult
-              const langGraphData = hybridResult.langGraphResult?.data;
-              const traditionalOutput = (hybridResult.traditionalResult as any)?.output;
-
-              const resultData: Record<string, unknown> =
-                (langGraphData && typeof langGraphData === "object"
-                  ? (langGraphData as Record<string, unknown>)
-                  : undefined) ||
-                (traditionalOutput && typeof traditionalOutput === "object"
-                  ? (traditionalOutput as Record<string, unknown>)
-                  : undefined) ||
-                {};
-
-              const taskResult = {
-                success: hybridResult.success,
-                data: resultData,
-                message: `Executado via ${hybridResult.mode}`,
-                processingTimeMs: hybridResult.executionTime,
-                confidence: hybridResult.success ? 0.95 : 0.5,
-              } satisfies AgentTaskResult;
-
-              // 🔵 AZURE: Track execução híbrida
-              trackAgentTask(
-                agent.id,
-                task.type,
-                hybridResult.success ? "COMPLETED" : "FAILED",
-                hybridResult.executionTime,
-                hybridResult.success ? undefined : "Hybrid execution failed"
-              );
-
-              logActivity(
-                agent.id,
-                `Executado via ${hybridResult.mode} (${hybridResult.executionTime}ms)`,
-                hybridResult.success ? "success" : "error"
-              );
-
-              return taskResult;
-            } else if (useStreaming) {
-              // Fallback para agentes sem versão híbrida - usar streaming tradicional
-              const callbacks = createStreamingCallbacks(
-                agent.id,
-                setStreamingContent,
-                setAgents,
-                logActivity
-              );
-              return await processTaskWithStreamingAI(task, agent, callbacks);
-            } else {
-              // Fallback para processamento tradicional sem streaming
-              return await processTaskWithRealAI(task, agent);
-            }
-          },
+          () =>
+            executeAgentTask(
+              agent,
+              task,
+              agentSpan,
+              useStreaming,
+              logActivity,
+              setStreamingContent,
+              setAgents
+            ),
           { agentId: agent.id, taskType: task.type }
         );
 
@@ -644,36 +737,28 @@ export function useAutonomousAgents() {
           timestamp: Date.now(),
           duration,
           success: true,
-          tokensUsed: result.tokensUsed,
+          tokensUsed: result.tokensUsed || 0,
           taskType: task.type,
         });
 
-        // � TRACING: Adicionar evento de conclusão
+        // 🔍 TRACING: Adicionar evento de conclusão
         addEvent(agentSpan, "task.completed", {
           "result.success": result.success,
-          "result.confidence": result.confidence,
+          "result.confidence": result.confidence || 0,
           processing_time_ms: duration,
-          tokens_used: result.tokensUsed,
+          tokens_used: (result as any).tokensUsed || 0,
         });
 
         // Finalizar span com sucesso
         setAttribute(agentSpan, "task.status", "completed");
-        endSpan(agentSpan);
+        setAttribute(agentSpan, "task.duration_ms", duration);
+        if ((result as any).tokensUsed) {
+          setAttribute(agentSpan, "task.tokens_used", (result as any).tokensUsed);
+        }
+        await endSpan(agentSpan, "ok");
 
         // �🔵 AZURE: Track tarefa concluída
         trackAgentTask(agent.id, task.type, "COMPLETED", duration);
-
-        // 🔍 TRACING: Finalizar span com sucesso
-        setAttribute(agentSpan, "task.status", "completed");
-        setAttribute(agentSpan, "task.duration_ms", duration);
-        if (result.tokensUsed) {
-          setAttribute(agentSpan, "task.tokens_used", result.tokensUsed);
-        }
-        addEvent(agentSpan, "task.completed", {
-          success: true,
-          message: result.message || "Task completed successfully",
-        });
-        await endSpan(agentSpan, "ok");
 
         // Use extracted helper for completion (S2004 compliance)
         handleTaskCompletion(
@@ -731,7 +816,15 @@ export function useAutonomousAgents() {
         processingRef.current.delete(agent.id);
       }
     },
-    [taskQueue, setTaskQueue, setAgents, setCompletedTasks, logActivity, useStreaming]
+    [
+      getNextTaskForProcessing,
+      markTaskAsProcessing,
+      pauseForHumanIfNeeded,
+      setCompletedTasks,
+      logActivity,
+      useStreaming,
+      shouldSkipAgentProcessing,
+    ]
   );
 
   const processNextTaskRef = useRef(processNextTask);
@@ -741,18 +834,32 @@ export function useAutonomousAgents() {
   }, [processNextTask]);
 
   // =============================
+  // LOOP CONTÍNUO DE PROCESSAMENTO DE TAREFAS
+  // =============================
+  useEffect(() => {
+    const processAgentTasks = async () => {
+      const enabledAgents = (agents || []).filter(
+        (agent) => agent.enabled && agent.status !== "paused"
+      );
+
+      for (const agent of enabledAgents) {
+        // Chamar processNextTask via ref para evitar dependências do useEffect
+        await processNextTaskRef.current(agent);
+      }
+    };
+
+    // Processar tarefas imediatamente no mount
+    processAgentTasks();
+
+    // Processar tarefas periodicamente (a cada 5 segundos)
+    const interval = setInterval(processAgentTasks, 5_000);
+
+    return () => clearInterval(interval);
+  }, [agents, taskQueue]);
+
+  // =============================
   // LOOP CONTÍNUO DE PROCESSAMENTO
   // =============================
-
-  // Helper para processar agentes ativos (reduz S2004 nesting)
-  const processActiveAgents = useCallback(() => {
-    const currentAgents = agents || [];
-    currentAgents.forEach((agent) => {
-      if (agent.enabled && agent.continuousMode) {
-        processNextTaskRef.current(agent);
-      }
-    });
-  }, [agents]);
 
   // Helper para atualizar atividade de um agente individual (reduz S2004 nesting)
   const updateSingleAgentActivity = useCallback((agent: Agent): Agent => {
@@ -773,7 +880,7 @@ export function useAutonomousAgents() {
   useEffect(() => {
     const updateInterval = setInterval(() => {
       setAgents((current) => (current || []).map(updateSingleAgentActivity));
-    }, 10000); // 10s
+    }, 10_000); // 10s
 
     return () => {
       clearInterval(updateInterval);
@@ -797,42 +904,72 @@ export function useAutonomousAgents() {
         maxErrorRate: 10, // 10% de erro
       });
 
-      if (unhealthy.length > 0) {
-        console.warn(
-          "[AgentHealth] Agentes degradados detectados:",
-          unhealthy.map((a: { agentId: string }) => a.agentId)
-        );
+      if (unhealthy.length === 0) return;
 
-        // 🔵 AZURE: Track métricas de performance dos agentes
-        unhealthy.forEach(
-          (agent: {
-            agentId: string;
-            p95Latency: number;
-            errorRate: number;
-            successRate: number;
-          }) => {
-            trackAgentPerformance(agent.agentId, {
-              tasksCompleted: 0, // Agente degradado
-              averageProcessingTime: agent.p95Latency,
-              errorRate: agent.errorRate,
-            });
-          }
-        );
+      console.warn(
+        "[AgentHealth] Agentes degradados detectados:",
+        unhealthy.map((a: { agentId: string }) => a.agentId)
+      );
 
-        // Notificação visual local
-        toast.error(`⚠️ ${unhealthy.length} agente(s) degradado(s)`, {
-          description: `Agentes com problemas: ${unhealthy.map((a: { agentId: string }) => a.agentId).join(", ")}`,
-          duration: 10000,
+      // 🔵 AZURE: Track métricas de performance dos agentes
+      unhealthy.forEach((agent: any) => {
+        trackAgentPerformance(agent.agentId, {
+          tasksCompleted: 0, // Agente degradado
+          averageProcessingTime: agent.p95Latency,
+          errorRate: agent.errorRate,
         });
-      }
+      });
+
+      // Notificação visual local
+      toast.error(`⚠️ ${unhealthy.length} agente(s) degradado(s)`, {
+        description: `Agentes com problemas: ${unhealthy.map((a: { agentId: string }) => a.agentId).join(", ")}`,
+        duration: 10_000,
+      });
     };
 
     // Verifica imediatamente no mount
     checkAgentHealth();
 
     // Verifica a cada 60s
-    const interval = setInterval(checkAgentHealth, 60000);
+    const interval = setInterval(checkAgentHealth, 60_000);
 
     return () => clearInterval(interval);
   }, [setAgents]);
+
+  // =============================
+  // TOGGLE FUNCTIONS
+  // =============================
+  const toggleAgent = useCallback(
+    (agentId: string) => {
+      setAgents((current) =>
+        (current || []).map((agent) =>
+          agent.id === agentId ? { ...agent, enabled: !agent.enabled } : agent
+        )
+      );
+    },
+    [setAgents]
+  );
+
+  const toggleStreaming = useCallback(() => {
+    setUseStreaming((current: boolean) => !current);
+  }, []);
+
+  // =============================
+  // RETURN HOOK API
+  // =============================
+  return {
+    agents: agents || [],
+    taskQueue: taskQueue || [],
+    completedTasks: completedTasks || [],
+    activityLog: activityLog || [],
+    serverLogs,
+    legalMemory,
+    streamingContent,
+    isStreamingEnabled: useStreaming,
+    addTask,
+    toggleAgent,
+    toggleStreaming,
+    refreshServerData: fetchServerData,
+    setAgents,
+  };
 }

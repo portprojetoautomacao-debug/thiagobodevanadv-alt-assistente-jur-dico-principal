@@ -1,10 +1,10 @@
 import { expect, test } from "@playwright/test";
-import fs from "fs";
-import http from "http";
-import os from "os";
-import path from "path";
+import fs from "node:fs";
+import http from "node:http";
+import os from "node:os";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
-import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -79,7 +79,7 @@ test.describe("Chrome Extension E2E - PJe Sync", () => {
     if (server) server.close();
   });
 
-  test("should load extension, inject content script and call backend sync", async (_testFixtures, testInfo) => {
+  test("should load extension, inject content script and call backend sync", async ({}, testInfo) => {
     // Using chromium.launchPersistentContext to load extension
     const userDataDir = path.join(os.tmpdir(), `playwright-user-data-${Date.now()}`);
     const context = await chromium.launchPersistentContext(userDataDir, {
@@ -106,21 +106,19 @@ test.describe("Chrome Extension E2E - PJe Sync", () => {
 
       // Intercept network requests to backend sync endpoint
       let capturedRequestBody: any = null;
-      await context.route("https://assistente-juridico-github.vercel.app/api/pje-sync", (route) => {
+      await context.route("https://assistente-juridico-github.vercel.app/api/pje-sync", async (route) => {
         const request = route.request();
-        (async () => {
-          try {
-            const post = request.postData();
-            if (post) capturedRequestBody = JSON.parse(post);
-          } catch (e) {
-            // ignore invalid JSON
-          }
-          route.fulfill({
-            status: 200,
-            contentType: "application/json",
-            body: JSON.stringify({ success: true, synced: 1 }),
-          });
-        })();
+        try {
+          const post = request.postData();
+          if (post) capturedRequestBody = JSON.parse(post);
+        } catch (e) {
+          // ignore invalid JSON
+        }
+        route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({ success: true, synced: 1 }),
+        });
       });
 
       // Open page with url that contains pje/painel so the content script logic runs

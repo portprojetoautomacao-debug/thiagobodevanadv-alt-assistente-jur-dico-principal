@@ -15,8 +15,8 @@ import { randomUUID } from "node:crypto";
 import { agentMonitor } from "../src/lib/agent-monitoring.js";
 // 🔍 TRACING: OpenTelemetry para monitoramento
 import {
-    AnalyzeIntimationInputSchema,
-    DraftPetitionInputSchema,
+  AnalyzeIntimationInputSchema,
+  DraftPetitionInputSchema,
 } from "../src/lib/agent-schemas.js";
 import { legalMemory, type LegalContextType } from "../src/lib/legal-memory.js";
 import { tracingService } from "../src/lib/tracing.js";
@@ -1323,57 +1323,61 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 
-  try {
-    // 🔍 TRACING: Criar span para request da API
-    const span = tracingService.startSpan('api.agents.handler', {
-      'http.method': req.method,
-      'http.route': '/api/agents',
-      'http.action': action || 'unknown',
-    });
+  // 🔍 TRACING: Criar span para request da API
+  const span = tracingService.startSpan("api.agents.handler", {
+    kind: "server",
+    attributes: {
+      "http.route": "/api/agents",
+    },
+  });
 
-    span.addEvent('request.received', {
-      'timestamp': Date.now(),
-      'action': action,
+  tracingService.setAttribute(span, "http.method", req.method || "unknown");
+  tracingService.setAttribute(span, "http.action", action || "unknown");
+
+  try {
+    tracingService.addEvent(span, "request.received", {
+      timestamp: Date.now(),
+      action: action || "unknown",
     });
 
     let result;
-    
+
     if (action === "process-queue" && req.method === "POST") {
-      span.setAttribute('handler', 'process-queue');
+      tracingService.setAttribute(span, "handler", "process-queue");
       result = await handleProcessQueue(res);
-      span.addEvent('queue.processed');
-      span.end();
+      tracingService.addEvent(span, "queue.processed");
+      await tracingService.endSpan(span);
       return result;
     }
 
     if (action === "process-task" && req.method === "POST") {
-      span.setAttribute('handler', 'process-task');
+      tracingService.setAttribute(span, "handler", "process-task");
       result = await handleProcessTask(req, res);
-      span.addEvent('task.processed');
-      span.end();
+      tracingService.addEvent(span, "task.processed");
+      await tracingService.endSpan(span);
       return result;
     }
 
     if (action === "logs" && req.method === "GET") {
-      span.setAttribute('handler', 'logs');
+      tracingService.setAttribute(span, "handler", "logs");
       result = await handleGetLogs(res);
-      span.addEvent('logs.retrieved');
-      span.end();
+      tracingService.addEvent(span, "logs.retrieved");
+      await tracingService.endSpan(span);
       return result;
     }
 
     if (action === "memory" && req.method === "GET") {
-      span.setAttribute('handler', 'memory');
+      tracingService.setAttribute(span, "handler", "memory");
       result = await handleGetMemory(res);
-      span.addEvent('memory.retrieved');
-      span.end();
+      tracingService.addEvent(span, "memory.retrieved");
+      await tracingService.endSpan(span);
       return result;
     }
 
-    span.setAttribute('error', true);
-    span.setAttribute('error.message', 'Invalid action');
-    span.end();
-    
+    tracingService.setAttribute(span, "error", "true");
+    tracingService.setAttribute(span, "error.message", "Invalid action");
+    await tracingService.endSpan(span, "error", "Invalid action");
+
     return res.status(400).json({
       error: "Invalid action. Use: process-queue, process-task, logs, or memory",
       timestamp: new Date().toISOString(),
@@ -1383,9 +1387,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // 🔍 TRACING: Registrar erro
     if (span) {
-      span.recordException(error as Error);
-      span.setStatus({ code: 2, message: error instanceof Error ? error.message : 'Unknown error' });
-      span.end();
+      tracingService.recordException(span, error as Error);
+      await tracingService.endSpan(
+        span,
+        "error",
+        error instanceof Error ? error.message : "Unknown error"
+      );
     }
 
     return res.status(500).json({

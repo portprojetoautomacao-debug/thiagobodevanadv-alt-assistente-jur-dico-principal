@@ -2,13 +2,10 @@
  * Hook otimizado para gest�o financeira com valida��o Zod
  */
 
+import { validateFinancialEntry } from "@/schemas/process.schema";
 import { useCallback } from "react";
 import { toast } from "sonner";
 import { useKV } from "./use-kv";
-import {
-  validateFinancialEntry,
-  type FinancialEntryValidated as _FinancialEntryValidated,
-} from "@/schemas/process.schema";
 
 // Tipo FinancialEntry (compat�vel com o sistema existente)
 export interface FinancialEntry {
@@ -186,7 +183,7 @@ export function useFinancialValidated() {
   // Obter categorias �nicas
   const getUniqueCategories = useCallback(() => {
     const categories = entries.map((e) => e.category);
-    return Array.from(new Set(categories)).sort();
+    return Array.from(new Set(categories)).sort((a, b) => a.localeCompare(b, "pt-BR"));
   }, [entries]);
 
   // Resumo financeiro por categoria

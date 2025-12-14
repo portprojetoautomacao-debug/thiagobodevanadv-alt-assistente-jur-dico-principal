@@ -1,5 +1,34 @@
-import { spawn } from "child_process";
+// @ts-nocheck
 import fetch from "node-fetch";
+import { spawn } from "node:child_process";
+import fs from "node:fs";
+import path from "node:path";
+import { afterAll, beforeAll, describe, expect, test } from "vitest";
+
+const pythonCandidates: Array<string> = [
+  process.env.PYTHON_BIN,
+  process.env.PYTHON_PATH,
+  process.env.PYTHON_EXECUTABLE,
+  process.platform === "win32" ? "C:/Python311/python.exe" : "/usr/bin/python3",
+].filter(Boolean) as Array<string>;
+
+function resolvePythonBinary(): string {
+  const existing = pythonCandidates.find(
+    (candidate) => candidate && path.isAbsolute(candidate) && fs.existsSync(candidate)
+  );
+
+  if (existing) return existing;
+
+  // Fallback consciente: ainda assim evita PATH controlado se variável existir
+  if (process.env.PYTHON_BIN || process.env.PYTHON_PATH) {
+    const candidate = (process.env.PYTHON_BIN || process.env.PYTHON_PATH) as string;
+    if (candidate) return path.isAbsolute(candidate) ? candidate : path.resolve(candidate);
+  }
+
+  // Último recurso: python3 no PATH (pode não existir em Windows). Logamos para visibilidade.
+  console.warn("[DSPy] Usando fallback python3 do PATH; configure PYTHON_BIN para segurança");
+  return "python3";
+}
 
 /**
  * Verifica se o servidor DSPy Bridge está acessível
@@ -22,9 +51,10 @@ async function isDspyBridgeAvailable(port: number, maxAttempts = 8): Promise<boo
   return false;
 }
 
+const DSPY_PORT = 8765;
+
 describe("DSPy Bridge (FastAPI) integration", () => {
   let proc: ReturnType<typeof spawn> | null = null;
-  const port = 8765;
   // Prefer repository secret (CI) if provided, fall back to a stable test token
   const token = process.env.DSPY_API_TOKEN || "test-token-123";
   let bridgeAvailable = false;
@@ -34,25 +64,26 @@ describe("DSPy Bridge (FastAPI) integration", () => {
     if (!process.env.DSPY_API_TOKEN) {
       process.env.DSPY_API_TOKEN = token;
     }
-    process.env.DSPY_PORT = String(port);
+    process.env.DSPY_PORT = String(DSPY_PORT);
 
     // Se já houver um servidor DSPy rodando (por ex., pelo workflow CI), não iniciar outro
     try {
-      const existing = await isDspyBridgeAvailable(port, 3);
+      const existing = await isDspyBridgeAvailable(DSPY_PORT, 3);
       if (existing) {
         console.info("DSPy bridge already running on port, reusing existing server for tests");
         bridgeAvailable = true;
         return;
       }
-    } catch (e) {
-      // ignore and proceed to spawn if check fails
+    } catch (error) {
+      console.warn(`Unable to verify existing DSPy bridge on port ${port}: ${String(error)}`);
+      // Continue and attempt to spawn a new instance
     }
 
     // Tentar iniciar o servidor Python
     try {
-      proc = spawn("python3", ["scripts/dspy_bridge.py"], {
+      proc = spawn(resolvePythonBinary(), ["scripts/dspy_bridge.py"], {
         stdio: "pipe",
-        env: { ...process.env, DSPY_API_TOKEN: token, DSPY_PORT: String(port) },
+        env: { ...process.env, DSPY_API_TOKEN: token, DSPY_PORT: String(DSPY_PORT) },
       });
 
       // Attaching logs for debugging on CI
@@ -77,11 +108,12 @@ describe("DSPy Bridge (FastAPI) integration", () => {
       // Allow a slightly longer startup time in CI
       await new Promise((resolve) => setTimeout(resolve, 2000));
     } catch (err) {
-      console.warn("DSPy bridge not running, skipping test");
+      console.warn(`Failed to spawn DSPy bridge: ${String(err)}`);
+      return;
     }
 
     // Verificar se o servidor está acessível (aumentando tentativas em CI)
-    bridgeAvailable = await isDspyBridgeAvailable(port, 8);
+    bridgeAvailable = await isDspyBridgeAvailable(DSPY_PORT, 8);
     if (!bridgeAvailable) {
       console.warn("DSPy bridge not running, skipping test");
     }
@@ -98,7 +130,7 @@ describe("DSPy Bridge (FastAPI) integration", () => {
       console.warn("DSPy bridge not running, test skipped");
       return; // Skip silently when service not available
     }
-    const res = await fetch(`http://127.0.0.1:${port}/health`);
+    const res = await fetch(`http://127.0.0.1:${DSPY_PORT}/health`);
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.service).toBe("dspy-bridge");
@@ -111,7 +143,7 @@ describe("DSPy Bridge (FastAPI) integration", () => {
     }
     // Use token from environment (garantido pelo beforeAll)
     const authToken = process.env.DSPY_API_TOKEN!;
-    const res = await fetch(`http://127.0.0.1:${port}/optimize`, {
+    const res = await fetch(`http://127.0.0.1:${DSPY_PORT}/optimize`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${authToken}`,

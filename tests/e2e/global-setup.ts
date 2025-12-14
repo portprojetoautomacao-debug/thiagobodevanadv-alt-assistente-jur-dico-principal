@@ -1,5 +1,5 @@
 import { chromium, FullConfig } from "@playwright/test";
-import path from "path";
+import path from "node:path";
 
 async function globalSetup(config: FullConfig) {
   // Any global setup can go here (programmatic login + storageState)

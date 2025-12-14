@@ -227,4 +227,5 @@ class PJeContentScript {
 }
 
 // Inicializa
-new PJeContentScript();
+const contentScript = new PJeContentScript();
+console.log("[PJe Content] Initialized", contentScript);

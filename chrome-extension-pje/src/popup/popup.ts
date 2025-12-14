@@ -355,5 +355,6 @@ class PopupController {
 
 // Inicializar quando DOM estiver pronto
 document.addEventListener("DOMContentLoaded", () => {
-  new PopupController();
+  const controller = new PopupController();
+  console.log("[PJe Popup] Controller initialized", controller);
 });

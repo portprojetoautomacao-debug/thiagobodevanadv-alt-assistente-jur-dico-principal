@@ -26,7 +26,9 @@
         "MS-SarifVSCode.sarif-viewer",
         "trailofbits.sarif-explorer",
         "ms-dotnettools.vscode-dotnet-runtime",
-        "golang.go"
+        "golang.go",
+        "sonar-copilot-assistant.sonar-copilot-assistant",
+        "ms-windows-ai-studio.windows-ai-studio"
       ],
       "settings": {
         // ========================================

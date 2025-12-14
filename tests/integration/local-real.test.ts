@@ -1,5 +1,6 @@
-import { execFile } from "child_process";
-import path from "path";
+import { execFile } from "node:child_process";
+import fs from "node:fs";
+import path from "node:path";
 import { describe, it } from "vitest";
 
 describe("local real integration tests (dev API)", () => {
@@ -7,6 +8,19 @@ describe("local real integration tests (dev API)", () => {
     "should run the local dev server and validate extension-errors endpoints",
     async () => {
       const scriptPath = path.join(process.cwd(), "scripts", "run-local-real-tests.sh");
+
+      const bashPathCandidates = [
+        process.env.BASH_PATH,
+        process.platform === "win32" ? "C:/Program Files/Git/bin/bash.exe" : "/bin/bash",
+      ].filter(Boolean) as Array<string>;
+
+      const bashPath = bashPathCandidates.find((candidate) => candidate && fs.existsSync(candidate));
+
+      if (!bashPath) {
+        throw new Error(
+          "Bash não encontrado. Defina BASH_PATH com caminho absoluto para o executável bash."
+        );
+      }
 
       // Garantir que variáveis de ambiente necessárias estejam definidas
       const testEnv = {
@@ -18,7 +32,7 @@ describe("local real integration tests (dev API)", () => {
 
       await new Promise<void>((resolve, reject) => {
         const proc = execFile(
-          "bash",
+          bashPath,
           [scriptPath],
           {
             cwd: process.cwd(),
@@ -27,8 +41,8 @@ describe("local real integration tests (dev API)", () => {
           },
           (err, stdout, stderr) => {
             // For debugging, we attach logs
-            console.log("=== stdout ===\n" + stdout);
-            console.error("=== stderr ===\n" + stderr);
+            console.log(`=== stdout ===\n${stdout}`);
+            console.error(`=== stderr ===\n${stderr}`);
             if (err) {
               console.error(`Process exited with code ${err.code || "unknown"}`);
               return reject(err);

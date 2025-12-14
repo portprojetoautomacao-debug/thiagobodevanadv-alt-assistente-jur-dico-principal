@@ -145,13 +145,14 @@ function transformFromGemini(data: unknown): LLMResponse {
   };
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS - restrict to ALLOWED_ORIGINS list
+// Helper: Configurar CORS headers
+function setupLLMCorsHeaders(res: VercelResponse, req: VercelRequest): VercelResponse | null {
   const allowedOrigins = (process.env.ALLOWED_ORIGINS ?? "")
     .split(",")
     .map((x) => x.trim())
     .filter(Boolean);
-  const origin = (req.headers && (req.headers["origin"] as string | undefined)) || "";
+  const origin = (req.headers?.origin as string | undefined) || "";
+  
   if (origin && allowedOrigins.length > 0) {
     if (!allowedOrigins.includes(origin)) {
       return res.status(403).json({ error: "Origin not allowed" });
@@ -160,8 +161,45 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } else if (allowedOrigins.length === 0) {
     res.setHeader("Access-Control-Allow-Origin", "*");
   }
+  
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  return null;
+}
+
+// Helper: Obter IP do cliente
+function getLLMClientIP(req: VercelRequest): string {
+  return (
+    (req.headers["x-forwarded-for"] as string | undefined) ||
+    (req.headers["x-real-ip"] as string | undefined) ||
+    "unknown"
+  );
+}
+
+// Helper: Aplicar rate limiting
+async function applyLLMRateLimit(clientIP: string, res: VercelResponse): Promise<boolean> {
+  const rl = await rateLimitMiddleware(clientIP);
+  Object.entries(rl.headers || {}).forEach(([k, v]) => res.setHeader(k, v));
+  
+  if (!rl.allowed) {
+    res.setHeader(
+      "Retry-After",
+      Math.max(
+        1,
+        Math.ceil((Number(rl.headers["X-RateLimit-Reset"]) - Date.now()) / 1000)
+      ).toString()
+    );
+    res.status(429).json({ error: rl.error || "Rate limit exceeded" });
+    return false;
+  }
+  
+  return true;
+}
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // CORS
+  const corsError = setupLLMCorsHeaders(res, req);
+  if (corsError) return corsError;
 
   if (req.method === "OPTIONS") {
     res.status(200).end();
@@ -174,28 +212,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // Require LLM proxy API key
-  // ✅ CORREÇÃO: Permitir acesso em desenvolvimento local
   if (process.env.NODE_ENV !== "development" && !process.env.VERCEL_ENV) {
     if (!requireApiKey(req, res, "LLM_PROXY_API_KEY")) return;
   }
 
-  // rate limit middleware
-  const clientIP =
-    (req.headers["x-forwarded-for"] as string | undefined) ||
-    (req.headers["x-real-ip"] as string | undefined) ||
-    "unknown";
-  const rl = await rateLimitMiddleware(clientIP);
-  Object.entries(rl.headers || {}).forEach(([k, v]) => res.setHeader(k, v));
-  if (!rl.allowed) {
-    res.setHeader(
-      "Retry-After",
-      Math.max(
-        1,
-        Math.ceil((Number(rl.headers["X-RateLimit-Reset"]) - Date.now()) / 1000)
-      ).toString()
-    );
-    return res.status(429).json({ error: rl.error || "Rate limit exceeded" });
-  }
+  // Rate limiting
+  const clientIP = getLLMClientIP(req);
+  const rateLimitPassed = await applyLLMRateLimit(clientIP, res);
+  if (!rateLimitPassed) return;
 
   // Configurar provedores (ordem de prioridade)
   const providers: ProviderConfig[] = [

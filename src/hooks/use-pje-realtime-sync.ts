@@ -87,7 +87,9 @@ function convertProcessoPJeToProcess(pje: ProcessoPJe): Process {
     status:
       pje.situacao === "ativo" ? "ativo" : pje.situacao === "baixado" ? "concluido" : "arquivado",
     fase: pje.ultimoMovimento?.descricao || "Em andamento",
-    valor: pje.valor ? parseFloat(pje.valor.replace(/[^\d,]/g, "").replace(",", ".")) : undefined,
+    valor: pje.valor
+      ? Number.parseFloat(pje.valor.replace(/[^\d,]/g, "").replace(",", "."))
+      : undefined,
     dataDistribuicao: pje.distribuicao || now,
     dataUltimaMovimentacao: pje.ultimoMovimento?.timestamp
       ? new Date(pje.ultimoMovimento.timestamp).toISOString()

@@ -1,5 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
-import fs from "fs";
+import fs from "node:fs";
 
 const PORT = process.env.PORT || "5173";
 const BASE_URL = process.env.BASE_URL || `http://127.0.0.1:${PORT}`;
@@ -36,7 +36,9 @@ export default defineConfig({
   webServer: USE_PROD
     ? undefined
     : {
-        command: `node ./scripts/start-dev-with-api.cjs -- --port ${PORT} --host 127.0.0.1`,
+        command: process.platform === "win32"
+          ? `node start-dev-with-api.cjs --port ${PORT} --host 127.0.0.1`
+          : `node start-dev-with-api.cjs --port ${PORT} --host 127.0.0.1`,
         url: `http://127.0.0.1:${PORT}`,
         // SEMPRE reutilizar servidor existente para evitar conflitos de porta
         reuseExistingServer: true,

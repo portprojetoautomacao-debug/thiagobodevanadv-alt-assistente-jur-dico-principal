@@ -50,12 +50,12 @@ const useToolbarNavigation = (toolbarRef: React.RefObject<HTMLDivElement | null>
 
     const handleFocus = (e: FocusEvent) => {
       const target = e.target as HTMLElement;
-      if (toolbar.contains(target)) target.setAttribute("data-focus-visible", "true");
+      if (toolbar.contains(target)) target.dataset.focusVisible = "true";
     };
 
     const handleBlur = (e: FocusEvent) => {
       const target = e.target as HTMLElement;
-      if (toolbar.contains(target)) target.removeAttribute("data-focus-visible");
+      if (toolbar.contains(target)) delete target.dataset.focusVisible;
     };
 
     toolbar.addEventListener("focus", handleFocus, true);

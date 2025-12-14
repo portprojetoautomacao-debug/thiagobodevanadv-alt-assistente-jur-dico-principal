@@ -355,159 +355,191 @@ function isAuthorized(req: VercelRequest): boolean {
   return !!(isVercelCron || isLocalDev || isVercelApp || hasApiKey);
 }
 
-// ============================================================================
-// SERVICES HEALTH CHECK
-// ============================================================================
-
-async function checkServiceHealth(service: string): Promise<ServiceHealthInfo> {
+// Helper: Checar Qdrant
+async function checkQdrantHealth(): Promise<ServiceHealthInfo> {
   const now = new Date().toISOString();
-
-  switch (service) {
-    case "qdrant": {
-      const url = process.env.VITE_QDRANT_URL || process.env.QDRANT_URL;
-      const apiKey = process.env.VITE_QDRANT_API_KEY || process.env.QDRANT_API_KEY;
-      if (!url || !apiKey) {
-        return {
-          name: "qdrant",
-          status: "not-configured",
-          lastCheck: now,
-          message: "Missing QDRANT_URL or QDRANT_API_KEY",
-        };
-      }
-      try {
-        const start = Date.now();
-        const response = await fetch(`${url}/collections`, {
-          headers: { "api-key": apiKey },
-          signal: AbortSignal.timeout(5000),
-        });
-        const latency = Date.now() - start;
-        if (response.ok) {
-          return { name: "qdrant", status: "healthy", latency, lastCheck: now };
-        }
-        return {
-          name: "qdrant",
-          status: "degraded",
-          latency,
-          lastCheck: now,
-          message: `HTTP ${response.status}`,
-        };
-      } catch (error) {
-        return {
-          name: "qdrant",
-          status: "down",
-          lastCheck: now,
-          message: error instanceof Error ? error.message : "Unknown error",
-        };
-      }
+  const url = process.env.VITE_QDRANT_URL || process.env.QDRANT_URL;
+  const apiKey = process.env.VITE_QDRANT_API_KEY || process.env.QDRANT_API_KEY;
+  
+  if (!url || !apiKey) {
+    return {
+      name: "qdrant",
+      status: "not-configured",
+      lastCheck: now,
+      message: "Missing QDRANT_URL or QDRANT_API_KEY",
+    };
+  }
+  
+  try {
+    const start = Date.now();
+    const response = await fetch(`${url}/collections`, {
+      headers: { "api-key": apiKey },
+      signal: AbortSignal.timeout(5000),
+    });
+    const latency = Date.now() - start;
+    
+    if (response.ok) {
+      return { name: "qdrant", status: "healthy", latency, lastCheck: now };
     }
-
-    case "dspy": {
-      const url = process.env.VITE_DSPY_URL || process.env.DSPY_URL || "http://localhost:8765";
-      const token = process.env.VITE_DSPY_API_TOKEN || process.env.DSPY_API_TOKEN;
-      if (!token) {
-        return {
-          name: "dspy",
-          status: "not-configured",
-          lastCheck: now,
-          message: "Missing DSPY_API_TOKEN",
-        };
-      }
-      try {
-        const start = Date.now();
-        const response = await fetch(`${url}/health`, {
-          headers: { Authorization: `Bearer ${token}` },
-          signal: AbortSignal.timeout(5000),
-        });
-        const latency = Date.now() - start;
-        if (response.ok) {
-          return { name: "dspy", status: "healthy", latency, lastCheck: now };
-        }
-        return {
-          name: "dspy",
-          status: "degraded",
-          latency,
-          lastCheck: now,
-          message: `HTTP ${response.status}`,
-        };
-      } catch (error) {
-        return {
-          name: "dspy",
-          status: "down",
-          lastCheck: now,
-          message: error instanceof Error ? error.message : "Unknown error",
-        };
-      }
-    }
-
-    case "gemini": {
-      const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
-      if (!apiKey) {
-        return {
-          name: "gemini",
-          status: "not-configured",
-          lastCheck: now,
-          message: "Missing GEMINI_API_KEY",
-        };
-      }
-      // Gemini API doesn't have a dedicated health endpoint, so we just check if the key is configured
-      return { name: "gemini", status: "healthy", lastCheck: now, message: "API key configured" };
-    }
-
-    case "redis": {
-      const url = process.env.UPSTASH_REDIS_REST_URL;
-      const token = process.env.UPSTASH_REDIS_REST_TOKEN;
-      if (!url || !token) {
-        return {
-          name: "redis",
-          status: "not-configured",
-          lastCheck: now,
-          message: "Missing Upstash Redis credentials",
-        };
-      }
-      try {
-        const start = Date.now();
-        const response = await fetch(`${url}/ping`, {
-          headers: { Authorization: `Bearer ${token}` },
-          signal: AbortSignal.timeout(5000),
-        });
-        const latency = Date.now() - start;
-        if (response.ok) {
-          return { name: "redis", status: "healthy", latency, lastCheck: now };
-        }
-        return {
-          name: "redis",
-          status: "degraded",
-          latency,
-          lastCheck: now,
-          message: `HTTP ${response.status}`,
-        };
-      } catch (error) {
-        return {
-          name: "redis",
-          status: "down",
-          lastCheck: now,
-          message: error instanceof Error ? error.message : "Unknown error",
-        };
-      }
-    }
-
-    case "autogen": {
-      const apiKey = process.env.AUTOGEN_API_KEY;
-      if (!apiKey) {
-        return {
-          name: "autogen",
-          status: "not-configured",
-          lastCheck: now,
-          message: "Missing AUTOGEN_API_KEY",
-        };
-      }
-      return { name: "autogen", status: "healthy", lastCheck: now, message: "API key configured" };
-    }
-
-    default:
-      return { name: service, status: "not-configured", lastCheck: now };
+    
+    return {
+      name: "qdrant",
+      status: "degraded",
+      latency,
+      lastCheck: now,
+      message: `HTTP ${response.status}`,
+    };
+  } catch (error) {
+    return {
+      name: "qdrant",
+      status: "down",
+      lastCheck: now,
+      message: error instanceof Error ? error.message : "Unknown error",
+    };
   }
 }
+
+// Helper: Checar DSPy
+async function checkDspyHealth(): Promise<ServiceHealthInfo> {
+  const now = new Date().toISOString();
+  const url = process.env.VITE_DSPY_URL || process.env.DSPY_URL || "http://localhost:8765";
+  const token = process.env.VITE_DSPY_API_TOKEN || process.env.DSPY_API_TOKEN;
+  
+  if (!token) {
+    return {
+      name: "dspy",
+      status: "not-configured",
+      lastCheck: now,
+      message: "Missing DSPY_API_TOKEN",
+    };
+  }
+  
+  try {
+    const start = Date.now();
+    const response = await fetch(`${url}/health`, {
+      headers: { Authorization: `Bearer ${token}` },
+      signal: AbortSignal.timeout(5000),
+    });
+    const latency = Date.now() - start;
+    
+    if (response.ok) {
+      return { name: "dspy", status: "healthy", latency, lastCheck: now };
+    }
+    
+    return {
+      name: "dspy",
+      status: "degraded",
+      latency,
+      lastCheck: now,
+      message: `HTTP ${response.status}`,
+    };
+  } catch (error) {
+    return {
+      name: "dspy",
+      status: "down",
+      lastCheck: now,
+      message: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+// Helper: Checar Gemini
+function checkGeminiHealth(): ServiceHealthInfo {
+  const now = new Date().toISOString();
+  const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+  
+  if (!apiKey) {
+    return {
+      name: "gemini",
+      status: "not-configured",
+      lastCheck: now,
+      message: "Missing GEMINI_API_KEY",
+    };
+  }
+  
+  return { name: "gemini", status: "healthy", lastCheck: now, message: "API key configured" };
+}
+
+// Helper: Checar Redis
+async function checkRedisHealth(): Promise<ServiceHealthInfo> {
+  const now = new Date().toISOString();
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  
+  if (!url || !token) {
+    return {
+      name: "redis",
+      status: "not-configured",
+      lastCheck: now,
+      message: "Missing Upstash Redis credentials",
+    };
+  }
+  
+  try {
+    const start = Date.now();
+    const response = await fetch(`${url}/ping`, {
+      headers: { Authorization: `Bearer ${token}` },
+      signal: AbortSignal.timeout(5000),
+    });
+    const latency = Date.now() - start;
+    
+    if (response.ok) {
+      return { name: "redis", status: "healthy", latency, lastCheck: now };
+    }
+    
+    return {
+      name: "redis",
+      status: "degraded",
+      latency,
+      lastCheck: now,
+      message: `HTTP ${response.status}`,
+    };
+  } catch (error) {
+    return {
+      name: "redis",
+      status: "down",
+      lastCheck: now,
+      message: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+// Helper: Checar AutoGen
+function checkAutogenHealth(): ServiceHealthInfo {
+  const now = new Date().toISOString();
+  const apiKey = process.env.AUTOGEN_API_KEY;
+  
+  if (!apiKey) {
+    return {
+      name: "autogen",
+      status: "not-configured",
+      lastCheck: now,
+      message: "Missing AUTOGEN_API_KEY",
+    };
+  }
+  
+  return { name: "autogen", status: "healthy", lastCheck: now, message: "API key configured" };
+}
+
+async function checkServiceHealth(service: string): Promise<ServiceHealthInfo> {
+  switch (service) {
+    case "qdrant":
+      return checkQdrantHealth();
+    case "dspy":
+      return checkDspyHealth();
+    case "gemini":
+      return checkGeminiHealth();
+    case "redis":
+      return checkRedisHealth();
+    case "autogen":
+      return checkAutogenHealth();
+    default:
+      return { name: service, status: "not-configured", lastCheck: new Date().toISOString() };
+  }
+}
+
+// REMOVED: _legacyCheckServiceHealth - Use checkServiceHealth() instead
+// This function was deprecated and duplicated logic already present in helpers above
 
 // ============================================================================
 // CIRCUIT BREAKERS
@@ -665,13 +697,14 @@ async function getFullDashboard(): Promise<FullDashboard> {
   };
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS headers - restrict to ALLOWED_ORIGINS
+// Helper: Configurar CORS para observability
+function setupObservabilityCorsHeaders(res: VercelResponse, req: VercelRequest): VercelResponse | null {
   const allowed = (process.env.ALLOWED_ORIGINS ?? "")
     .split(",")
     .map((x) => x.trim())
     .filter(Boolean);
-  const origin = (req.headers && (req.headers["origin"] as string | undefined)) || "";
+  const origin = (req.headers?.origin as string | undefined) || "";
+  
   if (origin && allowed.length > 0) {
     if (!allowed.includes(origin)) {
       return res.status(403).json({ error: "Origin not allowed" });
@@ -680,8 +713,45 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } else if (allowed.length === 0) {
     res.setHeader("Access-Control-Allow-Origin", "*");
   }
+  
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-api-key");
+  return null;
+}
+
+// Helper: Obter IP do cliente
+function getObservabilityClientIP(req: VercelRequest): string {
+  return (
+    (req.headers["x-forwarded-for"] as string | undefined) ||
+    (req.headers["x-real-ip"] as string | undefined) ||
+    "unknown"
+  );
+}
+
+// Helper: Aplicar rate limiting
+async function applyObservabilityRateLimit(clientIP: string, res: VercelResponse): Promise<boolean> {
+  const rl = await rateLimitMiddleware(clientIP);
+  Object.entries(rl.headers || {}).forEach(([k, v]) => res.setHeader(k, v));
+  
+  if (!rl.allowed) {
+    res.setHeader(
+      "Retry-After",
+      Math.max(
+        1,
+        Math.ceil((Number(rl.headers["X-RateLimit-Reset"]) - Date.now()) / 1000)
+      ).toString()
+    );
+    res.status(429).json({ error: rl.error || "Rate limit exceeded" });
+    return false;
+  }
+  
+  return true;
+}
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // CORS
+  const corsError = setupObservabilityCorsHeaders(res, req);
+  if (corsError) return corsError;
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();
@@ -692,22 +762,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // Rate limit
-  const clientIP =
-    (req.headers["x-forwarded-for"] as string | undefined) ||
-    (req.headers["x-real-ip"] as string | undefined) ||
-    "unknown";
-  const rl = await rateLimitMiddleware(clientIP);
-  Object.entries(rl.headers || {}).forEach(([k, v]) => res.setHeader(k, v));
-  if (!rl.allowed) {
-    res.setHeader(
-      "Retry-After",
-      Math.max(
-        1,
-        Math.ceil((Number(rl.headers["X-RateLimit-Reset"]) - Date.now()) / 1000)
-      ).toString()
-    );
-    return res.status(429).json({ error: rl.error || "Rate limit exceeded" });
-  }
+  const clientIP = getObservabilityClientIP(req);
+  const rateLimitPassed = await applyObservabilityRateLimit(clientIP, res);
+  if (!rateLimitPassed) return;
 
   // Authorization check
   if (!isAuthorized(req) && !requireApiKey(req, res, "OBSERVABILITY_API_KEY")) {

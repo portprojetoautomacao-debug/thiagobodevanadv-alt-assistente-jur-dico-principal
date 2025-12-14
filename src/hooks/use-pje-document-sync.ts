@@ -132,7 +132,7 @@ export function usePJeDocumentSync(): PJeDocumentSync {
 
       // Atualizar lista de salvos
       const novosDocumentos = documentosSalvos ? [...documentosSalvos, documento] : [documento];
-      await setDocumentosSalvos(novosDocumentos);
+      setDocumentosSalvos(novosDocumentos);
 
       // Mover de pendentes para processados
       setDocumentosPendentes((prev) => prev.filter((d) => d.id !== id));

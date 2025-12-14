@@ -12,8 +12,8 @@
  * - User analytics e sessões
  */
 
-import { ApplicationInsights } from "@microsoft/applicationinsights-web";
 import { ReactPlugin } from "@microsoft/applicationinsights-react-js";
+import { ApplicationInsights } from "@microsoft/applicationinsights-web";
 import { createBrowserHistory } from "history";
 
 // Configuração
@@ -37,7 +37,7 @@ const appInsights = new ApplicationInsights({
 
     // Configurações de performance
     maxBatchInterval: 5000,
-    maxBatchSizeInBytes: 10000,
+    maxBatchSizeInBytes: 10_000,
 
     // Sampling (enviar 100% em dev, 50% em prod)
     samplingPercentage: import.meta.env.PROD ? 50 : 100,
@@ -153,14 +153,14 @@ export function trackAPICall(
   durationMs: number,
   success: boolean
 ) {
-  appInsights.trackDependency({
+  appInsights.trackDependencyData({
     name: endpoint,
     data: `${method} ${endpoint}`,
     duration: durationMs,
-    resultCode: statusCode,
     success,
     type: "HTTP",
     target: endpoint,
+    properties: { statusCode: statusCode.toString() },
   });
 }
 
@@ -173,14 +173,14 @@ export function trackRedisCall(
   durationMs: number,
   success: boolean
 ) {
-  appInsights.trackDependency({
+  appInsights.trackDependencyData({
     name: `Redis_${operation}`,
     data: `${operation} ${key}`,
     duration: durationMs,
-    resultCode: success ? 200 : 500,
     success,
     type: "Redis",
     target: "Upstash Redis",
+    properties: { responseCode: success ? "200" : "500" },
   });
 }
 
@@ -351,7 +351,7 @@ export function trackPageView(
 ) {
   appInsights.trackPageView({
     name,
-    uri: url || window.location.href,
+    uri: url || globalThis.location.href,
     properties,
   });
 }
@@ -416,7 +416,7 @@ export function cleanupApplicationInsights() {
 }
 
 // Exportar instâncias
-export { appInsights, reactPlugin, browserHistory };
+export { appInsights, browserHistory, reactPlugin };
 
 // Exportar default
 export default appInsights;

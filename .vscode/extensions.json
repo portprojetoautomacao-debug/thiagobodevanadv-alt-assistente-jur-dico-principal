@@ -41,6 +41,9 @@
     "p42ai.refactor",
     "ms-playwright.playwright",
     "trailofbits.sarif-explorer",
-    "ms-sarifvscode.sarif-viewer"
+    "ms-sarifvscode.sarif-viewer",
+    "sonar-copilot-assistant.sonar-copilot-assistant",
+    "sonar-copilot-assistant.sonar-copilot-assistant",
+    "sonar-copilot-assistant.sonar-copilot-assistant"
   ]
 }

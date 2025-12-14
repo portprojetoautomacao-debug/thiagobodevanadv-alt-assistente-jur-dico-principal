@@ -5,7 +5,7 @@
  * Verifica se a integração com Google Calendar para prazos legais está funcionando
  */
 
-import https from "https";
+import https from "node:https";
 
 console.log("🧪 Iniciando teste de integração Google Calendar...");
 

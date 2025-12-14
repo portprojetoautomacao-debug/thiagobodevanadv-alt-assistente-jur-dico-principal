@@ -70,7 +70,7 @@ function validateAuth(req: VercelRequest): boolean {
     return false;
   }
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  if (!authHeader?.startsWith("Bearer ")) {
     return false;
   }
 
@@ -95,6 +95,88 @@ function validateAuth(req: VercelRequest): boolean {
 // Optionally keep a small guard, but prefer Zod schema validation
 function _validateRequest(body: unknown): body is OrchestrationRequest {
   return OrchestrationRequestSchema.safeParse(body).success;
+}
+
+// Helper: Verificar abort signal
+function checkAbortSignal(signal: AbortSignal): void {
+  if (signal.aborted) {
+    throw new Error("Operation aborted");
+  }
+}
+
+// Helper: Criar task para agente específico
+function createTaskForAgent(baseTask: any, agentId: string): any {
+  return { ...baseTask, id: `${baseTask.id}-${agentId}`, agentId };
+}
+
+// Helper: Extrair mensagens do resultado LangGraph
+function extractLangGraphMessages(langGraphResult: any, agentId: string): AgentMessage[] {
+  const messages: AgentMessage[] = [];
+  if (!Array.isArray(langGraphResult?.messages)) {
+    return messages;
+  }
+  
+  for (const m of langGraphResult.messages) {
+    messages.push({
+      role: `${agentId}:${m.role || 'agent'}`,
+      content: String(m.content || ''),
+      timestamp: Date.now(),
+    });
+  }
+  return messages;
+}
+
+// Helper: Criar mensagem de conclusão
+function createCompletionMessage(agentId: string, mode: string): AgentMessage {
+  return {
+    role: agentId,
+    content: `[Done] ${agentId} completed (mode=${mode})`,
+    timestamp: Date.now(),
+  };
+}
+
+// Helper: Criar mensagem de erro
+function createErrorMessage(agentId: string, err: unknown): AgentMessage {
+  return {
+    role: agentId,
+    content: `[Error] ${err instanceof Error ? err.message : String(err)}`,
+    timestamp: Date.now(),
+  };
+}
+
+// Helper: Processar resultado de execução do agente
+function processAgentResult(agentId: string, result: any, messages: AgentMessage[]): void {
+  const langGraphResult = result.langGraphResult as any;
+  const extractedMessages = extractLangGraphMessages(langGraphResult, agentId);
+  
+  if (extractedMessages.length > 0) {
+    messages.push(...extractedMessages);
+  } else {
+    messages.push(createCompletionMessage(agentId, result.mode));
+  }
+}
+
+// Helper: Processar um agente individual
+async function processAgent(
+  agentId: string,
+  taskForAgent: any,
+  messages: AgentMessage[],
+  timeout?: number
+): Promise<void> {
+  messages.push({ role: agentId, content: `[Run] Starting ${agentId}`, timestamp: Date.now() });
+  
+  try {
+    const result = await executeHybridTask(agentId, taskForAgent, {
+      timeoutMs: timeout || 30000,
+    });
+    processAgentResult(agentId, result, messages);
+  } catch (err) {
+    messages.push(createErrorMessage(agentId, err));
+    // In fallback mode we continue (timeout > 0 allows continuation)
+    if (timeout && timeout > 0) {
+      // Continue with next agent
+    }
+  }
 }
 
 /**
@@ -127,49 +209,9 @@ async function orchestrateAgents(
 
   // Execute agents according to requested coordination
   for (const agentId of request.agents) {
-    if (signal.aborted) {
-      throw new Error("Operation aborted");
-    }
-
-    // Short-circuit if agent disabled / not mapped in hybrid
-    const taskForAgent = { ...baseTask, id: `${baseTask.id}-${agentId}`, agentId } as any;
-    try {
-      messages.push({ role: agentId, content: `[Run] Starting ${agentId}`, timestamp: Date.now() });
-      const result = await executeHybridTask(agentId, taskForAgent, {
-        timeoutMs: request.timeout || 30000,
-      });
-      
-      // Tentar extrair mensagens do resultado (com type guard)
-      const langGraphResult = result.langGraphResult as any;
-      if (langGraphResult && Array.isArray(langGraphResult.messages)) {
-        for (const m of langGraphResult.messages) {
-          messages.push({
-            role: `${agentId}:${m.role || 'agent'}`,
-            content: String(m.content || ''),
-            timestamp: Date.now(),
-          });
-        }
-      } else {
-        messages.push({
-          role: agentId,
-          content: `[Done] ${agentId} completed (mode=${result.mode})`,
-          timestamp: Date.now(),
-        });
-      }
-    } catch (err) {
-      messages.push({
-        role: agentId,
-        content: `[Error] ${err instanceof Error ? err.message : String(err)}`,
-        timestamp: Date.now(),
-      });
-      // In fallback mode we continue, otherwise bubble error
-      if (request.timeout && request.timeout > 0) {
-        // Continue with next agent
-      }
-    }
-
-    // If sequential policy is required and task for agent caused failure, depending on the policy we might stop
-    // For now we always continue to collect results
+    checkAbortSignal(signal);
+    const taskForAgent = createTaskForAgent(baseTask, agentId);
+    await processAgent(agentId, taskForAgent, messages, request.timeout);
   }
 
   const duration = Date.now() - startTime;

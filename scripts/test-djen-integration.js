@@ -5,7 +5,7 @@
  * Verifica se a integração com a API de publicações legais está funcionando
  */
 
-import https from 'https';
+import https from 'node:https';
 
 console.log('🧪 Iniciando teste de integração DJEN/DataJud...');
 

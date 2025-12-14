@@ -74,7 +74,7 @@ export const NodeBackground = Extension.create<NodeBackgroundOptions>({
               const styleColor = element.style?.backgroundColor;
               if (styleColor) return styleColor;
 
-              const dataColor = element.getAttribute("data-background-color");
+              const dataColor = element.dataset.backgroundColor;
               return dataColor || null;
             },
 

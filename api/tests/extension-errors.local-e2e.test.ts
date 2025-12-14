@@ -1,5 +1,5 @@
-import { execFile } from "child_process";
-import path from "path";
+import { execFile } from "node:child_process";
+import path from "node:path";
 import { describe, it } from "vitest";
 
 describe("extension-errors local E2E", () => {

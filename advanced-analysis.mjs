@@ -147,20 +147,26 @@ async function analyzeQualityGate() {
   });
 
   const status = qualityGate.projectStatus.status;
-  const emoji = status === "OK" ? "✅" : status === "WARN" ? "⚠️" : "❌";
+  const emoji = getStatusEmoji(status);
 
   console.log(`${emoji} Status: ${status}\n`);
 
   if (qualityGate.projectStatus.conditions) {
     console.log("📋 Condições:");
     qualityGate.projectStatus.conditions.forEach((cond) => {
-      const condEmoji = cond.status === "OK" ? "✅" : cond.status === "WARN" ? "⚠️" : "❌";
+      const condEmoji = getStatusEmoji(cond.status);
       console.log(
         `  ${condEmoji} ${cond.metricKey}: ${cond.actualValue} (limite: ${cond.errorThreshold || cond.warningThreshold})`
       );
     });
   }
   console.log();
+}
+
+function getStatusEmoji(status) {
+  if (status === "OK") return "✅";
+  if (status === "WARN") return "⚠️";
+  return "❌";
 }
 
 async function analyzeTechnicalDebt() {

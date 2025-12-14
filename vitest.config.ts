@@ -1,5 +1,5 @@
 import react from "@vitejs/plugin-react";
-import { resolve } from "path";
+import { resolve } from "node:path";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
@@ -23,7 +23,7 @@ export default defineConfig({
     // Ajustar concorrência baseado em ambiente para estabilidade
     maxConcurrency: process.env.CI ? 3 : 1,
     // ✅ Isolar testes no CI para melhor confiabilidade
-    isolate: process.env.CI ? true : false,
+    isolate: !!process.env.CI,
     // ✅ Suporte a sharding para execução paralela
     // Use --shard=1/4 --shard=2/4 etc nos comandos
     include: [

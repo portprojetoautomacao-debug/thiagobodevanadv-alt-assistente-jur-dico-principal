@@ -1,10 +1,10 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { requireApiKey } from "./lib/auth.js";
 import {
-  sendDailySummaryEmail,
-  sendEmail,
-  sendNotificationEmail,
-  sendUrgentDeadlineAlert,
+    sendDailySummaryEmail,
+    sendEmail,
+    sendNotificationEmail,
+    sendUrgentDeadlineAlert,
 } from "./lib/email-service.js";
 import { rateLimitMiddleware } from "./lib/rate-limit.js";
 import { retryWithBackoff } from "./lib/retry.js";
@@ -22,17 +22,20 @@ import { EmailRequest, EmailUnion } from "./lib/validation.js";
  * - "urgent": Alerta de prazo urgente
  * - "daily_summary": Resumo diário
  */
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Auth via token header
-  if (!requireApiKey(req, res, "EMAIL_API_KEY")) return;
-
-  // Rate limiting by IP
-  const clientIP =
+// Helper: Obter IP do cliente
+function getClientIP(req: VercelRequest): string {
+  return (
     (req.headers["x-forwarded-for"] as string | undefined) ||
     (req.headers["x-real-ip"] as string | undefined) ||
-    "unknown";
+    "unknown"
+  );
+}
+
+// Helper: Aplicar rate limiting
+async function applyEmailRateLimit(clientIP: string, res: VercelResponse): Promise<boolean> {
   const rl = await rateLimitMiddleware(clientIP);
   Object.entries(rl.headers || {}).forEach(([k, v]) => res.setHeader(k, v));
+  
   if (!rl.allowed) {
     res.setHeader(
       "Retry-After",
@@ -41,8 +44,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         Math.ceil((Number(rl.headers["X-RateLimit-Reset"]) - Date.now()) / 1000)
       ).toString()
     );
-    return res.status(429).json({ error: rl.error || "Rate limit exceeded" });
+    res.status(429).json({ error: rl.error || "Rate limit exceeded" });
+    return false;
   }
+  
+  return true;
+}
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // Auth via token header
+  if (!requireApiKey(req, res, "EMAIL_API_KEY")) return;
+
+  // Rate limiting by IP
+  const clientIP = getClientIP(req);
+  const rateLimitPassed = await applyEmailRateLimit(clientIP, res);
+  if (!rateLimitPassed) return;
+  
   // Apenas POST permitido
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });

@@ -82,7 +82,7 @@ export default function PrazosView() {
       }
     });
 
-    return lista.sort((a, b) => a.dataFinal.localeCompare(b.dataFinal));
+    return lista.sort((a, b) => a.dataFinal.localeCompare(b.dataFinal, "pt-BR"));
   }, [processes]);
 
   const filteredPrazos = useMemo(() => {

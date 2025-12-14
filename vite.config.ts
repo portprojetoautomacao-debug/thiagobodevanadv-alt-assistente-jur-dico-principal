@@ -131,6 +131,17 @@ export default defineConfig({
       // Permite usar window.open com preview de PDF / impressão sem quebrar tudo
       "Cross-Origin-Opener-Policy": "same-origin-allow-popups",
     },
+    // Permite acesso aos arquivos em estruturas de pastas aninhadas
+    fs: {
+      allow: [
+        // Permite acesso ao projeto inteiro (resolve estrutura .git/assistente-jur-dico-principal)
+        resolve(projectRoot, ".."),
+        // Permite acesso ao diretório do projeto
+        projectRoot,
+        // Permite acesso ao node_modules
+        resolve(projectRoot, "node_modules"),
+      ],
+    },
     // Permite desabilitar o proxy que redireciona chamadas /api para produção
     // útil para E2E locais para testar APIs localmente
     proxy:

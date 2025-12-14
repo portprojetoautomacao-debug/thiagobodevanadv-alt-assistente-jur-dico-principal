@@ -1,16 +1,52 @@
-import { execSync, spawn } from "child_process";
-import { expect, test, vi, beforeAll, afterAll } from "vitest";
+// @ts-nocheck
+import { spawn, spawnSync } from "node:child_process";
+import { existsSync } from "node:fs";
+import path from "node:path";
+import { afterAll, beforeAll, expect, test, vi } from "vitest";
 
 // Mock fetch globally
 const mockFetch = vi.fn();
-global.fetch = mockFetch as any;
+globalThis.fetch = mockFetch as any;
+
+const pythonCandidates: Array<string> = [
+  process.env.PYTHON_BIN,
+  process.env.PYTHON_PATH,
+  process.env.PYTHON_EXECUTABLE,
+  process.platform === "win32" ? "C:/Python311/python.exe" : "/usr/bin/python3",
+].filter(Boolean) as Array<string>;
+
+function resolvePythonBinary(): string {
+  const absoluteCandidate = pythonCandidates.find(
+    (candidate) => candidate && path.isAbsolute(candidate) && existsSync(candidate)
+  );
+
+  if (absoluteCandidate) return absoluteCandidate;
+
+  if (pythonCandidates.length > 0) {
+    const fallback = pythonCandidates[0];
+    return path.isAbsolute(fallback) ? fallback : path.resolve(fallback);
+  }
+
+  console.warn("[DSPy] Usando fallback python3 do PATH; configure PYTHON_BIN para segurança");
+  return "python3";
+}
+
+const pythonBinary = resolvePythonBinary();
 
 let fastapiAvailable = true;
 try {
-  execSync('python3 -c "import fastapi"', { stdio: "ignore" });
-} catch (_err) {
+  const result = spawnSync(pythonBinary, ["-c", "import fastapi"], { stdio: "ignore" });
+  if (result.status !== 0) {
+    fastapiAvailable = false;
+    console.warn("fastapi não encontrado para testes reais do DSPy Bridge", result.error);
+  }
+} catch (error) {
   fastapiAvailable = false;
+  console.warn("fastapi não encontrado para testes reais do DSPy Bridge", error);
 }
+
+const DSPY_TOKEN = process.env.DSPY_API_TOKEN || "test-token-123";
+const DSPY_PORT = 8765;
 
 // Mock server response
 const mockHealthResponse = {
@@ -56,19 +92,16 @@ afterAll(() => {
 // Skip real test if fastapi not installed, use mock instead
 if (!fastapiAvailable || process.env.DSPY_BRIDGE_ENABLED === "false") {
   test("DSPy Bridge - health and optimize (mocked)", async () => {
-    const token = "test-token-123";
-    const port = 8765;
-
     // Test health endpoint
-    const health = await fetch(`http://127.0.0.1:${port}/health`);
+    const health = await fetch(`http://127.0.0.1:${DSPY_PORT}/health`);
     expect(health.status).toBe(200);
     const json = await health.json();
     expect(json.service).toBe("dspy-bridge");
 
     // Test optimize endpoint
-    const res = await fetch(`http://127.0.0.1:${port}/optimize`, {
+    const res = await fetch(`http://127.0.0.1:${DSPY_PORT}/optimize`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${DSPY_TOKEN}`, "Content-Type": "application/json" },
       body: JSON.stringify({ prompt: "Hello please optimize me" }),
     });
     expect(res.status).toBe(200);
@@ -78,24 +111,29 @@ if (!fastapiAvailable || process.env.DSPY_BRIDGE_ENABLED === "false") {
   });
 } else {
   test("DSPy Bridge - health and optimize (real)", async () => {
-    const token = "test-token-123";
-    const port = 8765;
-    process.env.DSPY_API_TOKEN = token;
-    process.env.DSPY_PORT = String(port);
+    process.env.DSPY_API_TOKEN = DSPY_TOKEN;
+    process.env.DSPY_PORT = String(DSPY_PORT);
 
-    const proc = spawn("python3", ["scripts/dspy_bridge.py"], { stdio: "inherit" });
-    // Wait for server to start
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    const proc = spawn(pythonBinary, ["scripts/dspy_bridge.py"], { stdio: "inherit" });
+    // Wait for server to start and capture startup failures
+    await new Promise((resolve, reject) => {
+      const timer = setTimeout(resolve, 800);
+      proc.once("error", (error) => {
+        clearTimeout(timer);
+        console.error("Falha ao iniciar DSPy Bridge", error);
+        reject(error);
+      });
+    });
 
     try {
-      const health = await fetch(`http://127.0.0.1:${port}/health`);
+      const health = await fetch(`http://127.0.0.1:${DSPY_PORT}/health`);
       expect(health.status).toBe(200);
       const json = await health.json();
       expect(json.service).toBe("dspy-bridge");
 
-      const res = await fetch(`http://127.0.0.1:${port}/optimize`, {
+      const res = await fetch(`http://127.0.0.1:${DSPY_PORT}/optimize`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        headers: { Authorization: `Bearer ${DSPY_TOKEN}`, "Content-Type": "application/json" },
         body: JSON.stringify({ prompt: "Hello please optimize me" }),
       });
       expect(res.status).toBe(200);
@@ -103,7 +141,11 @@ if (!fastapiAvailable || process.env.DSPY_BRIDGE_ENABLED === "false") {
       expect(body.optimized_prompt).toBeDefined();
       expect(body.metadata).toBeDefined();
     } finally {
-      proc.kill();
+      try {
+        proc.kill();
+      } catch (killError) {
+        console.warn("Não foi possível encerrar o processo do DSPy Bridge", killError);
+      }
     }
   });
 }

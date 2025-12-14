@@ -225,5 +225,6 @@
   },
   "chat.agent.maxRequests": 40,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "notebook.defaultFormatter": "esbenp.prettier-vscode"
+  "notebook.defaultFormatter": "esbenp.prettier-vscode",
+  "sarif-viewer.connectToGithubCodeScanning": "off"
 }

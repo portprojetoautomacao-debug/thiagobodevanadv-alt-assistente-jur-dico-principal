@@ -51,6 +51,88 @@ export class RateLimiter {
   }
 
   /**
+   * Helper: Calcular reset time baseado no primeiro timestamp
+   */
+  private calculateResetTime(rawRange: any, now: number): number {
+    if (!Array.isArray(rawRange) || rawRange.length < 2) {
+      return now + this.config.windowMs;
+    }
+
+    const score = rawRange[1];
+    if (score === undefined || score === null || Number.isNaN(Number(score))) {
+      return now + this.config.windowMs;
+    }
+
+    const firstTs = typeof score === "number" ? score : Number.parseInt(String(score), 10);
+    return firstTs + this.config.windowMs;
+  }
+
+  /**
+   * Helper: Verificar rate limit usando Redis
+   */
+  private async checkWithRedis(
+    redisKey: string,
+    now: number,
+    windowStart: number
+  ): Promise<RateLimitResult> {
+    // Remove requests fora da janela e conta requests atuais
+    const multi = this.redis!.multi();
+    multi.zremrangebyscore(redisKey, 0, windowStart);
+    multi.zcard(redisKey);
+    multi.zrange(redisKey, 0, -1, { withScores: true });
+
+    const results = await multi.exec();
+    const currentCount = typeof results[1] === "number" ? results[1] : 0;
+    const rawRange = results[2];
+
+    if (currentCount >= this.config.maxRequests) {
+      return this.createRateLimitExceededResult(currentCount, rawRange, now);
+    }
+
+    return await this.createAllowedResult(redisKey, currentCount, now);
+  }
+
+  /**
+   * Helper: Criar resultado quando limite é excedido
+   */
+  private createRateLimitExceededResult(
+    currentCount: number,
+    rawRange: any,
+    now: number
+  ): RateLimitResult {
+    const resetTime = this.calculateResetTime(rawRange, now);
+    return {
+      allowed: false,
+      remaining: 0,
+      resetTime,
+      totalRequests: currentCount,
+    };
+  }
+
+  /**
+   * Helper: Criar resultado quando request é permitido
+   */
+  private async createAllowedResult(
+    redisKey: string,
+    currentCount: number,
+    now: number
+  ): Promise<RateLimitResult> {
+    // Adiciona o novo request
+    await this.redis!.zadd(redisKey, { score: now, member: now.toString() });
+
+    // Define TTL para limpeza automática (2x a janela)
+    const ttlSeconds = Math.ceil(this.config.windowMs / 1000) * 2;
+    await this.redis!.expire(redisKey, ttlSeconds);
+
+    return {
+      allowed: true,
+      remaining: this.config.maxRequests - currentCount - 1,
+      resetTime: now + this.config.windowMs,
+      totalRequests: currentCount + 1,
+    };
+  }
+
+  /**
    * Verifica se o request é permitido
    */
   async check(key: string): Promise<RateLimitResult> {
@@ -60,54 +142,7 @@ export class RateLimiter {
     const windowStart = now - this.config.windowMs;
     try {
       if (this.redis) {
-        // Remove requests fora da janela e conta requests atuais
-        const multi = this.redis.multi();
-
-        multi.zremrangebyscore(redisKey, 0, windowStart);
-        multi.zcard(redisKey);
-        // com withScores, o Redis retorna [member, score, member, score, ...]
-        multi.zrange(redisKey, 0, -1, { withScores: true });
-
-        const results = await multi.exec();
-
-        const currentCount = typeof results[1] === "number" ? results[1] : 0;
-        const rawRange = results[2];
-
-        if (currentCount >= this.config.maxRequests) {
-          // Calcula quando a janela reseta
-          let resetTime = now + this.config.windowMs;
-
-          if (Array.isArray(rawRange) && rawRange.length >= 2) {
-            // Pega o score do primeiro par [member, score, ...]
-            const score = rawRange[1];
-            if (score !== undefined && score !== null && !Number.isNaN(Number(score))) {
-              const firstTs =
-                typeof score === "number" ? score : Number.parseInt(String(score), 10);
-              resetTime = firstTs + this.config.windowMs;
-            }
-          }
-
-          return {
-            allowed: false,
-            remaining: 0,
-            resetTime,
-            totalRequests: currentCount,
-          };
-        }
-
-        // Adiciona o novo request
-        await this.redis.zadd(redisKey, { score: now, member: now.toString() });
-
-        // Define TTL para limpeza automática (2x a janela)
-        const ttlSeconds = Math.ceil(this.config.windowMs / 1000) * 2;
-        await this.redis.expire(redisKey, ttlSeconds);
-
-        return {
-          allowed: true,
-          remaining: this.config.maxRequests - currentCount - 1,
-          resetTime: now + this.config.windowMs,
-          totalRequests: currentCount + 1,
-        };
+        return await this.checkWithRedis(redisKey, now, windowStart);
       }
 
       // In-memory fallback

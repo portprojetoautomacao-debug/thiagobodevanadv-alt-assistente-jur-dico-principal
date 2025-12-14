@@ -5,7 +5,7 @@
  * Usa as ferramentas MCP para análise profunda de código
  */
 
-import { spawn } from "child_process";
+import { spawn } from "node:child_process";
 
 const SONAR_CONFIG = {
   url: "https://sonarcloud.io",

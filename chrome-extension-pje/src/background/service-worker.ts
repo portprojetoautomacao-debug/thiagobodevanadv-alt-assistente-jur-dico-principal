@@ -10,11 +10,12 @@ import { SyncManager } from "./sync-manager";
 console.log("[PJe Sync] Background Service Worker iniciado");
 
 // Inicializa gerenciador de sincronização
-new SyncManager();
+const syncManager = new SyncManager();
+console.log("[PJe Sync] Sync Manager inicializado", syncManager);
 
 // Inicializa gerenciador de crawler
-new CrawlerManager();
-console.log("[PJe Sync] Crawler Manager inicializado");
+const crawlerManager = new CrawlerManager();
+console.log("[PJe Sync] Crawler Manager inicializado", crawlerManager);
 
 // Evento de instalação
 chrome.runtime.onInstalled.addListener((details) => {

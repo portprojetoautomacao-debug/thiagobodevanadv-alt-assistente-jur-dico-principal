@@ -17,9 +17,9 @@ import { escapeHtml } from "../lib/sanitize.js";
 import { AnalysisResult, applyDeadlineDates, parseAIResponse } from "../lib/task-helpers.js";
 import { withTimeout } from "../lib/timeout.js";
 import {
-  AgentInputSchema,
-  AgentTaskInputSchema,
-  handleValidationError,
+    AgentInputSchema,
+    AgentTaskInputSchema,
+    handleValidationError,
 } from "../lib/validation.js";
 
 /**
@@ -127,8 +127,7 @@ function handleMonitoringRoute(taskType: string): AnalysisResult {
 function handleDefaultRoute(task: AgentTask): AnalysisResult {
   // Se existir deadline em task.data, cria estrutura mínima de análise
   if (
-    task.data &&
-    task.data.deadline &&
+    task.data?.deadline &&
     typeof task.data.deadline === "object" &&
     "days" in task.data.deadline &&
     "type" in task.data.deadline
@@ -181,6 +180,90 @@ function isMonitoringTask(taskType: string): boolean {
   return taskType === "monitor-djen" || taskType === "check-deadlines";
 }
 
+// Helper: Configurar CORS headers
+function setupCorsHeaders(
+  res: VercelResponse,
+  origin: string,
+  allowedOrigins: string[]
+): VercelResponse | null {
+  if (origin && allowedOrigins.length > 0) {
+    if (!allowedOrigins.includes(origin)) {
+      return res.status(403).json({ error: "Origin not allowed" });
+    }
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  } else if (allowedOrigins.length === 0) {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+  }
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  return null;
+}
+
+// Helper: Validar e parsear request body
+function validateRequestBody(
+  req: VercelRequest,
+  res: VercelResponse
+): { safeTask: AgentTask; safeAgent: Agent } | null {
+  const { task, agent } = req.body as { task: unknown; agent: unknown };
+
+  const parsedTask = AgentTaskInputSchema.safeParse(task);
+  if (!parsedTask.success) {
+    res.status(400).json({
+      error: "Invalid task payload",
+      details: handleValidationError(parsedTask.error),
+    });
+    return null;
+  }
+
+  const parsedAgent = AgentInputSchema.safeParse(agent);
+  if (!parsedAgent.success) {
+    res.status(400).json({
+      error: "Invalid agent payload",
+      details: handleValidationError(parsedAgent.error),
+    });
+    return null;
+  }
+
+  return { safeTask: parsedTask.data, safeAgent: parsedAgent.data };
+}
+
+// Helper: Sanitizar dados da task
+function sanitizeTaskData(task: AgentTask): void {
+  if (task.data && typeof task.data.text === "string") {
+    const escaped = escapeHtml(task.data.text) as unknown as string;
+    task.data.text = redactPii(escaped) as unknown as string;
+  }
+}
+
+// Helper: Obter IP do cliente
+function getClientIP(req: VercelRequest): string {
+  return (
+    (req.headers?.["x-forwarded-for"] as string | undefined) ||
+    (req.headers?.["x-real-ip"] as string | undefined) ||
+    "unknown"
+  );
+}
+
+// Helper: Aplicar rate limiting
+async function applyRateLimit(clientIP: string, res: VercelResponse): Promise<boolean> {
+  const rl = await rateLimitMiddleware(clientIP);
+  Object.entries(rl.headers || {}).forEach(([k, v]) => res.setHeader(k, v));
+
+  if (!rl.allowed) {
+    res.setHeader(
+      "Retry-After",
+      Math.max(
+        1,
+        Math.ceil((Number(rl.headers["X-RateLimit-Reset"]) - Date.now()) / 1000)
+      ).toString()
+    );
+    res.status(429).json({ error: rl.error || "Rate limit exceeded" });
+    return false;
+  }
+
+  return true;
+}
+
 // Handler principal
 export async function dispatchTask(task: AgentTask, _agent: Agent): Promise<AnalysisResult> {
   if (isAnalysisTask(task.type)) {
@@ -200,18 +283,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     .split(",")
     .map((x) => x.trim())
     .filter(Boolean);
-  const origin = (req.headers && (req.headers["origin"] as string | undefined)) || "";
-  if (origin && allowedOrigins.length > 0) {
-    if (!allowedOrigins.includes(origin)) {
-      return res.status(403).json({ error: "Origin not allowed" });
-    }
-    res.setHeader("Access-Control-Allow-Origin", origin);
-  } else if (allowedOrigins.length === 0) {
-    // Fallback to wildcard only if ALLOWED_ORIGINS not configured (for local dev)
-    res.setHeader("Access-Control-Allow-Origin", "*");
-  }
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  const origin = (req.headers?.["origin"] as string | undefined) || "";
+
+  const corsError = setupCorsHeaders(res, origin, allowedOrigins);
+  if (corsError) return corsError;
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();
@@ -225,56 +300,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!requireApiKey(req, res, "AUTOGEN_API_KEY")) return;
 
   // Rate limiting by client IP
-  const clientIP =
-    ((req.headers && (req.headers["x-forwarded-for"] as string | undefined)) as
-      | string
-      | undefined) ||
-    ((req.headers && (req.headers["x-real-ip"] as string | undefined)) as string | undefined) ||
-    "unknown";
-  const rl = await rateLimitMiddleware(clientIP);
-  Object.entries(rl.headers || {}).forEach(([k, v]) => res.setHeader(k, v));
-  if (!rl.allowed) {
-    res.setHeader(
-      "Retry-After",
-      Math.max(
-        1,
-        Math.ceil((Number(rl.headers["X-RateLimit-Reset"]) - Date.now()) / 1000)
-      ).toString()
-    );
-    return res.status(429).json({ error: rl.error || "Rate limit exceeded" });
-  }
+  const clientIP = getClientIP(req);
+  const rateLimitPassed = await applyRateLimit(clientIP, res);
+  if (!rateLimitPassed) return;
 
-  const { task, agent } = req.body as { task: unknown; agent: unknown };
+  // Validate request body
+  const validated = validateRequestBody(req, res);
+  if (!validated) return;
 
-  // Validate with Zod
-  const parsedTask = AgentTaskInputSchema.safeParse(task);
-  if (!parsedTask.success) {
-    return res
-      .status(400)
-      .json({ error: "Invalid task payload", details: handleValidationError(parsedTask.error) });
-  }
-  const parsedAgent = AgentInputSchema.safeParse(agent);
-  if (!parsedAgent.success) {
-    return res
-      .status(400)
-      .json({ error: "Invalid agent payload", details: handleValidationError(parsedAgent.error) });
-  }
-
-  if (!parsedTask || !parsedAgent) {
-    return res.status(400).json({
-      error: "Missing required fields: task, agent",
-    });
-  }
-
-  const safeTask = parsedTask.data;
-  const safeAgent = parsedAgent.data;
+  const { safeTask, safeAgent } = validated;
 
   // Sanitize and redact PII from text fields to avoid injection and leak
-  if (safeTask.data && typeof safeTask.data.text === "string") {
-    // Escape HTML first, then redact PII
-    const escaped = escapeHtml(safeTask.data.text) as unknown as string;
-    safeTask.data.text = redactPii(escaped) as unknown as string;
-  }
+  sanitizeTaskData(safeTask);
 
   console.log(
     `[Process Task] Processing task ${safeTask.id} for agent ${safeAgent.name} (${safeAgent.id})`
@@ -283,7 +320,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     // Always use timeout + retry for calls to LLM
     const exec = async () => dispatchTask(safeTask as any, safeAgent as any);
-    const result: AnalysisResult = await retryWithBackoff(() => withTimeout(45000, exec()), 3, 500);
+    const result: AnalysisResult = await retryWithBackoff(
+      () => withTimeout(45_000, exec()),
+      3,
+      500
+    );
 
     console.log(
       `[Process Task] Task ${safeTask.id} completed: ${result.success ? "success" : "failed"}`

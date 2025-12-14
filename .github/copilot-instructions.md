@@ -70,8 +70,8 @@ Este documento fornece instruções detalhadas para o GitHub Copilot trabalhar e
  - **Integrações críticas**: Google OAuth/Calendar (`src/lib/google-calendar-service.ts`), DJEN/DataJud (`src/lib/djen-api.ts`, `src/lib/datajud-api.ts`), PJe via Chrome Extension (`chrome-extension-pje/`, endpoint `/api/pje-sync`), Qdrant (`src/lib/qdrant-service.ts` - optional, cloud), DSPy Bridge (`scripts/dspy_bridge.py` - optional, Railway), Email API (`api/emails.ts`), Todoist apenas via stub `src/lib/todoist-stub.ts` no client (pacote official restrito a `/api`).
 - **Cron/automação**: Jobs descritos em `api/cron.ts` e `vercel.json` (DJEN monitor, filas de agentes, backup). Novos jobs exigem atualizar ambos + README.
 - **Build/Testes**: `npm run dev`, `npm run build`, `npm run lint`, `npm run test`, `npm run test:e2e`. Extensão Chrome: `cd chrome-extension-pje && npm run build`. Scripts novos precisam refletir em `.github/workflows/*`.
-- **Padrões React/UI**: Apenas components funcionais, props `Props`, hooks no topo, alias `@/`. `src/components/ui/` (shadcn) é imutável. Manter lazy-loading/código dividido alinhado com `App.tsx`, skeleton loaders e `aria-label` em botões.
-- **Tipos/estado**: `src/types.ts` centraliza `Process`, `Expediente`, `Minuta`. Extensão usa tipos em `chrome-extension-pje/src/shared/types.ts` (`ProcessoPJe`, `Expediente`, `SyncMessage`). Ao adicionar campos, sincronize hooks (`use-processes`, `use-auto-minuta`), APIs (`api/agents.ts`, `api/expedientes.ts`, `api/pje-sync.ts`) e contadores do dashboard.
+- **Padrões React/UI**: Apenas components funcionais, props `Props`, hooks no topo, alias `@/`. `src/components/ui/` (shadcn) é imutável. Manter lazy-loading/código dividido alinhado com `App.tsx` (ver `docs/LAZY_LOADING_MAP.md`), skeleton loaders e `aria-label` em botões.
+- **Tipos/estado**: `src/types.ts` centraliza `Process`, `Expediente`, `Minuta`. Extensão usa tipos em `chrome-extension-pje/src/shared/types.ts` (`ProcessoPJe`, `Expediente`, `SyncMessage`). Ao adicionar campos, siga `docs/TYPE_SYNC_CHECKLIST.md` para sincronizar hooks (`use-processes`, `use-auto-minuta`), APIs (`api/agents.ts`, `api/expedientes.ts`, `api/pje-sync.ts`) e contadores do dashboard.
 - **Segurança/Performance**: Nada de segredos no repo; use `src/lib/config.ts` + `.env.example`. Respeite `manualChunks` de `vite.config.ts`, CSP de `vercel.json` e monitoração Sentry (`src/services/error-tracking.ts`). Extensão Chrome: API Key armazenada em Chrome Storage, comunicação HTTPS apenas.
 - **Workflow**: Antes de PR, rode lint+testes e reporte resultados; manter `main` verde garante deploy automático Vercel. Para extensão, rode `npm test` em `chrome-extension-pje/`.
 
@@ -93,6 +93,24 @@ Este documento fornece instruções detalhadas para o GitHub Copilot trabalhar e
    - **Agents**: `src/lib/agents.ts` → 15 agentes IA (9 ativos)
    - **Data**: Upstash KV (Redis) via `useKV()` hook ou `api/kv.ts`
    - **Tests**: Vitest (`src/**/*.test.ts`), Playwright (`tests/e2e/`)
+
+### 📚 Comandos Úteis para Copilot
+
+**Acesso rápido à documentação crítica:**
+
+```bash
+# Quick start
+@workspace Abrir .github/copilot-instructions.md seção "Quick Start"
+
+# Troubleshooting
+@workspace Abrir .github/copilot-instructions.md seção "Troubleshooting"
+
+# Lazy loading
+@workspace Abrir docs/LAZY_LOADING_MAP.md
+
+# Sincronização de tipos
+@workspace Abrir docs/TYPE_SYNC_CHECKLIST.md
+```
 
 ### 🗺️ Mapa de Endpoints API (Serverless)
 
@@ -1141,6 +1159,12 @@ Para detalhes completos da arquitetura híbrida, incluindo:
 - **Atualizar documentação** quando modificar automação
 - **Manter compatibilidade** com tasks existentes
 - **Priorizar estabilidade** sobre novas features
+
+### 🔒 Regras específicas para novos serviços opcionais (Qdrant / DSPy / Email)
+
+- **Qdrant**: Não modifique collections/indices diretamente sem aprovação da equipe; prefira aplicar alterações via migrations e documente o impacto de scaling/retention.
+- **DSPy Bridge**: Qualquer atualização de imagem ou dependências deve ser testada com `dspy-bridge` em ambiente de staging; atualizações em produção requerem rollback plan e teste de latência.
+- **Email API / Email service**: Não altere os provedores de e-mail (resend) sem atualização dos testes e documentação; valide `RESEND_API_KEY` e monitore filas.
 
 ### 🔒 Regras específicas para novos serviços opcionais (Qdrant / DSPy / Email)
 
