@@ -224,7 +224,14 @@ function validateRequestBody(
     return null;
   }
 
-  return { safeTask: parsedTask.data, safeAgent: parsedAgent.data };
+  return {
+    safeTask: parsedTask.data,
+    safeAgent: {
+      id: parsedAgent.data.id,
+      type: parsedAgent.data.type || "unknown",
+      name: parsedAgent.data.name || "Unnamed Agent",
+    },
+  };
 }
 
 // Helper: Sanitizar dados da task

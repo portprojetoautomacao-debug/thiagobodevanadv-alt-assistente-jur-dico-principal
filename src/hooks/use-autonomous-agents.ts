@@ -165,7 +165,7 @@ function handleTaskCompletion(
     task.type,
     result?.success ? "COMPLETED" : "FAILED",
     Date.now() - new Date(task.createdAt).getTime(),
-    result?.success ? undefined : (result as Record<string, unknown>)?.error
+    result?.success ? undefined : String(result?.error || "Unknown error")
   );
 }
 

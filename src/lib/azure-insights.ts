@@ -154,12 +154,14 @@ export function trackAPICall(
   success: boolean
 ) {
   appInsights.trackDependencyData({
+    id: `api-${Date.now()}`,
     name: endpoint,
     data: `${method} ${endpoint}`,
     duration: durationMs,
     success,
     type: "HTTP",
     target: endpoint,
+    responseCode: statusCode,
     properties: { statusCode: statusCode.toString() },
   });
 }
@@ -174,12 +176,14 @@ export function trackRedisCall(
   success: boolean
 ) {
   appInsights.trackDependencyData({
+    id: `redis-${Date.now()}`,
     name: `Redis_${operation}`,
     data: `${operation} ${key}`,
     duration: durationMs,
     success,
     type: "Redis",
     target: "Upstash Redis",
+    responseCode: success ? 200 : 500,
     properties: { responseCode: success ? "200" : "500" },
   });
 }

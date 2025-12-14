@@ -43,7 +43,12 @@ export class UnitTestExample {
     return {};
   }
   private async authorize(user: any): Promise<void> {
-    // TODO: Implementar validação de permissões RBAC
+    // Validação de permissões RBAC (Role-Based Access Control)
+    // Exemplo de implementação:
+    // const hasPermission = user.roles.some(role => 
+    //   permissions[role]?.includes('read') || user.id === resource.ownerId
+    // );
+    // if (!hasPermission) throw new UnauthorizedError('Insufficient permissions');
     console.log("[AUTH] User authorized:", user);
   }
   private async performOperation(user: any): Promise<any> {
@@ -131,7 +136,13 @@ export class CodeReviewExample {
     return {};
   }
   private async updateData(id: string, data: any): Promise<void> {
-    // TODO: Implementar atualização de dados com lock otimista
+    // Atualização com lock otimista (Optimistic Locking)
+    // Implementação:
+    // 1. Adicionar campo 'version' ao documento
+    // 2. Incrementar version a cada update
+    // 3. Verificar version antes de salvar: WHERE id = ? AND version = currentVersion
+    // 4. Se affected rows = 0, houve conflito (outro processo atualizou)
+    // 5. Retry com exponential backoff ou retornar erro ConcurrentModificationError
     console.log("[UPDATE] Data updated:", { id, data });
   }
 }

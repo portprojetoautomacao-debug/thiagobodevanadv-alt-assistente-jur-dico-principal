@@ -80,7 +80,11 @@ export default function DeadlineCalculator() {
       const holidays: string[] = [];
 
       // Feriados nacionais - em produção, buscar de API como Calendarific ou banco de dados
-      // TODO(PRAZOS-003): Integrar com API de feriados estaduais/municipais
+      // ENHANCEMENT(PRAZOS-003): Integração com API de feriados estaduais/municipais
+      // APIs sugeridas:
+      // - Brasil API: https://brasilapi.com.br/api/feriados/v1/{ano}
+      // - Calendarific: https://calendarific.com/api/v2/holidays (pago, mais completo)
+      // Implementação: criar hook useFeriados() que faz cache local (1 ano) e sincroniza semanalmente
       // Atualmente usa apenas feriados nacionais fixos
       // Opções avaliadas: Calendarific API, Brasil API, tabela customizável por tribunal
       // Refs: https://calendarific.com/api-documentation | https://brasilapi.com.br/docs

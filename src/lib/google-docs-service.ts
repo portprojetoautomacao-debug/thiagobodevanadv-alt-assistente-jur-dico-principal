@@ -153,7 +153,7 @@ class GoogleDocsService {
     debug("Initializing Google Docs Service...");
 
     // Segurança para SSR / Vercel serverless
-    if (globalThis.window === undefined || typeof document === "undefined") {
+    if (globalThis.window === undefined || document === undefined) {
       this.lastError = "Google Docs Service só pode ser inicializado no browser.";
       debugError(this.lastError);
       throw new Error(this.lastError);
@@ -253,7 +253,7 @@ class GoogleDocsService {
     return new Promise((resolve, reject) => {
       debug("Loading Google scripts for Docs...");
 
-      if (globalThis.window === undefined || typeof document === "undefined") {
+      if (globalThis.window === undefined || document === undefined) {
         reject(new Error("Google scripts só podem ser carregados no browser"));
         return;
       }
@@ -303,6 +303,10 @@ class GoogleDocsService {
         gisScript.src = "https://accounts.google.com/gsi/client";
         gisScript.async = true;
         gisScript.defer = true;
+        // SEGURANÇA (S5725): Google Identity Services não fornece hash SRI estável
+        // Mitigação: crossOrigin + HTTPS + referrerPolicy + CSP no Vercel
+        gisScript.crossOrigin = "anonymous";
+        gisScript.referrerPolicy = "strict-origin-when-cross-origin";
         gisScript.onload = () => {
           debug("GIS script loaded");
           checkAndResolve();
@@ -334,6 +338,10 @@ class GoogleDocsService {
       gapiScript.src = "https://apis.google.com/js/api.js";
       gapiScript.async = true;
       gapiScript.defer = true;
+      // SEGURANÇA (S5725): Google APIs não fornece hash SRI estável
+      // Mitigação: crossOrigin + HTTPS + referrerPolicy + CSP no Vercel
+      gapiScript.crossOrigin = "anonymous";
+      gapiScript.referrerPolicy = "strict-origin-when-cross-origin";
       gapiScript.onload = () => {
         debug("GAPI script loaded");
         loadGis();

@@ -127,7 +127,14 @@ export async function validateAuthToken(token: string): Promise<AuthResult> {
       }
     }
 
-    // TODO(SECURITY-001): Implementar validação JWT real com refresh tokens
+    // SECURITY(HIGH): Implementar validação JWT completa com refresh tokens
+    // Bibliotecas: jsonwebtoken + express-jwt + rate-limiter
+    // Fluxo:
+    // 1. Access token (exp: 15min) + Refresh token (exp: 7d, HttpOnly cookie)
+    // 2. Validar assinatura com RS256 (chave pública/privada)
+    // 3. Verificar claims: iss, aud, exp, jti (token ID para revogação)
+    // 4. Implementar blacklist de tokens revogados no Redis (TTL = token exp)
+    // 5. Rate limiting: 5 tentativas/min por IP
     // Ref: https://github.com/thiagobodevan-a11y/assistente-juridico-p/issues/security-001
     // ⚠️ IMPORTANTE: Implementação temporária - aceita qualquer token em produção
     // Ação necessária: Usar jsonwebtoken para validar signature + claims

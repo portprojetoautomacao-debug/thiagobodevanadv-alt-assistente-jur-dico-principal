@@ -60,7 +60,7 @@ function App() {
   // Fallback de roteamento: sincroniza currentView com o hash da URL
   useEffect(() => {
     const applyHashView = () => {
-      if (typeof globalThis === "undefined") return;
+      if (globalThis === undefined) return;
       const hash = globalThis.location.hash.replace(/^#/, "").trim();
       if (hash) {
         setCurrentView(hash as ViewType);

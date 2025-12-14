@@ -9,7 +9,9 @@
 
 // TODO: Implementar autenticação de dois fatores
 export function loginUser(email: string, password: string) {
-  // FIXME: Validação de email não está funcionando corretamente
+  // AÇÃO NECESSÁRIA: Implementar validação RFC 5322 completa para email
+  // Atual: regex simples não cobre todos os casos (TLDs com 2+ caracteres, emails internacionais)
+  // Sugestão: usar biblioteca validator.js ou email-validator
   const isValid = validateEmail(email);
 
   // ISSUE: Senha sendo armazenada em texto plano

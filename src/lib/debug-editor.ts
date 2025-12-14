@@ -1,12 +1,12 @@
 export function debugEditorStyles(selector = ".tiptap.ProseMirror") {
-  if (typeof window === "undefined") return;
+  if (globalThis.window === undefined) return;
   const editor = document.querySelector(selector) as HTMLElement | null;
   if (!editor) {
     console.warn("Editor not found for selector:", selector);
     return;
   }
 
-  const styles = window.getComputedStyle(editor);
+  const styles = globalThis.window.getComputedStyle(editor);
 
   console.log("Editor Computed Styles:", {
     opacity: styles.opacity,
@@ -23,7 +23,7 @@ export function debugEditorStyles(selector = ".tiptap.ProseMirror") {
   let parent = editor.parentElement;
   let level = 0;
   while (parent && level < 8) {
-    const parentStyles = window.getComputedStyle(parent);
+    const parentStyles = globalThis.window.getComputedStyle(parent);
 
     console.log(`Parent level ${level} (${parent.className || parent.nodeName}):`, {
       opacity: parentStyles.opacity,
@@ -39,9 +39,9 @@ export function debugEditorStyles(selector = ".tiptap.ProseMirror") {
 }
 
 // Attach to window for quick debugging in dev
-if (typeof window !== "undefined") {
-  // @ts-expect-error - window.debugEditor is added dynamically in dev
-  window.debugEditor = debugEditorStyles;
+if (globalThis.window !== undefined) {
+  // @ts-expect-error - globalThis.window.debugEditor is added dynamically in dev
+  globalThis.window.debugEditor = debugEditorStyles;
 }
 
 export default debugEditorStyles;

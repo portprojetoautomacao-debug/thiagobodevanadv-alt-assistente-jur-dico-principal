@@ -48,7 +48,7 @@ export function useWindowSize(): WindowSizeState {
   });
 
   const handleViewportChange = useThrottledCallback(() => {
-    if (typeof window === "undefined") return;
+    if (globalThis.window === undefined) return;
 
     const vp = window.visualViewport;
     if (!vp) return;

@@ -15,7 +15,7 @@ export class HttpLlmClient implements LlmClient {
   private readonly timeout: number;
   private readonly maxRetries: number;
 
-  constructor(private opts: HttpLlmClientOptions) {
+  constructor(private readonly opts: HttpLlmClientOptions) {
     this.timeout = opts.timeout ?? 30000; // 30s
     this.maxRetries = opts.maxRetries ?? 3;
   }

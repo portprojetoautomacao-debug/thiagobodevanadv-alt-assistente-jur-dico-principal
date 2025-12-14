@@ -31,8 +31,8 @@ export interface SearchResult {
 }
 
 export class QdrantService {
-  private config: Required<QdrantConfig>;
-  private baseHeaders: HeadersInit;
+  private readonly config: Required<QdrantConfig>;
+  private readonly baseHeaders: HeadersInit;
   private collectionVectorSize?: number;
 
   constructor(config: QdrantConfig) {

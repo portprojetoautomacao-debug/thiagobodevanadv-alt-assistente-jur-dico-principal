@@ -99,9 +99,9 @@ const PJE_TRIBUNAL_URLS: Record<string, string> = {
 export class PJeAPIError extends Error {
   constructor(
     message: string,
-    public statusCode?: number,
-    public tribunal?: string,
-    public originalError?: unknown
+    public readonly statusCode?: number,
+    public readonly tribunal?: string,
+    public readonly originalError?: unknown
   ) {
     super(message);
     this.name = "PJeAPIError";

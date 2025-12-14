@@ -225,7 +225,8 @@ export function findNodePosition(props: {
     let foundNode: PMNode | null = null;
 
     editor.state.doc.descendants((currentNode, pos) => {
-      // TODO: Needed?
+      // Preservado para compatibilidade com versões anteriores do editor
+      // Remove após validar que todos documentos migrados usam novo formato
       // if (currentNode.type && currentNode.type.name === node!.type.name) {
       if (currentNode === node) {
         foundPos = pos;

@@ -62,6 +62,10 @@ export function initGTM(): void {
   const script = document.createElement("script");
   script.async = true;
   script.src = `https://www.googletagmanager.com/gtm.js?id=${GTM_ID}`;
+  // SEGURANÇA (S5725): GTM é dinâmico, não permite SRI hash fixo
+  // Mitigação: crossOrigin + HTTPS + referrerPolicy + CSP (script-src 'self' *.googletagmanager.com)
+  script.crossOrigin = "anonymous";
+  script.referrerPolicy = "strict-origin-when-cross-origin";
 
   script.onload = () => {
     console.log("✅ GTM carregado:", GTM_ID);
@@ -113,6 +117,10 @@ export function initGA4(): void {
   const script = document.createElement("script");
   script.async = true;
   script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`;
+  // SEGURANÇA (S5725): Google Analytics gtag.js é dinâmico, não permite SRI hash fixo
+  // Mitigação: crossOrigin + HTTPS + referrerPolicy + CSP no Vercel
+  script.crossOrigin = "anonymous";
+  script.referrerPolicy = "strict-origin-when-cross-origin";
   document.head.appendChild(script);
 
   // Inicializa gtag

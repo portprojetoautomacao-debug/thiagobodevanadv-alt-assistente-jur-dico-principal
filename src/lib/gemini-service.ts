@@ -213,7 +213,7 @@ export async function callGemini(
   });
   // Variáveis no escopo externo para uso no catch
   const finalConfig = { ...DEFAULT_CONFIG, ...config };
-  let endpoint: string;
+  let endpoint = "";
 
   try {
     // Validação de configuração básica

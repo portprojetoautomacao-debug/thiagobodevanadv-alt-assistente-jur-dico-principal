@@ -162,6 +162,10 @@ export function GoogleAuthButton({ onSuccess, onError }: Readonly<GoogleAuthButt
     const script = document.createElement("script");
     script.src = "https://accounts.google.com/gsi/client";
     script.async = true;
+    // SEGURANÇA (S5725): Google Identity Services não fornece hash SRI estável
+    // Mitigação: crossOrigin + HTTPS + referrerPolicy + CSP no Vercel
+    script.crossOrigin = "anonymous";
+    script.referrerPolicy = "strict-origin-when-cross-origin";
     script.onload = () => initializeGoogleSignIn();
     document.body.appendChild(script);
 

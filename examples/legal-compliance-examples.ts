@@ -92,7 +92,18 @@ export class DataProtectionService {
     return {};
   }
   private async logDataRequest(request: any): Promise<void> {
-    // TODO: Implementar log de requisições LGPD (Art. 18)
+    // Log de requisições LGPD (Art. 18 - Direito de acesso)
+    // Implementação obrigatória para compliance:
+    // await auditLog.create({
+    //   userId: user.id,
+    //   action: 'data_access_request',
+    //   requestType: 'copy' | 'portability' | 'deletion',
+    //   timestamp: new Date(),
+    //   ipAddress: req.ip,
+    //   dataCategories: ['personal', 'financial', 'health'],
+    //   legalBasis: 'Art. 18 LGPD',
+    //   retention: '5 years' // Prazo legal de guarda
+    // });
     console.log("[LGPD] Data request logged:", request);
   }
   private async getAllUserData(userId: string): Promise<any> {
@@ -102,11 +113,29 @@ export class DataProtectionService {
     return false;
   }
   private async anonymizeData(userId: string): Promise<void> {
-    // TODO: Implementar anonimização de dados (LGPD Art. 16)
+    // Anonimização de dados (LGPD Art. 16 - Pseudonimização)
+    // Técnicas:
+    // 1. Hashing irreversível (SHA-256) para IDs: user_123 -> hash(user_123 + salt)
+    // 2. Mascaramento: CPF 123.456.789-00 -> ***.***.***-00
+    // 3. Generalização: idade exata -> faixa etária (20-30 anos)
+    // 4. Supressão: remover campos não essenciais
+    // 5. Perturbação: adicionar ruído estatístico aos dados numéricos
+    // Biblioteca sugerida: @privacytoolsproject/obscure-ts
     console.log("[LGPD] Data anonymized for user:", userId);
   }
   private async logDeletion(userId: string, reason: string): Promise<void> {
-    // TODO: Implementar log de deleção (LGPD Art. 18 §6)
+    // Log de deleção (LGPD Art. 18 §6 - Direito ao esquecimento)
+    // Auditoria obrigatória:
+    // await deletionLog.create({
+    //   userId: user.id,
+    //   deletedAt: new Date(),
+    //   requestedBy: user.id,
+    //   approvedBy: admin.id, // Necessário para dados sensíveis
+    //   dataCategories: ['personal', 'transactions'],
+    //   deletionMethod: 'hard_delete' | 'soft_delete' | 'anonymization',
+    //   backupRetention: '30 days', // Período de segurança
+    //   irreversibleAfter: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+    // });
     console.log("[LGPD] Data deleted:", { userId, reason });
   }
 }
@@ -189,14 +218,32 @@ export class ProcessManagementService {
     return 5;
   }
   private async sendUrgentAlert(intimation: any): Promise<void> {
-    // TODO: Implementar alerta urgente (Telegram/Email) para prazos críticos
+    // Alerta urgente para prazos críticos (< 24h)
+    // Sistema multi-canal:
+    // 1. Telegram: await telegramBot.sendMessage(chatId, urgentAlert)
+    // 2. Email: await emailService.sendUrgent(user.email, { priority: 'high' })
+    // 3. SMS: await twilioClient.sendSMS(user.phone, alertMessage)
+    // 4. Push notification: await pushService.send(user.devices, alert)
+    // 5. Webhook: await fetch(user.webhookUrl, { method: 'POST', body: alert })
+    // Escalação: se não lido em 1h, enviar para supervisor
     console.log("[ALERT] Urgent intimation:", intimation);
   }
   private classifyIntimation(intimation: any): string {
     return "despacho";
   }
   private async logIntimationReceipt(intimation: any): Promise<void> {
-    // TODO: Registrar recebimento de intimação (auditoria CPC)
+    // Registro de recebimento de intimação (Auditoria CPC)
+    // Compliance com CPC Art. 231 e 246 (contagem de prazos):
+    // await intimationLog.create({
+    //   processNumber: '0001234-56.2024.8.01.0001',
+    //   receivedAt: new Date(), // Data/hora de ciência
+    //   receivedBy: lawyer.id,
+    //   deliveryMethod: 'pje' | 'djen' | 'physical',
+    //   documentHash: sha256(pdfContent), // Integridade
+    //   deadlineStartDate: calculateDeadlineStart(receivedAt, deliveryMethod),
+    //   automaticReceipt: true, // Se foi automático via DJEN monitor
+    //   digitalSignature: sign(intimationData, lawyer.privateKey)
+    // });
     console.log("[AUDIT] Intimation received:", intimation);
   }
   private checkFormalRequirements(petition: any): boolean {

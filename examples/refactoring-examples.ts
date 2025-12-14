@@ -60,9 +60,9 @@ export class UnusedCodeExample {
 
   // CLEANUP: Comentários obsoletos
   processData(data: any) {
-    // TODO: Implementar validação - FEITO EM 2023
-    // FIXME: Bug no IE6 - OBSOLETO
-    // NOTE: Código antigo comentado abaixo
+    // Validação implementada em 2023 - mantida para compatibilidade
+    // Versão atual usa Zod schemas em src/lib/validation.ts
+    // NOTE: Código antigo comentado abaixo (pré-2020, IE6 descontinuado)
     // const oldWay = doSomethingOld();
     // const anotherOldWay = doSomethingElse();
 

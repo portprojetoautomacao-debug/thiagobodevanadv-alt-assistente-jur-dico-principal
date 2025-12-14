@@ -136,7 +136,7 @@ export default function AdvancedNLPDashboard() {
 
   const copyToClipboard = (text: string) => {
     try {
-      if (typeof navigator === "undefined" || !navigator.clipboard) {
+      if (!navigator?.clipboard) {
         toast.error("Copiar para a área de transferência não é suportado neste ambiente");
         return;
       }

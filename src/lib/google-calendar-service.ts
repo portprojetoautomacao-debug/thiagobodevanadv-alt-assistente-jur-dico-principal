@@ -158,7 +158,7 @@ class GoogleCalendarService {
     return new Promise((resolve, reject) => {
       debug("Loading Google scripts...");
 
-      if (globalThis.window === undefined || typeof document === "undefined") {
+      if (globalThis.window === undefined || document === undefined) {
         reject(new Error("Google scripts só podem ser carregados no browser"));
         return;
       }

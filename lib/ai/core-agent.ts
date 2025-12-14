@@ -85,7 +85,7 @@ export class SimpleAgent {
   private readonly sessionId: string;
   private readonly memoryStore: MemoryStore;
 
-  constructor(private opts: AgentOptions) {
+  constructor(private readonly opts: AgentOptions) {
     this.maxSteps = opts.maxSteps ?? 6;
     this.sessionId = opts.sessionId ?? `session-${opts.persona.id}`;
     this.memoryStore = opts.memoryStore ?? InMemoryMemoryStore;

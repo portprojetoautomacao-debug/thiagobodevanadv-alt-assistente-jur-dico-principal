@@ -63,7 +63,7 @@ export function useAutoMinuta() {
 
   // Carregar tarefas já processadas do localStorage
   useEffect(() => {
-    if (typeof window === "undefined") {
+    if (globalThis.window === undefined) {
       return; // Server-side rendering - não fazer nada
     }
 

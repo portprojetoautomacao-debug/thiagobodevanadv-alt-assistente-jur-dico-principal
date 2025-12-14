@@ -36,7 +36,7 @@ const initialRect: RectState = {
   left: 0,
 };
 
-const isSSR = typeof window === "undefined";
+const isSSR = window === undefined;
 const hasResizeObserver = !isSSR && typeof ResizeObserver !== "undefined";
 
 /**

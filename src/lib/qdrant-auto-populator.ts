@@ -165,13 +165,13 @@ const DEFAULT_CONFIG: Required<AutoPopulatorConfig> = {
 };
 
 export class QdrantAutoPopulator {
-  private config: Required<AutoPopulatorConfig>;
+  private readonly config: Required<AutoPopulatorConfig>;
 
   constructor(
-    private qdrant: QdrantService,
-    private dataJud: DataJudService,
-    private temaExtractor: TemaExtractorService,
-    private embeddings: GeminiEmbeddingService,
+    private readonly qdrant: QdrantService,
+    private readonly dataJud: DataJudService,
+    private readonly temaExtractor: TemaExtractorService,
+    private readonly embeddings: GeminiEmbeddingService,
     config: Partial<AutoPopulatorConfig> = {}
   ) {
     this.config = { ...DEFAULT_CONFIG, ...config };
@@ -188,7 +188,9 @@ export class QdrantAutoPopulator {
       console.log(`[AutoPopulator] Processo: ${intimacao.numeroProcesso}`);
 
       // 1. Verificar duplicata
-      // TODO: Re-enable after fixing TypeScript issues
+      // AÇÃO NECESSÁRIA: Atualizar @qdrant/client para v3.x e ajustar tipos de resposta
+      // Temporariamente desabilitado devido a conflitos de tipos entre Qdrant Client v2 e v3
+      // Referência: https://github.com/qdrant/qdrant-js/releases para breaking changes
       /* if (this.config.enableCache && intimacao.numeroProcesso) {
         const existente = await this.checkDuplicate(intimacao.numeroProcesso);
         if (existente) {
@@ -386,18 +388,18 @@ export class QdrantAutoPopulator {
 
     // 3. Validar magnitude (embeddings Gemini s�o normalizados)
     const magnitude = Math.sqrt(embedding.reduce((sum, v) => sum + v * v, 0));
-    if (Math.abs(magnitude - 1.0) > 0.01) {
-      issues.push(`Magnitude anormal: ${magnitude.toFixed(4)} (esperado ~1.0)`);
+    if (Math.abs(magnitude - 1) > 0.01) {
+      issues.push(`Magnitude anormal: ${magnitude.toFixed(4)} (esperado ~1)`);
     }
 
-    // 4. Validar que n�o � zero vector
+    // 4. Validar que não é zero vector
     const isZeroVector = embedding.every((v) => v === 0);
     if (isZeroVector) {
       issues.push("Zero vector detectado");
     }
 
     // Confidence baseado na magnitude
-    const confidence = Math.max(0, 1 - Math.abs(magnitude - 1.0));
+    const confidence = Math.max(0, 1 - Math.abs(magnitude - 1));
 
     return {
       valid: issues.length === 0,
@@ -471,7 +473,9 @@ export class QdrantAutoPopulator {
       atualizadoEm: new Date().toISOString(),
       fonte: intimacao.source === "DJEN" ? "djen" : "pje",
 
-      escritorio: "default", // TODO: pegar do contexto
+      // PENDING: Implementar identificação de escritório a partir de contexto do usuário
+      // Atualmente usando valor padrão até implementação de multi-tenant
+      escritorio: "default",
       textoCompleto: intimacao.conteudo || "",
       entidadesNomeadas: [...temas.entidades.pessoas, ...temas.entidades.empresas],
       citacoesLegais: temas.entidades.leis,

@@ -276,7 +276,7 @@ export function useGoogleDocs() {
 
         // Se houver mudanças locais recentes, confirmar com usuário
         if (hasLocalChanges) {
-          const confirm = window.confirm(
+          const confirm = globalThis.window.confirm(
             `Esta minuta foi modificada localmente após a última sincronização.\n\n` +
               `Última modificação local: ${new Date(minuta.atualizadoEm).toLocaleString("pt-BR")}\n` +
               `Última sincronização: ${lastSyncTime ? new Date(lastSyncTime).toLocaleString("pt-BR") : "Nunca"}\n\n` +

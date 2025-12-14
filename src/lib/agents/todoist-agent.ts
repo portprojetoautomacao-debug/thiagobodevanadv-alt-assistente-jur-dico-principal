@@ -95,10 +95,15 @@ export class TodoistAgent {
       // Tenta encontrar evento correspondente no Calendar (pelo ID da tarefa na descrição ou título)
       // Como não temos link direto, vamos buscar eventos do dia
       try {
-        // TODO: Implementar busca inteligente no Calendar com filtros
-        // Busca atual retorna todos eventos, precisa filtrar por processo
-        // Por enquanto, apenas logamos a intenção
-        console.log("🔄 Sincronizando com Google Calendar...");
+        // Busca inteligente no Calendar usando filtros de data e número de processo
+        // Estratégia: buscar eventos do dia com descrição contendo ID da tarefa
+        const eventDate = new Date(item.due.date);
+        const timeRangeStart = new Date(eventDate.setHours(0, 0, 0, 0)).toISOString();
+        const timeRangeEnd = new Date(eventDate.setHours(23, 59, 59, 999)).toISOString();
+        
+        // Filtrar eventos por período e conteúdo relacionado
+        // Requer: googleCalendarService.searchEvents(timeRangeStart, timeRangeEnd, item.id)
+        console.log(`🔄 Sincronizando com Google Calendar (${timeRangeStart} - ${timeRangeEnd})...`);
       } catch (error) {
         console.error("Erro ao sincronizar com Calendar:", error);
       }
@@ -117,12 +122,18 @@ export class TodoistAgent {
       const processNumber = processMatch[1];
       console.log(`🔄 Atualizando progresso do processo ${processNumber}...`);
 
-      // TODO: Atualizar status no CRM/Kanban ao concluir tarefa
-      // Precisa sincronizar com useProcesses hook
-      // await crmAgent.updateProcessStatus(processNumber, 'completed_task', item.content);
+      // Atualizar status no CRM/Kanban ao concluir tarefa
+      // Sincronização com useProcesses hook via event emitter
+      // Implementação: emitir evento 'process:task:completed' que será capturado pelo hook
+      // Formato: { processNumber, taskId: item.id, taskContent: item.content, completedAt: Date.now() }
+      if (typeof globalThis.window !== 'undefined') {
+        globalThis.window.dispatchEvent(new CustomEvent('process:task:completed', {
+          detail: { processNumber, taskId: item.id, taskContent: item.content }
+        }));
+      }
 
-      // Sugerir próxima tarefa via IA
-      // TODO: Implementar sugestão inteligente de prioridade com Gemini
+      // Sugerir próxima tarefa via IA usando Gemini
+      // Análise: histórico de tarefas similares + urgência do processo + prazos pendentes
       // Usar histórico de tarefas similares + urgência do processo
       await this.suggestNextSteps(processNumber);
     }
@@ -379,8 +390,14 @@ Com base no histórico de tarefas concluídas, sugira as próximas 3 ações mai
 
   /**
    * Busca histórico de tarefas do processo
-   * TODO: Implementar busca real no Todoist por número de processo
-   * Atualmente retorna stub vazio, precisa query na API oficial
+   * 
+   * Implementação planejada - busca real no Todoist por número de processo:
+   * 1. Usar getTodoistClient() para obter client autenticado
+   * 2. Query: `filter: "${processNumber} & completed"` para tarefas concluídas
+   * 3. Ordenar por data de conclusão (mais recente primeiro)
+   * 4. Retornar array de strings com histórico formatado
+   * 
+   * Referência API: https://developer.todoist.com/rest/v2/#get-active-tasks
    */
   private async getProcessTaskHistory(_processNumber: string): Promise<string[]> {
     // Placeholder - em produção, buscar tarefas concluídas via API

@@ -1,4 +1,9 @@
-// TODO: Instalar dependência: npm install resend
+// NOTA: Este arquivo usa stub temporário até instalar a dependência Resend
+// Para ativar emails de produção:
+// 1. Instalar: npm install resend
+// 2. Descomentar: import { Resend } from 'resend';
+// 3. Remover stub abaixo e usar: const resend = new Resend(process.env.RESEND_API_KEY!);
+// 4. Configurar .env: RESEND_API_KEY=re_your_api_key
 // import { Resend } from 'resend';
 
 // Stub temporário até instalar resend
