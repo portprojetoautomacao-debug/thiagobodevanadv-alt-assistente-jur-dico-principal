@@ -271,5 +271,19 @@
   "notebook.defaultFormatter": "esbenp.prettier-vscode",
   "sarif-viewer.connectToGithubCodeScanning": "off",
   "git.autofetch": true,
-  "redhat.telemetry.enabled": true
+  "redhat.telemetry.enabled": true,
+  "git.ignoreLimitWarning": true,
+  "prettier.useTabs": true,
+  "prettier.vueIndentScriptAndStyle": true,
+  "prettier.withNodeModules": true,
+  "prettier.singleQuote": true,
+  "prettier.resolveGlobalModules": true,
+  "prettier.requirePragma": true,
+  "prettier.requireConfig": true,
+  "prettier.jsxSingleQuote": true,
+  "prettier.insertPragma": true,
+  "prettier.experimentalTernaries": true,
+  "prettier.enableDebugLogs": true,
+  "prettier.bracketSameLine": true,
+  "prettier.singleAttributePerLine": true
 }

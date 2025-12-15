@@ -21,7 +21,8 @@ const SERVICE_NAME = "assistente-juridico-pje";
 const SERVICE_VERSION = "1.0.1";
 
 // Endpoint do AI Toolkit (HTTP OTLP)
-const OTLP_ENDPOINT = import.meta.env.VITE_OTLP_ENDPOINT || "http://localhost:4319/v1/traces";
+const OTLP_ENDPOINT = import.meta.env.VITE_OTLP_ENDPOINT;
+const TRACING_ENABLED = import.meta.env.VITE_ENABLE_TRACING;
 
 // Provider global
 let tracerProvider: WebTracerProvider | null = null;
@@ -48,6 +49,14 @@ let isInitialized = false;
 export function initializeOpenTelemetry(): void {
   if (isInitialized) {
     console.warn("[OpenTelemetry] Já inicializado, ignorando chamada duplicada");
+    return;
+  }
+
+  // Se não configurado ou apenas console, usar apenas o tracingService interno
+  if (!OTLP_ENDPOINT || TRACING_ENABLED === "console") {
+    console.log("[OpenTelemetry] ⚠️ OTLP desabilitado - usando apenas console tracing");
+    console.log("[OpenTelemetry] Para habilitar OTLP, defina VITE_OTLP_ENDPOINT no .env");
+    isInitialized = true; // Marcar como inicializado para evitar warnings
     return;
   }
 

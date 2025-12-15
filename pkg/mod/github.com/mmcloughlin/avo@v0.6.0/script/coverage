@@ -1,0 +1,45 @@
+#!/bin/bash
+
+set -euo pipefail
+
+ext=".coverprofile"
+
+# Temporary working directory.
+workdir=$(mktemp -d)
+
+function cleanup() {
+    rm -rf "${workdir}"
+}
+trap cleanup EXIT
+
+# Clean existing coverage files.
+find . -name '*'${ext} | xargs rm -f
+
+# Unit test coverage.
+go test -covermode=count -coverprofile=unittests${ext} ./...
+
+# Integration test coverage.
+#
+# Collect for each individual avo assembly generator.
+coverbase="${workdir}/cover"
+coversingle="${coverbase}/test"
+mkdir -p "${coversingle}"
+
+coverdirs=()
+for main in $(find . -name 'asm.go'); do
+	dir=$(dirname ${main})
+	name=$(basename ${dir})
+
+	coverdir="${coversingle}/${name}"
+	mkdir "${coverdir}"
+	GOCOVERDIR="${coverdir}" go run -tags=integration -cover "${main}" -out /dev/null
+
+	coverdirs+=("${coverdir}")
+done
+
+# Merge integration test coverage.
+covermergeinputs=$(IFS=","; echo "${coverdirs[*]}")
+covermergeoutput="${coverbase}/merge"
+mkdir "${covermergeoutput}"
+go tool covdata merge -i="${covermergeinputs}" -o="${covermergeoutput}"
+go tool covdata textfmt -i="${covermergeoutput}" -o="integration${ext}"
