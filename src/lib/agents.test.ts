@@ -2,7 +2,7 @@
  * Tests for AI Agents system
  */
 
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   type Agent,
   type AgentTask,
@@ -14,6 +14,11 @@ import {
 } from "./agents";
 
 describe("AI Agents System", () => {
+  beforeEach(() => {
+    vi.clearAllTimers();
+    vi.useRealTimers();
+  });
+
   describe("processTaskWithAI", () => {
     it("should process monitoring tasks successfully", async () => {
       const task: AgentTask = {

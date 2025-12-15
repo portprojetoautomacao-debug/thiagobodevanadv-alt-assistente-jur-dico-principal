@@ -929,8 +929,9 @@ async function fetchAgents(): Promise<Agent[]> {
 
 /**
  * Salva fila de tarefas no KV
+ * @deprecated Função mantida para compatibilidade mas não utilizada (atomic updates previnem race conditions)
  */
-async function saveTaskQueue(taskQueue: AgentTask[]): Promise<void> {
+async function _saveTaskQueue(_taskQueue: AgentTask[]): Promise<void> {
   try {
     const redis = getRedisOrNull();
     if (!redis) {
@@ -938,7 +939,7 @@ async function saveTaskQueue(taskQueue: AgentTask[]): Promise<void> {
       return;
     }
 
-    await redis.set("agent-task-queue", taskQueue);
+    await redis.set("agent-task-queue", _taskQueue);
   } catch (error) {
     logger.error("Failed to save task queue to Redis", error);
   }
@@ -991,7 +992,7 @@ function canProcessTask(task: AgentTask, agent: Agent): boolean {
 async function processChainedActions(
   task: AgentTask,
   result: TaskResult,
-  taskQueue: AgentTask[]
+  _taskQueue: AgentTask[]
 ): Promise<void> {
   if (
     task.type !== AgentTaskType.ANALYZE_DOCUMENT ||
@@ -1007,7 +1008,28 @@ async function processChainedActions(
       const nextTask = createChainedTask(String(actionText), task, mapping);
       logger.info(`Chaining task: ${nextTask.type} for ${nextTask.agentId}`);
       // ✨ ATOMIC: Salvar nova tarefa diretamente no KV
-      await addTaskToQueue(nextTask as any);
+      // Converter TaskStatus para formato kv-utils
+      const kvTask = {
+        ...nextTask,
+        status:
+          nextTask.status === TaskStatus.QUEUED
+            ? ("pending" as const)
+            : nextTask.status === TaskStatus.PROCESSING
+              ? ("in_progress" as const)
+              : nextTask.status === TaskStatus.COMPLETED
+                ? ("completed" as const)
+                : ("failed" as const),
+        priority:
+          nextTask.priority === TaskPriority.CRITICAL
+            ? ("urgent" as const)
+            : (nextTask.priority as "low" | "medium" | "high"),
+        result: nextTask.result
+          ? typeof nextTask.result === "string"
+            ? nextTask.result
+            : JSON.stringify(nextTask.result)
+          : undefined,
+      };
+      await addTaskToQueue(kvTask);
     }
   }
 }
@@ -1173,7 +1195,28 @@ async function handleProcessQueue(res: VercelResponse): Promise<VercelResponse> 
 
     // ✨ ATOMIC UPDATE: Salvar cada tarefa individualmente com verificação de versão
     // Isso previne que uma tarefa sobrescreva a fila inteira (race condition)
-    await updateTaskInQueue(task.id, task as any, originalVersion);
+    // Converter TaskStatus para formato kv-utils
+    const kvTaskUpdate = {
+      ...task,
+      status:
+        task.status === TaskStatus.QUEUED
+          ? ("pending" as const)
+          : task.status === TaskStatus.PROCESSING
+            ? ("in_progress" as const)
+            : task.status === TaskStatus.COMPLETED
+              ? ("completed" as const)
+              : ("failed" as const),
+      priority:
+        task.priority === TaskPriority.CRITICAL
+          ? ("urgent" as const)
+          : (task.priority as "low" | "medium" | "high"),
+      result: task.result
+        ? typeof task.result === "string"
+          ? task.result
+          : JSON.stringify(task.result)
+        : undefined,
+    };
+    await updateTaskInQueue(task.id, kvTaskUpdate, originalVersion);
   }
 
   // ⚠️ REMOVIDO: saveTaskQueue(taskQueue) causava race conditions graves
@@ -1239,7 +1282,7 @@ async function handleGetLogs(res: VercelResponse): Promise<VercelResponse> {
     const redis = getRedisOrNull();
     if (!redis) {
       logger.warn("No Redis available for logs");
-      return res.status(200).json({ logs: [] });
+      return res.status(200).json({ logs: [], warning: "Redis not configured" });
     }
 
     const logsData = await redis.get("agent-logs");
@@ -1247,7 +1290,12 @@ async function handleGetLogs(res: VercelResponse): Promise<VercelResponse> {
     return res.status(200).json({ logs });
   } catch (error) {
     logger.error("Failed to fetch agent logs", error);
-    return res.status(200).json({ logs: [] });
+    // Retornar 200 com array vazio para não quebrar o frontend
+    return res.status(200).json({
+      logs: [],
+      error: error instanceof Error ? error.message : "Unknown error",
+      fallback: true,
+    });
   }
 }
 
@@ -1259,7 +1307,7 @@ async function handleGetMemory(res: VercelResponse): Promise<VercelResponse> {
     const redis = getRedisOrNull();
     if (!redis) {
       logger.warn("No Redis available for memory");
-      return res.status(200).json({ memory: [] });
+      return res.status(200).json({ memory: [], warning: "Redis not configured" });
     }
 
     const memoryData = await redis.get("legal-memory");
@@ -1267,7 +1315,12 @@ async function handleGetMemory(res: VercelResponse): Promise<VercelResponse> {
     return res.status(200).json({ memory });
   } catch (error) {
     logger.error("Failed to fetch legal memory", error);
-    return res.status(200).json({ memory: [] });
+    // Retornar 200 com array vazio para não quebrar o frontend
+    return res.status(200).json({
+      memory: [],
+      error: error instanceof Error ? error.message : "Unknown error",
+      fallback: true,
+    });
   }
 }
 

@@ -189,10 +189,10 @@ export default function HumanAgentCollaboration({
       // Limpar timeouts (chamamos clearTimeout mesmo que seja null para o spy detectar)
       clearTimeout(humanActivityTimeoutRef.current!);
       humanActivityTimeoutRef.current = null;
-      
+
       clearTimeout(resumeTimeoutRef.current!);
       resumeTimeoutRef.current = null;
-      
+
       // Limpar intervals
       if (progressIntervalRef.current !== null) {
         clearInterval(progressIntervalRef.current);

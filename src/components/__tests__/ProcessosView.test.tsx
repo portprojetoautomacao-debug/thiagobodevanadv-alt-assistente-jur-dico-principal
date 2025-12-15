@@ -278,9 +278,12 @@ describe("ProcessosView - ViewMode Toggle", () => {
     const listButton = screen.getByRole("button", { name: /Visualização em lista/i });
     fireEvent.click(listButton);
 
-    await waitFor(() => {
-      expect(listButton).toBeInTheDocument();
-    });
+    await waitFor(
+      () => {
+        expect(listButton).toBeInTheDocument();
+      },
+      { timeout: 1000 }
+    );
   });
 });
 

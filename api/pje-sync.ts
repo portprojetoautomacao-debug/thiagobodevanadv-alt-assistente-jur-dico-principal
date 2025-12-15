@@ -32,7 +32,7 @@ function createFallbackInMemoryRedis() {
     "[PJe Sync] UPSTASH não configurado — usando fallback InMemoryRedis para desenvolvimento/testes."
   );
   // Implementação simples de um Redis-like com as operações necessárias.
-  const store = new Map<string, any>();
+  const store = new Map<string, unknown>();
 
   // Inicializa conjunto de API keys com a chave de teste padrão, se fornecida
   const initialApiKey = process.env.TEST_PJE_API_KEY || "valid-test-api-key";
@@ -42,7 +42,7 @@ function createFallbackInMemoryRedis() {
     async get(key: string) {
       return store.has(key) ? store.get(key) : null;
     },
-    async set(key: string, value: any) {
+    async set(key: string, value: unknown) {
       store.set(key, value);
       return "OK";
     },
@@ -54,16 +54,17 @@ function createFallbackInMemoryRedis() {
         cur.unshift(value);
         store.set(key, cur);
       }
-      return await Promise.resolve(store.get(key).length);
+      const result = store.get(key) as string[];
+      return await Promise.resolve(result.length);
     },
     async sismember(key: string, member: string) {
-      const set = store.get(key);
+      const set = store.get(key) as Set<string> | undefined;
       if (!set) return 0;
       return set.has(member) ? 1 : 0;
     },
     // helper to add members (used in tests/setup if needed)
     async sadd(key: string, member: string) {
-      const set = store.get(key) ?? new Set<string>();
+      const set = (store.get(key) as Set<string> | undefined) ?? new Set<string>();
       set.add(member);
       store.set(key, set);
       return 1;

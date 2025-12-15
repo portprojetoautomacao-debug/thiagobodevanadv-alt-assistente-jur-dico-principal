@@ -195,6 +195,10 @@ export function ProfessionalEditor({
   // ===========================
 
   const editorConfig: EditorConfig = {
+    // CKEditor 5 License Key (GPL v3 ou comercial)
+    // Para uso open-source/GPL, use 'GPL' como valor
+    // Para licença comercial, obtenha em: https://ckeditor.com/pricing/
+    licenseKey: "GPL",
     toolbar: {
       items: [
         "undo",

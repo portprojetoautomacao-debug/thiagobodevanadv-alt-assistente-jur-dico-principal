@@ -31,7 +31,7 @@ export class PesquisaJurisAgentQdrant extends LangGraphAgent {
     }
   }
 
-  protected async run(state: AgentState, signal: AbortSignal): Promise<AgentState> {
+  protected async run(state: AgentState, _signal: AbortSignal): Promise<AgentState> {
     return createInvokeAgentSpan(
       {
         agentName: "Pesquisa Jurisprudencial (Qdrant)",

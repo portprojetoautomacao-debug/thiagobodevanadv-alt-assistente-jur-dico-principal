@@ -1,14 +1,14 @@
-import { execSync, spawn } from "child_process";
+import { execSync } from "child_process";
 import { expect, test, vi, beforeAll, afterAll } from "vitest";
 
 // Mock fetch globally
 const mockFetch = vi.fn();
-global.fetch = mockFetch as any;
+global.fetch = mockFetch as typeof fetch;
 
 let fastapiAvailable = true;
 try {
   execSync('python3 -c "import fastapi"', { stdio: "ignore" });
-} catch (_err) {
+} catch {
   fastapiAvailable = false;
 }
 
@@ -30,7 +30,7 @@ const mockOptimizeResponse = {
 
 beforeAll(() => {
   // Setup mocks
-  mockFetch.mockImplementation((url: string, _options?: any) => {
+  mockFetch.mockImplementation((url: string, _options?: RequestInit) => {
     if (url.includes("/health")) {
       return Promise.resolve({
         status: 200,

@@ -166,6 +166,6 @@ try {
       HYBRID_AGENTS_DISABLED,
     };
   }
-} catch (e) {
+} catch {
   // Ignore errors in ESM environments
 }

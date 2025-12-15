@@ -51,7 +51,7 @@ export function requireApiKey(
     }
 
     return true;
-  } catch (_e) {
+  } catch {
     // Any error should deny access
     res.status(401).json({ error: "Unauthorized" });
     return false;

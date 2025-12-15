@@ -154,7 +154,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       default: {
         // This branch should be unreachable because EmailUnion is a discriminated union
         // but we keep a fallback for safety in case of unexpected payloads.
-        const unknownType = (body as any).type || "unknown";
+        const unknownType = (body as { type?: string }).type || "unknown";
         return res.status(400).json({
           error: `Tipo de email inválido: ${unknownType}. Use: test, notification, urgent, daily_summary`,
         });

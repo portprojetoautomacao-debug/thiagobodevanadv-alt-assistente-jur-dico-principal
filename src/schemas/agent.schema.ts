@@ -256,39 +256,44 @@ export const AgentCapabilityEnum = z.enum([
 /**
  * Schema para valida��o de Agente IA
  */
-export const agentSchema = z.object({
-  // Campos obrigat�rios
-  id: z.string().min(1, "ID do agente � obrigat�rio"),
-  name: z.string().min(1, "Nome do agente � obrigat�rio"),
-  type: AgentTypeEnum,
-  description: z.string().min(10, "Descri��o deve ter pelo menos 10 caracteres"),
-  capabilities: z.array(AgentCapabilityEnum).min(1, "Agente deve ter pelo menos 1 capacidade"),
-  active: z.boolean(),
-  status: AgentStatusEnum.default("idle"),
+export const agentSchema = z
+  .object({
+    // Campos obrigat�rios
+    id: z.string().min(1, "ID do agente � obrigat�rio"),
+    name: z.string().min(1, "Nome do agente � obrigat�rio"),
+    type: AgentTypeEnum,
+    description: z.string().min(10, "Descrição deve ter pelo menos 10 caracteres").optional(),
+    capabilities: z
+      .array(AgentCapabilityEnum)
+      .min(1, "Agente deve ter pelo menos 1 capacidade")
+      .optional(),
+    active: z.boolean().default(true),
+    status: AgentStatusEnum.default("idle"),
 
-  // Campos opcionais
-  icon: z.string().optional(),
-  color: z.string().optional(),
-  lastActive: z.string().datetime().optional(),
-  tasksCompleted: z.number().int().nonnegative().default(0),
-  tasksQueued: z.number().int().nonnegative().default(0),
-  successRate: z.number().min(0).max(100).optional(),
-  avgProcessingTime: z.number().nonnegative().optional(),
+    // Campos opcionais
+    icon: z.string().optional(),
+    color: z.string().optional(),
+    lastActive: z.string().datetime().optional(),
+    lastActivity: z.string().optional(), // Campo usado no código
+    tasksCompleted: z.number().int().nonnegative().default(0),
+    tasksQueued: z.number().int().nonnegative().default(0),
+    successRate: z.number().min(0).max(100).optional(),
+    avgProcessingTime: z.number().nonnegative().optional(),
 
-  // Configura��es
-  config: z
-    .object({
-      maxConcurrentTasks: z.number().int().positive().default(3),
-      timeout: z.number().int().positive().default(30000),
-      retryAttempts: z.number().int().nonnegative().default(3),
-      priority: TaskPriorityEnum.default("medium"),
-    })
-    .optional(),
+    // Configura��es
+    config: z
+      .object({
+        maxConcurrentTasks: z.number().int().positive().default(3),
+        timeout: z.number().int().positive().default(30000),
+        retryAttempts: z.number().int().nonnegative().default(3),
+        priority: TaskPriorityEnum.default("medium"),
+      })
+      .optional(),
 
-  // Metadados
-  metadata: safeRecordSchema.optional(),
-});
-
+    // Metadados
+    metadata: safeRecordSchema.optional(),
+  })
+  .passthrough(); // Permitir campos adicionais
 /**
  * Schema para valida��o de Tarefa de Agente
  */

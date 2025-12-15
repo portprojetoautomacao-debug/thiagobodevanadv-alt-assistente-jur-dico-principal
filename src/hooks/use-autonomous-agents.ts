@@ -213,7 +213,7 @@ function clearOutdatedLocalStorage(): void {
  * Incrementa sempre que a estrutura dos agentes mudar
  * Assim forçamos reset de dados antigos no localStorage
  */
-const AGENTS_DATA_VERSION = 7;
+const AGENTS_DATA_VERSION = 8; // Atualizado para 16 agentes (adicionado pesquisa-juris-qdrant)
 
 function getInitialAgents(): Agent[] {
   // Early return for server-side rendering
@@ -227,6 +227,7 @@ function getInitialAgents(): Agent[] {
     if (isDataVersionOutdated(version, AGENTS_DATA_VERSION)) {
       clearOutdatedLocalStorage();
       globalThis.localStorage.setItem("agents-data-version", JSON.stringify(AGENTS_DATA_VERSION));
+      console.log("[Agents] Versão desatualizada → inicializando 16 agentes");
       return initializeAgents();
     }
 
@@ -236,16 +237,25 @@ function getInitialAgents(): Agent[] {
     if (storedAgents) {
       const parsed = JSON.parse(storedAgents);
 
-      // Return valid stored agents
-      if (Array.isArray(parsed) && parsed.length === 15) return parsed;
+      // Return valid stored agents SOMENTE se tiver exatamente 16
+      if (Array.isArray(parsed) && parsed.length === 16) {
+        console.log("[Agents] Carregados 16 agentes do localStorage ✓");
+        return parsed;
+      }
 
-      console.log("[Agents] Quantidade incorreta de agentes → reinicializando…");
+      // Se quantidade incorreta, limpa e reinicializa
+      console.log(
+        `[Agents] Quantidade incorreta (${parsed?.length || 0}) → inicializando 16 agentes`
+      );
+      globalThis.localStorage.removeItem("autonomous-agents");
       return initializeAgents();
     }
   } catch (e) {
     console.error("[Agents] Erro ao carregar agentes:", e);
   }
 
+  // Fallback: sempre retorna 16 agentes
+  console.log("[Agents] Sem dados → inicializando 16 agentes");
   return initializeAgents();
 }
 
@@ -274,14 +284,17 @@ export function useAutonomousAgents() {
   const [useStreaming, setUseStreaming] = useState(true); // Streaming habilitado por padrão
 
   const processingRef = useRef<Set<string>>(new Set());
+  const initializedRef = useRef(false);
 
-  // Garante sempre 15 agentes
+  // Garante sempre 16 agentes - APENAS UMA VEZ na inicialização
+  // ⚠️ FIX: Adiciona agents.length como dependência para evitar loop infinito
   useEffect(() => {
-    if (agents && agents.length !== 15) {
-      console.log("[Agents] Corrigindo → 15 agentes obrigatórios");
+    if (!initializedRef.current && agents && agents.length !== 16) {
+      console.log("[Agents] Corrigindo → 16 agentes obrigatórios");
+      initializedRef.current = true; // ✅ FIX: Seta ANTES de chamar setAgents
       setAgents(initializeAgents());
     }
-  }, [agents, setAgents]);
+  }, [agents?.length]); // ✅ FIX: Adiciona agents.length como dependência
 
   // =============================
   // SYNC COM SERVIDOR (Logs e Memória)

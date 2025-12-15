@@ -76,7 +76,7 @@ export function useHybridAgents(options: UseHybridAgentsOptions = {}) {
           }
           if (same) return prev;
         }
-      } catch (e) {
+      } catch {
         // on any error, update to be safe
       }
       return newStats;
