@@ -61,7 +61,9 @@
     "ensure:sarif-deps:apply:commit": "node ./scripts/ensure-official-sarif-deps.cjs --apply --commit",
     "ensure:sarif-deps:apply:cleanup": "node ./scripts/ensure-official-sarif-deps.cjs --apply --remove-local",
     "setup:mcp": "pwsh -ExecutionPolicy Bypass -File scripts/verify-serena-setup.ps1",
-    "setup:mcp:bash": "bash scripts/verify-serena-setup.sh"
+    "setup:mcp:bash": "bash scripts/verify-serena-setup.sh",
+    "tracing:start": "node scripts/otlp-mock-server.cjs",
+    "dev:with-tracing": "npm run tracing:start & npm run dev"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
