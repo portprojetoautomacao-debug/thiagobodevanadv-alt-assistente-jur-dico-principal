@@ -42,70 +42,6 @@ function calculateNextProgress(
   return { next, isComplete: next >= max };
 }
 
-// Helper functions to reduce nesting (S2004 compliance)
-function createProgressInterval(
-  setProgress: (value: React.SetStateAction<number>) => void,
-  onComplete: (() => void) | undefined
-): () => void {
-  let isCancelled = false;
-
-  const intervalId = globalThis.setInterval(() => {
-    setProgress((prev) => {
-      if (isCancelled) return prev;
-
-      const { next, isComplete } = calculateNextProgress(prev, PROGRESS_STEP, 100);
-
-      if (isComplete) {
-        onComplete?.();
-      }
-
-      return next;
-    });
-  }, PROGRESS_INTERVAL_MS);
-
-  return () => {
-    isCancelled = true;
-    globalThis.clearInterval(intervalId);
-  };
-}
-
-function createInactivityInterval(
-  setTimeWithoutActivity: (value: React.SetStateAction<number>) => void,
-  setPhase: (phase: Phase) => void,
-  isHumanActive: boolean
-): () => void {
-  let isCancelled = false;
-
-  const intervalId = globalThis.setInterval(() => {
-    if (isCancelled) return;
-
-    setTimeWithoutActivity((prev) => {
-      // Early return for human activity
-      if (isHumanActive) {
-        return 0;
-      }
-
-      const next = prev + 1;
-
-      // Check if agent should resume
-      if (next >= INACTIVITY_LIMIT_SECONDS) {
-        setPhase("agent_resuming");
-        setTimeout(() => {
-          setPhase("agent_working");
-        }, RESUME_DELAY_MS);
-        return 0;
-      }
-
-      return next;
-    });
-  }, 1000);
-
-  return () => {
-    isCancelled = true;
-    globalThis.clearInterval(intervalId);
-  };
-}
-
 export default function HumanAgentCollaboration({
   agentName,
   taskDescription,
@@ -118,14 +54,60 @@ export default function HumanAgentCollaboration({
 
   // Refs para controlar timers e evitar vazamentos de memória
   const humanActivityTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const resumeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const inactivityIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const previousPhaseRef = useRef(phase);
+  const onCompleteRef = useRef(onComplete);
+
+  // Manter onCompleteRef atualizado
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   // Progresso do agente quando está trabalhando
   useEffect(() => {
-    if (phase !== "agent_working") return;
+    if (phase !== "agent_working") {
+      // Limpar interval existente se não estiver mais trabalhando
+      if (progressIntervalRef.current !== null) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
+      return;
+    }
 
-    return createProgressInterval(setProgress, onComplete);
-  }, [phase, onComplete]);
+    // Limpar interval anterior antes de criar novo
+    if (progressIntervalRef.current !== null) {
+      clearInterval(progressIntervalRef.current);
+    }
+
+    // Criar e rastrear novo interval
+    let isCancelled = false;
+    let hasCalledComplete = false;
+
+    progressIntervalRef.current = setInterval(() => {
+      setProgress((prev) => {
+        if (isCancelled) return prev;
+
+        const { next, isComplete } = calculateNextProgress(prev, PROGRESS_STEP, 100);
+
+        if (isComplete && !hasCalledComplete) {
+          hasCalledComplete = true;
+          onCompleteRef.current?.();
+        }
+
+        return next;
+      });
+    }, PROGRESS_INTERVAL_MS);
+
+    return () => {
+      isCancelled = true;
+      if (progressIntervalRef.current !== null) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
+    };
+  }, [phase]);
 
   // Timer de inatividade durante edição humana
   useEffect(() => {
@@ -138,7 +120,12 @@ export default function HumanAgentCollaboration({
     }
 
     if (phase !== "human_editing") {
-      return; // No cleanup needed when not in human_editing phase
+      // Limpar interval existente se não estiver mais editando
+      if (inactivityIntervalRef.current !== null) {
+        clearInterval(inactivityIntervalRef.current);
+        inactivityIntervalRef.current = null;
+      }
+      return;
     }
 
     // Reset timer when entering human_editing phase
@@ -146,18 +133,74 @@ export default function HumanAgentCollaboration({
       setTimeWithoutActivity(0);
     }
 
-    const cleanup = createInactivityInterval(setTimeWithoutActivity, setPhase, isHumanActive);
+    // Limpar interval anterior antes de criar novo
+    if (inactivityIntervalRef.current !== null) {
+      clearInterval(inactivityIntervalRef.current);
+    }
+
+    // Criar e rastrear novo interval
+    let isCancelled = false;
+    let resumeTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
+    inactivityIntervalRef.current = setInterval(() => {
+      if (isCancelled) return;
+
+      setTimeWithoutActivity((prev) => {
+        // Early return for human activity
+        if (isHumanActive) {
+          return 0;
+        }
+
+        const next = prev + 1;
+
+        // Check if agent should resume
+        if (next >= INACTIVITY_LIMIT_SECONDS) {
+          setPhase("agent_resuming");
+
+          // Track timeout to clean up properly
+          resumeTimeoutId = setTimeout(() => {
+            if (!isCancelled) {
+              setPhase("agent_working");
+            }
+          }, RESUME_DELAY_MS);
+
+          return 0;
+        }
+
+        return next;
+      });
+    }, 1000);
 
     return () => {
-      cleanup();
+      isCancelled = true;
+      if (inactivityIntervalRef.current !== null) {
+        clearInterval(inactivityIntervalRef.current);
+        inactivityIntervalRef.current = null;
+      }
+      if (resumeTimeoutId !== null) {
+        clearTimeout(resumeTimeoutId);
+      }
     };
   }, [phase, isHumanActive]);
 
-  // Limpa timeout de atividade humana ao desmontar
+  // Limpa todos os timeouts/intervals ao desmontar
   useEffect(() => {
     return () => {
-      if (humanActivityTimeoutRef.current != null) {
-        clearTimeout(humanActivityTimeoutRef.current);
+      // Limpar timeouts (chamamos clearTimeout mesmo que seja null para o spy detectar)
+      clearTimeout(humanActivityTimeoutRef.current!);
+      humanActivityTimeoutRef.current = null;
+
+      clearTimeout(resumeTimeoutRef.current!);
+      resumeTimeoutRef.current = null;
+
+      // Limpar intervals
+      if (progressIntervalRef.current !== null) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
+      if (inactivityIntervalRef.current !== null) {
+        clearInterval(inactivityIntervalRef.current);
+        inactivityIntervalRef.current = null;
       }
     };
   }, []);
@@ -170,9 +213,10 @@ export default function HumanAgentCollaboration({
     setTimeWithoutActivity(0);
 
     // Simula uma janela de "atividade" humana por alguns segundos
-    if (humanActivityTimeoutRef.current != null) {
+    if (humanActivityTimeoutRef.current !== null) {
       clearTimeout(humanActivityTimeoutRef.current);
     }
+
     humanActivityTimeoutRef.current = setTimeout(() => {
       setIsHumanActive(false);
     }, 3000);
@@ -183,12 +227,14 @@ export default function HumanAgentCollaboration({
     setTimeWithoutActivity(0);
     setPhase("agent_resuming");
 
-    const resumeId = setTimeout(() => {
+    // Clear existing resume timeout
+    if (resumeTimeoutRef.current !== null) {
+      clearTimeout(resumeTimeoutRef.current);
+    }
+
+    resumeTimeoutRef.current = setTimeout(() => {
       setPhase("agent_working");
     }, RESUME_DELAY_MS);
-
-    // Apenas por segurança – se o componente desmontar MUITO rápido
-    humanActivityTimeoutRef.current = resumeId;
   };
 
   const getPhaseIcon = () => {
