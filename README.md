@@ -1619,6 +1619,32 @@ gh run list --workflow=copilot-auto-fix.yml --limit 1
 gh workflow run copilot-auto-fix.yml
 ```
 
+### 🔍 Observability & Tracing
+
+O projeto inclui **tracing completo** com OpenTelemetry para monitorar agentes IA e chamadas LLM:
+
+- ✅ **OpenTelemetry** - Tracing distribuído de agentes e workflows
+- ✅ **AI Toolkit Integration** - Visualização de traces em tempo real no VS Code
+- ✅ **Sentry Performance** - APM e error tracking com PII filtering
+- ✅ **LLM Monitoring** - Rastreamento de tokens e custos Gemini
+- ✅ **Agent Observability** - Visibilidade completa dos 15 agentes autônomos
+
+**Quick Start:**
+
+```bash
+# 1. Abrir AI Toolkit Trace Viewer (VS Code Command Palette)
+AI Toolkit: Open Trace Viewer
+
+# 2. Configurar variáveis de ambiente
+VITE_OTLP_ENDPOINT=http://localhost:4318/v1/traces
+VITE_ENABLE_TRACING=true
+
+# 3. Iniciar app
+npm run dev
+```
+
+📖 **Documentação completa**: [`docs/TRACING_SETUP.md`](docs/TRACING_SETUP.md)
+
 ### 📚 Documentação Completa
 
 | Guia                                                         | Descrição                                         |
