@@ -180,7 +180,7 @@
   // ========================================
 
   "sonarlint.pathToNodeExecutable": "/usr/local/share/nvm/versions/node/v22.21.1/bin/node",
-  "sonarlint.ls.javaHome": "/usr/lib/jvm/java-21-openjdk-amd64",
+  "sonarlint.ls.javaHome": "/usr/local/sdkman/candidates/java/current",
   "sonarlint.output.showAnalyzerLogs": true,
   "sonarlint.output.showVerboseLogs": true,
   "sonarlint.focusOnNewCode": false,

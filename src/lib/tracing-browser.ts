@@ -26,8 +26,8 @@ const resource = resourceFromAttributes({
 
 // ✅ Configuração de tracing otimizada para AI Toolkit
 const isDev = import.meta.env.MODE === "development";
-const otlpEndpoint = import.meta.env.VITE_OTLP_ENDPOINT || "http://localhost:5173/v1/traces";
-const tracingEnabled = import.meta.env.VITE_ENABLE_TRACING === "true";
+const otlpEndpoint = import.meta.env.VITE_OTLP_ENDPOINT || "";
+const tracingEnabled = import.meta.env.VITE_ENABLE_TRACING === "true" && otlpEndpoint !== "";
 
 let spanProcessor: BatchSpanProcessor;
 
@@ -48,6 +48,10 @@ if (tracingEnabled && otlpEndpoint) {
       scheduledDelayMillis: 1000, // Enviar a cada 1 segundo
     });
     console.log("[Tracing] ✅ OTLP Exporter configurado com sucesso");
+  } catch (error) {
+    console.warn("[Tracing] ⚠️  Erro ao configurar OTLP, usando console apenas:", error);
+    spanProcessor = new BatchSpanProcessor(new ConsoleSpanExporter());
+  }
   } catch (error) {
     console.warn("[Tracing] ⚠️ Erro ao configurar OTLP, usando ConsoleSpanExporter:", error);
     spanProcessor = new BatchSpanProcessor(new ConsoleSpanExporter());

@@ -79,6 +79,31 @@ Este documento fornece instruções detalhadas para o GitHub Copilot trabalhar e
 - **Segurança/Performance**: Nada de segredos no repo; use `src/lib/config.ts` + `.env.example`. Respeite `manualChunks` de `vite.config.ts`, CSP de `vercel.json` e monitoração Sentry (`src/services/error-tracking.ts`). Extensão Chrome: API Key armazenada em Chrome Storage, comunicação HTTPS apenas.
 - **Workflow**: Antes de PR, rode lint+testes e reporte resultados; manter `main` verde garante deploy automático Vercel. Para extensão, rode `npm test` em `chrome-extension-pje/`.
 
+### 🔒 REGRA CRÍTICA: Arquivo .env.example É SAGRADO
+
+**NUNCA, em hipótese alguma:**
+
+❌ **NÃO APAGUE** o arquivo `/workspaces/assistente-jur-dico-principal/.env.example`
+❌ **NÃO MODIFIQUE** valores, chaves ou estrutura sem autorização explícita
+❌ **NÃO REMOVA** seções ou variáveis existentes
+❌ **NÃO REORGANIZE** a ordem das seções sem permissão
+❌ **NÃO ADICIONE** novas variáveis sem consultar o operador
+
+**Este arquivo é:**
+- 📚 **Documentação de referência** para todas as variáveis de ambiente
+- 🔑 **Template crítico** para configuração em produção
+- 🛡️ **Guia de segurança** com exemplos e links de obtenção de chaves
+- 📖 **Fonte única de verdade** para configuração do sistema
+
+**Se precisar adicionar variável:**
+1. Consulte o operador ANTES de modificar
+2. Documente com comentários claros
+3. Inclua link de onde obter a chave
+4. Adicione na seção correta (não crie seção nova)
+5. Use placeholder genérico (não valores reais)
+
+**Localização:** `/workspaces/assistente-jur-dico-principal/.env.example`
+
 ### 🔌 Chrome Extension PJe Sync - Workflow de Desenvolvimento
 
 A extensão Chrome está em `chrome-extension-pje/` com seu próprio package.json e build system:
