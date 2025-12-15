@@ -18,9 +18,9 @@ export default defineConfig({
     // Mantemos falhas de testes como falhas reais, mas evitamos que esse ruído
     // derrube o pipeline.
     dangerouslyIgnoreUnhandledErrors: true,
-    // Aumentar timeout para testes de performance e integração
-    testTimeout: 600000, // 10 minutos para testes de integração
-    hookTimeout: 60000, // 1 minuto para hooks
+    // Timeout reduzido para detectar testes travados rapidamente
+    testTimeout: 30000, // 30 segundos por teste
+    hookTimeout: 10000, // 10 segundos para hooks
     // Configuração de pool para estabilidade (modo manutenção)
     // Objetivo: executar em worker único e reutilizado, evitando flakiness de lifecycle do tinypool
     // (ex.: "Worker exited unexpectedly" no final da suíte).

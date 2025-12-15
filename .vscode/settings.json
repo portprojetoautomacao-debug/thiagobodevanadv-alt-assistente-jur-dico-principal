@@ -182,7 +182,31 @@
   "sonarlint.pathToNodeExecutable": "/usr/local/share/nvm/versions/node/v22.21.1/bin/node",
   "sonarlint.ls.javaHome": "/usr/lib/jvm/java-21-openjdk-amd64",
   "sonarlint.output.showAnalyzerLogs": true,
-  "sonarlint.output.showVerboseLogs": false,
+  "sonarlint.output.showVerboseLogs": true,
+  "sonarlint.focusOnNewCode": false,
+  "sonarlint.automaticAnalysis": true,
+  "sonarlint.ideLabsEnabled": true,
+
+  // Connected Mode - SonarCloud
+  "sonarlint.connectedMode.connections.sonarcloud": [
+    {
+      "connectionId": "sonarcloud-assistente-juridico",
+      "organizationKey": "thiagobodevanadv-alt",
+      "token": "ee13b3dd049fe0da3696d783020804f4a9e93566",
+      "region": "EU"
+    },
+    {
+      "connectionId": "thiagobodevanadv-alt",
+      "organizationKey": "thiagobodevanadv-alt",
+      "token": "ee13b3dd049fe0da3696d783020804f4a9e93566",
+      "region": "EU"
+    }
+  ],
+  "sonarlint.connectedMode.project": {
+    "connectionId": "sonarcloud-assistente-juridico",
+    "projectKey": "thiagobodevanadv-alt_assistente-jur-dico-principal"
+  },
+
   "sonarlint.rules": {
     "typescript:S1128": {
       "level": "off"
@@ -220,5 +244,48 @@
   "python.testing.unittestEnabled": true,
   "chat.tools.terminal.autoReplyToPrompts": true,
   "github-actions.workflows.pinned.workflows": [".github/workflows/ci.yml"],
-  "editor.codeActions.triggerOnFocusChange": true
+  "editor.codeActions.triggerOnFocusChange": true,
+  "windowsaistudio.enableRemoteFine-tuningAndInference": true,
+
+  // ========================================
+  // 🔍 SONARLINT - ANÁLISE AVANÇADA
+  // ========================================
+
+  // Configurações adicionais para integração com Copilot
+  "sonarlint.rules": {
+    "typescript:S1854": {
+      "level": "on",
+      "parameters": {}
+    },
+    "typescript:S3776": {
+      "level": "on",
+      "parameters": {
+        "threshold": "15"
+      }
+    },
+    "typescript:S6957": {
+      "level": "on"
+    }
+  },
+
+  // Análise em tempo real
+  "sonarlint.analyzeOpenFilesOnly": false,
+  "sonarlint.analyzeFreshOnly": false,
+
+  // Integração com Copilot Fix
+  "sonarlint.enableCodeActionsOnSave": true,
+  "sonarlint.pathToCompileCommands": "",
+
+  // Exclusões
+  "sonarlint.pathToNodeExecutable": "/usr/local/share/nvm/versions/node/v22.21.1/bin/node",
+  "sonarlint.disableTelemetry": false,
+  "sonarlint.trace.server": "messages",
+
+  // ========================================
+  // 🔧 GO LANGUAGE CONFIGURATION
+  // ========================================
+  "go.goroot": "/usr/local/go",
+  "go.gopath": "/home/node/go",
+  "go.toolsManagement.autoUpdate": true,
+  "git.ignoreLimitWarning": true
 }

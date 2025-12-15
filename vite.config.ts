@@ -126,6 +126,7 @@ export default defineConfig({
     exclude: ["@doist/todoist-api-typescript"],
   },
   server: {
+    host: "0.0.0.0", // Aceita conexões de 127.0.0.1, localhost e IPs externos
     port: process.env.PORT ? Number(process.env.PORT) : 5173,
     headers: {
       // Permite usar window.open com preview de PDF / impressão sem quebrar tudo

@@ -120,3 +120,27 @@ coverage-api/
 .sonar-results/
 jdk-25_linux-x64_bin.deb
 .vs/
+# Binários Go (não devem ser commitados)
+bin/
+pkg/
+
+# Notebooks Jupyter temporários
+*.ipynb
+*Untitled*.ipynb
+
+# Arquivos Python temporários
+*.py
+
+# Diretórios de teste temporários
+src/lib/tolkitagentetest/
+
+# Binários Go (não commitados)
+bin/
+pkg/
+
+# Notebooks Jupyter temporários
+*.ipynb
+*Untitled*.ipynb
+
+# Diretórios de teste temporários
+src/lib/tolkitagentetest/
