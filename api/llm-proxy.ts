@@ -386,12 +386,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
       if (!response.ok) {
         const errorText = await response.text();
+        // ✅ FIX: Log detalhado para debug de erros 429/500
+        console.error(`[${provider.name}] HTTP ${response.status}:`, {
+          url: targetUrl.replace(/key=[^&]+/, 'key=***'),
+          status: response.status,
+          error: errorText.substring(0, 500)
+        });
+        
+        // ✅ FIX: Tratamento específico para 429 (Rate Limit)
+        if (response.status === 429) {
+          throw new Error(`${provider.name} Rate Limit: ${errorText.substring(0, 200)}`);
+        }
+        
         throw new Error(`${provider.name} API error: ${response.status} - ${errorText}`);
       }
       return response.json();
     };
 
-    const data = await retryWithBackoff(() => withTimeout(45000, fetchFn()), 3, 500);
+    // ✅ FIX: Reduzir retries para evitar timeout em cascata
+    const data = await retryWithBackoff(() => withTimeout(45000, fetchFn()), 2, 1000);
 
     // Response status has already been checked inside fetchFn
 
@@ -414,22 +427,36 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     res.status(200).json(transformed);
   } catch (error) {
-    console.error("LLM proxy error:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    console.error("[LLM Proxy] Error:", {
+      provider: provider?.name,
+      error: errorMessage,
+      stack: error instanceof Error ? error.stack?.substring(0, 300) : undefined
+    });
+    
     // Update circuit failure count
     const name = provider?.name || "unknown";
     const st = circuit.get(name) || { failures: 0 };
     st.failures = (st.failures || 0) + 1;
-    // Open circuit if failures exceed threshold
-    const FAILURE_THRESHOLD = 5;
-    const OPEN_TIME_MS = 60_000; // 60s
+    
+    // ✅ FIX: Circuit breaker mais agressivo para Rate Limit
+    const FAILURE_THRESHOLD = errorMessage.includes("Rate Limit") ? 2 : 5;
+    const OPEN_TIME_MS = errorMessage.includes("Rate Limit") ? 120_000 : 60_000; // 2min para rate limit
+    
     if (st.failures >= FAILURE_THRESHOLD) {
       st.openedUntil = Date.now() + OPEN_TIME_MS;
+      console.warn(`[LLM Proxy] Circuit breaker ABERTO para ${name} (${st.failures} falhas)`);
     }
     circuit.set(name, st);
-    res.status(500).json({
+    
+    // ✅ FIX: Retornar 429 se for rate limit, 500 caso contrário
+    const statusCode = errorMessage.includes("Rate Limit") ? 429 : 500;
+    
+    res.status(statusCode).json({
       error: "Failed to process LLM request",
-      message: error instanceof Error ? error.message : "Unknown error",
+      message: errorMessage,
       provider: provider.name,
+      circuitOpen: st.openedUntil ? st.openedUntil > Date.now() : false,
     });
   }
 }

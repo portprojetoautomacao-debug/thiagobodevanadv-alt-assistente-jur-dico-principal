@@ -41,6 +41,23 @@ const initAnalyticsServices = () => {
     });
 };
 
+// ✅ TRACING: OpenTelemetry Browser inicialização
+let tracingInitialized = false;
+
+const initTracingServices = () => {
+  if (tracingInitialized) return;
+  tracingInitialized = true;
+
+  import("./lib/tracing-browser")
+    .then(({ initBrowserTracing }) => {
+      initBrowserTracing();
+      console.log("[Tracing] OpenTelemetry Browser inicializado");
+    })
+    .catch((error) => {
+      console.warn("[Tracing] Não inicializado:", error);
+    });
+};
+
 // ✅ ESTRATÉGIA DE CARREGAMENTO OTIMIZADA
 // 1. Monitoring: Carrega após primeira interação ou após 3s (o que ocorrer primeiro)
 // 2. Analytics: Carrega após 2s para não impactar FCP/LCP
@@ -72,6 +89,9 @@ const initOnIdle = () => {
 
 // Analytics - Inicializa após 2s
 setTimeout(initAnalyticsServices, 2000);
+
+// Tracing - Inicializa imediatamente (baixo impacto)
+initTracingServices();
 
 // Monitoring - Estratégias paralelas
 initOnInteraction();
