@@ -175,8 +175,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // Require LLM proxy API key in non-development environments unless explicitly allowed
   // Security: Avoid open LLM proxy in production
-  const isDev = process.env.NODE_ENV === "development";
+  // ✅ CORREÇÃO: Detectar localhost/127.0.0.1 como desenvolvimento
+  const isLocalhost = req.headers.host?.includes("localhost") || 
+                      req.headers.host?.includes("127.0.0.1") ||
+                      req.headers.host?.includes("[::1]");
+  const isDev = process.env.NODE_ENV === "development" || isLocalhost;
   const allowPublic = process.env.LLM_PROXY_ALLOW_PUBLIC === "true";
+  
   if (!isDev && !allowPublic) {
     // Always require API key in production by default
     if (!requireApiKey(req, res, "LLM_PROXY_API_KEY")) return;
