@@ -117,6 +117,19 @@ Recursos únicos que DEVEM ser migrados para o novo sistema:
 3. ❌ Modificar código do agente Microsoft
 4. ❌ Reimplementar funcionalidades que Microsoft já tem
 
+> **💡 PRINCÍPIO DA INTEGRAÇÃO:**
+> 
+> **"Estender, não modificar. Conectar, não substituir. Alimentar, não recriar."**
+> 
+> - ✅ **Estender** funcionalidades Microsoft com capacidades BR
+> - ✅ **Conectar** recursos BR aos agentes Microsoft existentes  
+> - ✅ **Alimentar** sistema Microsoft com dados BR formatados
+> - ❌ **NÃO modificar** código core Microsoft
+> - ❌ **NÃO substituir** agentes Microsoft por versões custom
+> - ❌ **NÃO recriar** funcionalidades que já existem
+> 
+> *(Veja detalhes completos na seção "Princípio da Integração" abaixo)*
+
 ### 🚨 REGRA CRÍTICA: PRESERVAR MICROSOFT MULTI-AGENT ENGINE
 
 **⚠️ ATENÇÃO MÁXIMA - LEIA ANTES DE QUALQUER MODIFICAÇÃO:**
