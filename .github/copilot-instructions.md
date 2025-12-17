@@ -2,6 +2,465 @@
 applyTo: "**"
 ---
 
+# 🚨 PLANO DE MIGRAÇÃO ATIVO - Microsoft Multi-Agent Engine
+
+> **STATUS**: 🔴 **MIGRAÇÃO EM PLANEJAMENTO** - Leia antes de qualquer ação
+>
+> **Decisão Estratégica**: Migrar de React + Vercel + Upstash para Microsoft Multi-Agent Custom Automation Engine + Azure
+>
+> **Documento Completo**: `/workspaces/assistente-jur-dico-principal/PLANO_MIGRACAO_COMPLETA.md`
+
+## 📋 Contexto da Migração
+
+### Razões para Migração
+
+**Problemas do Stack Atual:**
+- ❌ Upstash KV com limite de 1GB (insuficiente para crescimento)
+- ❌ Erros frequentes e difíceis de debugar
+- ❌ Sem suporte enterprise
+- ❌ Arquitetura custom difícil de manter
+
+**Vantagens do Novo Stack:**
+- ✅ Base testada e aprovada pela Microsoft
+- ✅ Cosmos DB sem limites de espaço
+- ✅ Arquitetura enterprise-grade
+- ✅ Menos bugs e mais estável
+- ✅ Melhor documentação e suporte
+- ✅ SLA 99.99%
+
+### Stack Alvo
+
+**Atual (a ser substituído):**
+- Frontend: React 19 + TypeScript + Vite
+- Backend: Vercel Functions (Node.js)
+- Database: Upstash KV (Redis)
+- LLM: Gemini 2.5 Pro
+
+**Novo (Microsoft Multi-Agent Engine):**
+- Frontend: Microsoft Multi-Agent UI (React customizado)
+- Backend: Python + Semantic Kernel + Azure Functions
+- Database: Cosmos DB (ilimitado)
+- Vector DB: Azure AI Search (substituindo Qdrant)
+- LLM: Azure OpenAI GPT-4 (ou manter Gemini)
+- Storage: Azure Blob Storage
+- Monitoring: Application Insights
+
+### O Que MANTER (Essencial)
+
+Recursos únicos que DEVEM ser migrados para o novo sistema:
+
+| Recurso | Localização Atual | Prioridade | Status |
+|---------|-------------------|------------|--------|
+| **DJEN Monitor** | `src/lib/djen-api.ts` | ⚠️ ESSENCIAL | Criar conector para alimentar agentes Microsoft |
+| **DataJud Integration** | `src/lib/datajud-api.ts`, `src/lib/datajud-service.ts` | ⚠️ ESSENCIAL | Criar conector para alimentar agentes Microsoft |
+| **Chrome Extension PJe Sync** | `chrome-extension-pje/` | ⚠️ ESSENCIAL | Apenas atualizar endpoint |
+| **15 Agentes Jurídicos** | `src/lib/agents.ts`, `TODOS_OS_15_AGENTES.md` | ✅ USAR MICROSOFT | **NÃO criar novos - USAR agentes Microsoft existentes** |
+| **Templates de Petições** | `src/lib/document-templates.ts` | 🔄 ADAPTAR | Adaptar para formato Microsoft |
+| **Cálculo de Prazos BR** | `src/utils/deadline-calculator.ts` | 🔄 ADAPTAR | Plugin/extensão para Microsoft |
+| **Qdrant Jurisprudências** | `src/lib/qdrant-service.ts` | ✅ USAR MICROSOFT | **Usar Azure AI Search (já está no Microsoft Engine)** |
+
+### Timeline de 4 Semanas
+
+**Semana 1: Setup Infraestrutura Azure**
+- Deploy Microsoft Multi-Agent Engine via `azd up` (SEM MODIFICAÇÕES)
+- Provisionar Cosmos DB, Azure AI Search, Container Apps
+- URLs de produção funcionando
+- Verificar agentes Microsoft disponíveis
+
+**Semana 2: Integrações Brasil (DJEN + DataJud + PJe) - MODO EXTENSÃO**
+- Criar `djen_connector.py` (CONECTOR, não agente novo)
+- Criar `datajud_connector.py` (CONECTOR para alimentar agentes Microsoft)
+- Criar endpoint `/api/extensoes/brasil/pje-sync` (recebe e formata para Microsoft)
+- Configurar webhook DJEN → formatar → enviar para agentes Microsoft existentes
+
+**Semana 3: USAR Agentes Microsoft (NÃO criar novos)**
+- **USAR** agentes Microsoft existentes (Document Analysis, Task Manager, etc)
+- **Identificar** quais agentes Microsoft equivalem às nossas 15 funções
+- **APENAS estender prompts** se necessário para contexto jurídico BR
+- **NÃO criar agentes novos** - Microsoft já tem todos necessários
+- **FOCO:** Conectar DJEN/DataJud aos agentes Microsoft via conectores
+
+**Semana 4: Templates, Dados e Cutover**
+- Criar templates de petições BR (compatíveis com formato Microsoft)
+- Script de migração Upstash → Cosmos DB (usar schema Microsoft)
+- Atualizar Chrome Extension para novo endpoint Azure
+- Cutover em produção (sistema Microsoft + extensões BR)
+
+### Custos
+
+**Atual:** $80/mês (Vercel + Upstash + Gemini + Qdrant)
+**Novo:** $210/mês (Azure Container Apps + Cosmos DB + AI Search + OpenAI)
+**Diferença:** +$130/mês = +R$ 650/mês
+
+**Justificativa:** Estabilidade, escalabilidade ilimitada, SLA 99.99%
+
+## 🎯 Diretrizes Durante a Migração
+
+### ⚠️ PRINCÍPIO FUNDAMENTAL: USAR AGENTES MICROSOFT, NÃO CRIAR NOVOS
+
+**🚨 REGRA ABSOLUTA:**
+- O Microsoft Multi-Agent Engine JÁ possui TODOS os agentes necessários
+- **NÃO converter** agentes TypeScript para Python
+- **NÃO criar** agentes customizados
+- **APENAS usar** os agentes que Microsoft fornece
+- **APENAS criar** conectores para DJEN, DataJud e PJe
+
+**Fluxo Correto:**
+1. ✅ **Identificar** qual agente Microsoft corresponde à funcionalidade
+2. ✅ **Criar conector** que formata dados BR para o agente Microsoft
+3. ✅ **Enviar dados** para o agente Microsoft processar
+4. ✅ **Estender prompt** (só se absolutamente necessário)
+
+**Fluxo ERRADO:**
+1. ❌ Converter agente TypeScript para Python
+2. ❌ Criar novo agente customizado
+3. ❌ Modificar código do agente Microsoft
+4. ❌ Reimplementar funcionalidades que Microsoft já tem
+
+### 🚨 REGRA CRÍTICA: PRESERVAR MICROSOFT MULTI-AGENT ENGINE
+
+**⚠️ ATENÇÃO MÁXIMA - LEIA ANTES DE QUALQUER MODIFICAÇÃO:**
+
+O Microsoft Multi-Agent Engine é um sistema **testado, aprovado e estável da Microsoft**. Durante a migração:
+
+#### ❌ O QUE NÃO FAZER:
+
+- **NÃO modificar** código core do Microsoft Multi-Agent Engine
+- **NÃO alterar** workflows existentes da Microsoft
+- **NÃO mudar** lógica de orquestração (MagenticOrchestration)
+- **NÃO refatorar** arquitetura base do sistema
+- **NÃO criar agentes novos** - Microsoft já tem TODOS os agentes necessários
+- **NÃO substituir** componentes testados por versões custom
+- **NÃO converter** agentes TypeScript para Python - USAR os da Microsoft
+
+#### ✅ O QUE FAZER:
+
+**1. Integração via Extensão (Método Preferido)**
+```python
+# CORRETO: Criar agentes de extensão que se conectam ao sistema Microsoft
+# src/backend/v3/agents/extensoes_brasil/djen_connector.py
+
+from semantic_kernel.agents import Agent
+
+class DJENConnectorAgent(Agent):
+    """
+    Agente de EXTENSÃO que se conecta ao Microsoft Multi-Agent Engine
+    NÃO modifica o sistema base, apenas adiciona capacidade brasileira
+    """
+    def __init__(self, kernel):
+        super().__init__(
+            name="DJEN Connector",
+            description="Conecta DJEN ao sistema Microsoft (extensão BR)",
+            kernel=kernel
+        )
+```
+
+**2. Interligação de Recursos**
+```python
+# CORRETO: Criar endpoints de integração, não modificar sistema core
+# src/backend/v3/api/extensoes_brasil/djen_webhook.py
+
+from fastapi import APIRouter
+
+router = APIRouter(prefix="/extensoes/brasil", tags=["brasil"])
+
+@router.post("/djen-feed")
+async def receber_djen(publicacao: Dict):
+    """
+    Endpoint que RECEBE dados do DJEN e ALIMENTA
+    os agentes Microsoft existentes (não cria novos)
+    """
+    # Formatar dados DJEN para formato Microsoft
+    formatted_data = format_to_microsoft_schema(publicacao)
+
+    # Enviar para agente Microsoft existente (não criar novo)
+    await microsoft_orchestrator.process(formatted_data)
+```
+
+**3. Atualização de Prompts (Último Recurso)**
+```python
+# ÚLTIMO RECURSO: Se agente Microsoft existe mas precisa entender contexto BR
+# src/backend/v3/config/prompt_extensions_br.py
+
+BRAZILIAN_LEGAL_CONTEXT = """
+Contexto adicional para sistema jurídico brasileiro:
+- Prazos processuais seguem CPC (Código de Processo Civil)
+- Considerar feriados nacionais e estaduais
+- DJEN = Diário de Justiça Eletrônico Nacional
+- DataJud = Base de jurisprudências do CNJ
+"""
+
+# Estender prompt do agente Microsoft, não substituir
+microsoft_agent.system_prompt += BRAZILIAN_LEGAL_CONTEXT
+```
+
+**4. Mapeamento de Funcionalidades (USAR Agentes Microsoft)**
+```python
+# CORRETO: Mapear funcionalidades atuais para agentes Microsoft existentes
+# NÃO criar agentes novos
+
+MAPEAMENTO_AGENTES = {
+    # Nossas funções atuais → IDs reais de agentes Microsoft equivalentes
+    # ATENÇÃO: Substituir os valores abaixo pelos IDs/nome canônico de agentes
+    # existentes no Microsoft Multi-Agent Engine (consultar documentação/registro).
+    "analise_documental": "<ID_AGENTE_MICROSOFT_DOCUMENT_PROCESSING>",
+    "gestao_prazos": "<ID_AGENTE_MICROSOFT_TASK_MANAGEMENT>",
+    "redacao_peticoes": "<ID_AGENTE_MICROSOFT_DOCUMENT_GENERATION>",
+    "pesquisa_juris": "<ID_AGENTE_MICROSOFT_RESEARCH_COM_AZURE_AI_SEARCH>",
+    # ... e assim por diante
+}
+
+# FOCO: Alimentar agentes Microsoft com dados BR (DJEN, DataJud, PJe)
+# NÃO criar nossos próprios agentes
+```
+
+#### 📋 Checklist de Integração Correta:
+
+- [ ] **Verificar quais agentes Microsoft existem** no engine
+- [ ] **USAR agentes Microsoft** - NÃO criar novos
+- [ ] **Criar apenas conectores/adaptadores** para recursos BR (DJEN, DataJud)
+- [ ] **Formatar dados BR** para schema Microsoft
+- [ ] **Registrar extensões** no agent_registry, não modificar registro Microsoft
+- [ ] **Documentar** claramente código como "EXTENSÃO BR"
+- [ ] **Testar** que integração não quebra funcionalidades Microsoft
+
+#### 🎯 Abordagem de Migração:
+
+```
+┌─────────────────────────────────────────────────────┐
+│     Microsoft Multi-Agent Engine (INTOCÁVEL)        │
+│  - Orquestração                                      │
+│  - Agentes base                                      │
+│  - Workflows                                         │
+│  - UI/Frontend                                       │
+└──────────────────────┬──────────────────────────────┘
+                       │
+                       │ Interfaces de extensão
+                       │
+┌──────────────────────┴──────────────────────────────┐
+│        EXTENSÕES BRASIL (NOSSO CÓDIGO)               │
+│                                                       │
+│  ┌────────────────────────────────────────────────┐ │
+│  │  Conectores/Adaptadores                        │ │
+│  │  - DJEN Connector                              │ │
+│  │  - DataJud Connector                           │ │
+│  │  - PJe Sync Adapter                            │ │
+│  └────────────────────────────────────────────────┘ │
+│                                                       │
+│  ┌────────────────────────────────────────────────┐ │
+│  │  Extensões de Prompts (se necessário)          │ │
+│  │  - Contexto jurídico BR                        │ │
+│  │  - Termos técnicos BR                          │ │
+│  └────────────────────────────────────────────────┘ │
+└───────────────────────────────────────────────────────┘
+```
+
+#### 🔒 Princípio da Integração:
+
+> **"Estender, não modificar. Conectar, não substituir. Alimentar, não recriar."**
+
+- ✅ **Estender** funcionalidades Microsoft com capacidades BR
+- ✅ **Conectar** recursos BR aos agentes Microsoft existentes
+- ✅ **Alimentar** sistema Microsoft com dados BR formatados
+- ❌ **NÃO modificar** código core Microsoft
+- ❌ **NÃO substituir** agentes Microsoft por versões custom
+- ❌ **NÃO recriar** funcionalidades que já existem
+
+### MODO ATUAL: Manutenção do Stack Existente
+
+**Enquanto a migração não inicia:**
+1. **Continue usando** o stack atual (React + Vercel + Upstash)
+2. **Corrija bugs** mas evite grandes refatorações
+3. **Documente** tudo que será migrado
+4. **Mantenha** compatibilidade com DJEN, DataJud e Chrome Extension
+
+### Quando Sugerir Migração vs Manutenção
+
+**Sugerir migração se:**
+- Problema relacionado a limites do Upstash (storage, rate limits)
+- Erros difíceis de debugar que Azure resolveria
+- Necessidade de features enterprise (SLA, suporte, compliance)
+- Usuário pede "solução definitiva" ou "escalável"
+
+**Manter atual se:**
+- Bug simples com fix óbvio
+- Feature pequena que não afeta arquitetura
+- Urgência (migração leva 4 semanas)
+- Apenas testando/prototipando
+
+### Repositório Microsoft Multi-Agent Engine
+
+**Localização:** `/workspaces/assistente-jur-dico-principal/Multi-Agent-Custom-Automation-Engine-Solution-Accelerator/`
+
+**Já clonado:** ✅ Sim
+
+**Deployment:**
+```bash
+cd Multi-Agent-Custom-Automation-Engine-Solution-Accelerator
+azd auth login
+azd up --environment production
+```
+
+### Primeiros Passos da Migração (Quando Iniciar)
+
+```bash
+# 1. Instalar Azure Developer CLI
+curl -fsSL https://aka.ms/install-azd.sh | bash
+
+# 2. Login Azure
+azd auth login
+
+# 3. Deploy base Microsoft (SEM MODIFICAÇÕES)
+cd Multi-Agent-Custom-Automation-Engine-Solution-Accelerator
+azd up --environment sandbox  # Começar com sandbox
+
+# 4. Criar estrutura de EXTENSÕES (não modificar Microsoft)
+mkdir -p src/backend/v3/agents/extensoes_brasil
+mkdir -p src/backend/v3/api/extensoes_brasil
+mkdir -p src/backend/v3/config/prompt_extensions_br
+
+# 5. Implementar primeiro CONECTOR (DJEN)
+# Ver PLANO_MIGRACAO_COMPLETA.md seção "Semana 2"
+# IMPORTANTE: Criar conector que ALIMENTA agentes Microsoft, não substitui
+```
+
+### Links Importantes
+
+- **Plano Completo:** `PLANO_MIGRACAO_COMPLETA.md`
+- **Microsoft Engine:** `Multi-Agent-Custom-Automation-Engine-Solution-Accelerator/README.md`
+- **Deployment Guide:** `Multi-Agent-Custom-Automation-Engine-Solution-Accelerator/docs/DeploymentGuide.md`
+- **Semantic Kernel Docs:** https://learn.microsoft.com/semantic-kernel/agents/
+- **Azure Developer CLI:** https://learn.microsoft.com/azure/developer/azure-developer-cli/
+
+---
+
+## ⚠️ REGRA #1: NUNCA EDITE SEM CONTEXTO
+
+**ANTES de criar/modificar QUALQUER código:**
+
+1. **Ler o arquivo completo** com `read_file` (não apenas trechos)
+2. **Buscar funções/padrões similares** com `grep_search` ou `semantic_search`
+3. **Verificar dependências** com `list_code_usages` (imports, calls, types)
+4. **Entender o fluxo** - ler docs relacionados (`docs/`, READMEs)
+
+**❌ PROIBIDO:**
+- Editar sem ler o arquivo inteiro
+- Criar função duplicada existente
+- Alterar API pública sem verificar usages
+- Ignorar padrões estabelecidos no código
+
+> **ℹ️ EXCEÇÃO:** Operador pode aprovar edição sem contexto completo se:
+> - For hotfix crítico (produção fora do ar)
+> - Contexto já foi validado anteriormente na sessão
+> - Mudança é trivial e isolada (ex: typo, comentário)
+
+---
+
+## 🚀 REGRA #2: SEJA PROATIVO - ENTREGUE SOLUÇÕES PRONTAS
+
+**O Copilot DEVE ser proativo e autônomo, não passivo:**
+
+### ✅ COMPORTAMENTO CORRETO:
+
+1. **INVESTIGUE PRIMEIRO** usando ferramentas disponíveis:
+   - `read_file` - ler arquivos relacionados
+   - `grep_search` - buscar padrões/erros
+   - `list_dir` - explorar estrutura de pastas
+   - `semantic_search` - encontrar código similar
+   - `get_errors` - verificar problemas de compilação
+   - `file_search` - localizar arquivos por padrão
+
+2. **ENTREGUE SOLUÇÕES COMPLETAS E FUNCIONAIS**:
+   - Código pronto para produção
+   - Testes validados (`npm run test:run`)
+   - Lint aprovado (`npm run lint`)
+   - TypeScript sem erros (`npm run type-check`)
+   - Documentação atualizada se necessário
+
+3. **MINIMIZE PERGUNTAS AO USUÁRIO**:
+   - ❌ **NUNCA** faça listas longas de perguntas como "❓ Perguntas Essenciais:"
+   - ❌ **EVITE** "preciso de mais contexto" - busque o contexto VOCÊ MESMO
+   - ❌ **NÃO PERGUNTE** sobre configurações óbvias - verifique nos arquivos
+   - ✅ **APENAS PERGUNTE** quando informação crítica não existe no repositório
+
+### ❌ EXEMPLO DE COMPORTAMENTO INADEQUADO:
+
+```
+❓ Perguntas Essenciais:
+1. Qual é o erro exato?
+2. Como você está chamando a função?
+3. O arquivo X está configurado?
+4. Qual modelo você está usando?
+
+🔍 Possíveis Problemas que Vejo:
+- Problema A
+- Problema B
+- Problema C
+
+✅ O Que Fazer Agora:
+Compartilhe [lista de coisas]...
+```
+
+### ✅ EXEMPLO DE COMPORTAMENTO CORRETO:
+
+```
+Analisando o problema...
+
+[Executa read_file, grep_search, get_errors automaticamente]
+
+Identifiquei 3 problemas:
+1. [Problema específico] - CORRIGIDO em [arquivo]
+2. [Problema específico] - CORRIGIDO em [arquivo]
+3. [Problema específico] - CORRIGIDO em [arquivo]
+
+Validação:
+✅ npm run type-check - passou
+✅ npm run lint - passou
+✅ npm run test:run - passou
+
+Solução pronta para produção!
+```
+
+### 🎯 Workflow Proativo:
+
+```
+┌─────────────────────┐
+│ Usuário faz pedido  │
+└──────────┬──────────┘
+           ↓
+    ┌──────┴─────────┐
+    │ INVESTIGAR     │ ← read_file, grep_search, get_errors
+    │ (use tools)    │
+    └──────┬─────────┘
+           ↓
+    ┌──────┴─────────┐
+    │ IMPLEMENTAR    │ ← multi_replace_string_in_file
+    │ (corrigir)     │
+    └──────┬─────────┘
+           ↓
+    ┌──────┴─────────┐
+    │ VALIDAR        │ ← npm run lint/test/type-check
+    │ (testar)       │
+    └──────┬─────────┘
+           ↓
+    ┌──────┴─────────┐
+    │ REPORTAR       │ ← "✅ Pronto para produção"
+    │ (entregar)     │
+    └────────────────┘
+```
+
+### 📋 Checklist de Entrega Proativa:
+
+- [ ] Investigou TODOS os arquivos relevantes
+- [ ] Corrigiu TODOS os problemas identificados
+- [ ] Validou com `npm run type-check && npm run lint && npm run test:run`
+- [ ] Reportou resultados específicos (não genéricos)
+- [ ] Entregou código pronto para produção
+
+**⚠️ IMPORTANTE**: Se após investigação completa você REALMENTE precisar de informação que não existe no repositório (ex: API key externa, preferência do usuário), pergunte ESPECIFICAMENTE essa informação - não faça listas genéricas de perguntas.
+
+---
+
 # 🚨 OBJETIVO ATUAL: MODO MANUTENÇÃO - PRODUÇÃO ESTÁVEL
 
 > **⚠️ ATENÇÃO MÁXIMA - LEIA ANTES DE QUALQUER AÇÃO**
@@ -39,6 +498,62 @@ applyTo: "**"
 3. **Testes passando**: Todos os testes continuam funcionando após a mudança?
 4. **Rollback fácil**: Se der problema, podemos reverter rapidamente?
 
+### 🚫 Árvore de Decisão - Modo Manutenção
+
+**Antes de implementar qualquer mudança, siga este fluxo:**
+
+```
+┌─────────────────────────────────┐
+│ Mudança solicitada pelo usuário │
+└──────────────┬──────────────────┘
+               ↓
+      ┌────────┴────────┐
+      │ É um BUG real?  │
+      │ (funcionalidade │
+      │   quebrada)     │
+      └────┬──────┬─────┘
+     SIM ↓      ↓ NÃO
+         │      │
+         │   ┌──┴──────────────┐
+         │   │ É MANUTENÇÃO?  │
+         │   │ (deps, docs,   │
+         │   │  testes)       │
+         │   └──┬──────┬──────┘
+         │ SIM ↓      ↓ NÃO
+         │     │      │
+         │     │   ┌──┴────────────────┐
+         │     │   │ RECUSAR           │
+         │     │   │ "Modo manutenção: │
+         │     │   │  não adicionamos  │
+         │     │   │  novas features"  │
+         │     │   └───────────────────┘
+         │     ↓
+         └────→ APROVAR
+               ↓
+         ┌─────────────────┐
+         │ 1. Ler contexto │
+         │ 2. Corrigir     │
+         │ 3. Validar      │
+         │ 4. Reportar     │
+         └─────────────────┘
+```
+
+**Exemplos de decisão:**
+
+| Solicitação | Decisão | Justificativa |
+|-------------|---------|---------------|
+| "Adicionar botão X" | ❌ RECUSAR | Nova feature - modo manutenção |
+| "Corrigir erro 404 em Y" | ✅ APROVAR | Bug real - afeta produção |
+| "Atualizar React 19.1" | ✅ APROVAR | Manutenção deps - segurança |
+| "Melhorar UX do Z" | ❌ RECUSAR | Não é bug - é melhoria |
+| "Adicionar teste faltante" | ✅ APROVAR | Manutenção - não introduz features |
+
+> **ℹ️ EXCEÇÕES APROVADAS PELO OPERADOR:**
+> Se o operador humano **aprovar explicitamente** uma exceção com justificativa técnica, o Copilot pode prosseguir mesmo que não se enquadre nos critérios acima. Neste caso:
+> - Documentar a exceção no commit/PR
+> - Validar duplamente com testes
+> - Manter reversibilidade fácil
+
 ### 📊 Prioridade de Correções:
 
 | Prioridade     | Tipo                                | Ação                     |
@@ -72,7 +587,49 @@ Este documento fornece instruções detalhadas para o GitHub Copilot trabalhar e
 - **Build/Testes**: `npm run dev`, `npm run build`, `npm run lint`, `npm run test`, `npm run test:e2e`. Extensão Chrome: `cd chrome-extension-pje && npm run build`. Scripts novos precisam refletir em `.github/workflows/*`.
 - **Padrões React/UI**: Apenas components funcionais, props `Props`, hooks no topo, alias `@/`. `src/components/ui/` (shadcn) é imutável. Manter lazy-loading/código dividido alinhado com `App.tsx` (ver `docs/LAZY_LOADING_MAP.md`), skeleton loaders e `aria-label` em botões.
 - **Tipos/estado**: `src/types.ts` centraliza `Process`, `Expediente`, `Minuta`. Extensão usa tipos em `chrome-extension-pje/src/shared/types.ts` (`ProcessoPJe`, `Expediente`, `SyncMessage`). Ao adicionar campos, siga `docs/TYPE_SYNC_CHECKLIST.md` para sincronizar hooks (`use-processes`, `use-auto-minuta`), APIs (`api/agents.ts`, `api/expedientes.ts`, `api/pje-sync.ts`) e contadores do dashboard.
+
+### 📝 TRIGGER AUTOMÁTICO: Sincronização de Tipos
+
+**Se você modificou qualquer um desses arquivos:**
+
+- `src/types.ts`
+- `chrome-extension-pje/src/shared/types.ts`
+- Qualquer interface `Process`, `Expediente`, `Minuta`, `TarefaSistema`
+
+**Você DEVE:**
+
+1. **Abrir e seguir**: `@workspace Abrir docs/TYPE_SYNC_CHECKLIST.md`
+2. **Atualizar TODOS os locais** listados no checklist:
+   - Hooks (`use-processes.ts`, `use-auto-minuta.ts`)
+   - APIs (`api/agents.ts`, `api/expedientes.ts`, `api/pje-sync.ts`)
+   - Componentes (Dashboard, contadores, tabelas)
+   - Testes (snapshots, mocks)
+3. **Validar** que contadores no dashboard refletem novos campos
+4. **Rodar testes** para garantir que nada quebrou
+
+**⚠️ FALHA COMUM**: Adicionar campo em `types.ts` mas esquecer de:
+- Atualizar hook que persiste dados
+- Atualizar API que retorna dados
+- Atualizar dashboard que exibe contadores
 - **Segurança/Performance**: Nada de segredos no repo; use `src/lib/config.ts` + `.env.example`. Respeite `manualChunks` de `vite.config.ts`, CSP de `vercel.json` e monitoração Sentry (`src/services/error-tracking.ts`). Extensão Chrome: API Key armazenada em Chrome Storage, comunicação HTTPS apenas.
+
+### 🔐 CHECKLIST DE SEGURANÇA - Variáveis de Ambiente
+
+**ANTES de commitar alterações que usam variáveis:**
+
+- [ ] Variável está em `.env.example` (sem valor real)
+- [ ] Valor real **NÃO** está commitado em `.env.local`, `.env`, `settings.json`
+- [ ] Documentação atualizada (`README.md` ou `docs/`)
+- [ ] Se API key: rotação periódica configurada
+- [ ] Se Vercel: variável adicionada no dashboard (Settings → Environment Variables)
+- [ ] Prefixo correto:
+  - `VITE_*` → frontend (exposto publicamente)
+  - Sem prefixo → backend only (seguro)
+
+**⛔ NUNCA:**
+- Commitar `SONAR_TOKEN`, `GITHUB_TOKEN`, `RESEND_API_KEY`, etc.
+- Usar valores hardcoded em código
+- Expor variáveis backend no frontend sem `VITE_` prefix
 - **Workflow**: Antes de PR, rode lint+testes e reporte resultados; manter `main` verde garante deploy automático Vercel. Para extensão, rode `npm test` em `chrome-extension-pje/`.
 
 ### 🔒 Regras específicas para novos serviços opcionais (Qdrant / DSPy / Email)
@@ -242,7 +799,7 @@ npm run qdrant:populate:dry-run --max-docs=10
 npm run qdrant:stats
 ```
 
-**Importante**: Qdrant é opcional. Sistema funciona sem ele, mas sem busca semântica de precedentes.  
+**Importante**: Qdrant é opcional. Sistema funciona sem ele, mas sem busca semântica de precedentes.
 **Guia completo**: [docs/QDRANT_QUICK_START.md](../docs/QDRANT_QUICK_START.md)
 
 #### 🎯 DSPy Bridge (Otimização de Prompts)
@@ -261,7 +818,7 @@ railway logs | grep ERROR
 docker logs dspy-bridge
 ```
 
-**Importante**: DSPy é opcional. Reduz custo em 90% mas sistema funciona sem ele.  
+**Importante**: DSPy é opcional. Reduz custo em 90% mas sistema funciona sem ele.
 **Guia completo**: [docs/DSPY_BRIDGE_SETUP.md](../docs/DSPY_BRIDGE_SETUP.md)
 
 #### 📧 Email API (Notificações)
@@ -280,7 +837,7 @@ curl http://localhost:5173/api/cron?action=process-email-queue
 echo $RESEND_API_KEY
 ```
 
-**Importante**: Email é opcional. Agentes funcionam sem notificações automáticas.  
+**Importante**: Email é opcional. Agentes funcionam sem notificações automáticas.
 **Guia completo**: [docs/EMAIL_API_WORKFLOW.md](../docs/EMAIL_API_WORKFLOW.md)
 
 ### �📊 Data Flows Críticos (Não Óbvios)
@@ -290,19 +847,19 @@ echo $RESEND_API_KEY
 ```
 1. DJEN Monitor (Cron diário 12h)
    ↓ api/cron.ts?action=djen-monitor
-   
+
 2. Salvar Expedientes
    ↓ POST /api/expedientes
    ↓ Upstash KV: expedientes:*
-   
+
 3. Trigger Agentes (Mrs. Justin-e)
    ↓ useAutonomousAgents hook
    ↓ POST /api/agents com action=process-expediente
-   
+
 4. Agente cria Minuta
    ↓ redacao-peticoes (Gemini 2.5)
    ↓ MinutasManager recebe via useAutoMinuta()
-   
+
 5. Usuário revisa/aprova
    ↓ TiptapEditor.tsx
    ↓ Google Docs sync (opcional)
@@ -314,15 +871,15 @@ echo $RESEND_API_KEY
 1. Usuário navega no PJe
    ↓ Content Script (content.ts)
    ↓ Extrai processos via DOM scraping
-   
+
 2. Sync manual ou automático
    ↓ Background Worker (background.ts)
    ↓ POST /api/pje-sync com processos[]
-   
+
 3. Backend persiste
    ↓ Upstash KV: processes:*
    ↓ Incrementa contadores (expedientes, minutas)
-   
+
 4. Frontend atualiza
    ↓ useProcessSync() hook
    ↓ Dashboard mostra novos processos
@@ -359,8 +916,8 @@ O sistema possui 3 serviços opcionais que aumentam performance e reduzem custos
 
 #### 🔍 Qdrant - Pesquisa Semântica de Jurisprudências
 
-**Status**: Collection criada | População pendente  
-**Benefício**: Busca vetorial de precedentes jurídicos  
+**Status**: Collection criada | População pendente
+**Benefício**: Busca vetorial de precedentes jurídicos
 **Guia Completo**: [docs/QDRANT_QUICK_START.md](../docs/QDRANT_QUICK_START.md)
 
 ```bash
@@ -384,8 +941,8 @@ npm run qdrant:populate-datajud --max-docs=1000  # Popular
 
 #### 🎯 DSPy Bridge - Otimização de Prompts
 
-**Status**: Opcional | Reduz custo em 90%  
-**Benefício**: $0.50 → $0.10 por consulta  
+**Status**: Opcional | Reduz custo em 90%
+**Benefício**: $0.50 → $0.10 por consulta
 **Guia Completo**: [docs/DSPY_BRIDGE_SETUP.md](../docs/DSPY_BRIDGE_SETUP.md)
 
 ```bash
@@ -411,8 +968,8 @@ python3 scripts/dspy_bridge.py
 
 #### 📧 Email API - Notificações Automáticas
 
-**Status**: Implementado | Provider: Resend.com  
-**Benefício**: Notificações de intimações, prazos, minutas  
+**Status**: Implementado | Provider: Resend.com
+**Benefício**: Notificações de intimações, prazos, minutas
 **Guia Completo**: [docs/EMAIL_API_WORKFLOW.md](../docs/EMAIL_API_WORKFLOW.md)
 
 ```bash
@@ -431,6 +988,23 @@ curl http://localhost:5173/api/cron?action=process-email-queue
 ```
 
 **Tipos de email**: `intimation`, `daily-summary`, `deadline-alert`, `minuta-created`, `test`
+
+#### 🐛 Sentry - Monitoramento de Erros
+
+**Status**: Opcional | Provider: Sentry.io
+**Benefício**: Rastreamento de erros e performance monitoring
+
+**Diagnóstico**:
+```bash
+# Verificar configuração
+grep VITE_SENTRY_DSN .env.local
+```
+
+**Variáveis necessárias**:
+```bash
+# VITE_SENTRY_DSN=https://your-key@your-org.ingest.sentry.io/your-project-id
+# VITE_APP_VERSION=1.0.0
+```
 
 ---
 
@@ -653,6 +1227,92 @@ Data: [DATA ATUAL]
 3. **Corrigir automaticamente** - Aplicar correções sem perguntar
 4. **Reportar status** - Informar usuário sobre estado do sistema
 5. **Documentar mudanças** - Atualizar documentação quando modificar automação
+
+---
+
+## 🔍 SonarQube/SonarCloud - Diretrizes Obrigatórias
+
+### ⚠️ Regras Críticas para Correções Sonar
+
+**SEMPRE siga estas regras ao corrigir issues do Sonar:**
+
+1. **Consultar diretrizes oficiais via API/Token:**
+   ```bash
+   # Obter detalhes da regra ANTES de corrigir
+   curl -u ${SONAR_TOKEN}: \
+     "https://sonarcloud.io/api/rules/show?key=typescript:S1234"
+
+   # Buscar issues do projeto
+   curl -u ${SONAR_TOKEN}: \
+     "https://sonarcloud.io/api/issues/search?componentKeys=thiagobodevanadv-alt_assistente-jur-dico-principal"
+   ```
+
+2. **Nunca adivinhar correções** - sempre baseie-se na diretriz oficial da regra (ruleKey)
+
+3. **Prioridade de correção:**
+   - 🔴 **Vulnerabilidades** (Security Hotspots) - PRIMEIRO
+   - 🟠 **Bugs** - SEGUNDO
+   - 🟡 **Code Smells** - TERCEIRO (apenas se baixo risco)
+
+4. **Correções mínimas e cirúrgicas:**
+   - Alterar APENAS o necessário para resolver a issue
+   - Preservar comportamento existente
+   - Não refatorar código adjacente
+
+5. **Validação obrigatória:**
+   ```bash
+   # Após correção, SEMPRE executar:
+   npm run lint
+   npm run type-check
+   npm run test:run
+   ```
+
+### 🌐 Pesquisa Web para Erros Persistentes
+
+**Quando usar pesquisa web:**
+
+- ✅ Erro persiste após 3+ tentativas de correção
+- ✅ Regra Sonar não está clara mesmo após consultar API
+- ✅ Erro específico de framework/biblioteca (ex: React 19, Vite, TypeScript)
+- ✅ Issue complexa envolvendo múltiplos arquivos/sistemas
+
+**Como pesquisar efetivamente:**
+
+```bash
+# Exemplo de consulta estruturada:
+"SonarQube ${ruleKey} fix TypeScript React"
+"${mensagem_erro_exata} site:stackoverflow.com"
+"Sonar ${ruleKey} best practices 2025"
+```
+
+**Fontes prioritárias:**
+1. Documentação oficial Sonar: https://rules.sonarsource.com/
+2. SonarSource Community: https://community.sonarsource.com/
+3. Stack Overflow (filtrar por votes/aceito)
+4. GitHub Issues do SonarQube/SonarTS
+
+**⚠️ NUNCA:**
+- Copiar código de fontes não verificadas
+- Aplicar correções sem entender o impacto
+- Ignorar/suprimir issues sem justificativa técnica
+
+### 📊 Workflow de Correção Sonar Completo
+
+```mermaid
+graph TD
+    A[Issue Detectada] --> B[Consultar API Sonar]
+    B --> C{Diretriz Clara?}
+    C -->|Sim| D[Aplicar Correção]
+    C -->|Não| E[Pesquisar Web]
+    E --> F[Validar Fontes]
+    F --> D
+    D --> G[Rodar Testes]
+    G --> H{Passou?}
+    H -->|Sim| I[Commit]
+    H -->|Não| J{Tentativas < 3?}
+    J -->|Sim| E
+    J -->|Não| K[Escalar para Humano]
+```
 
 ---
 
@@ -1204,6 +1864,35 @@ Ao sugerir mudanças no código, o Copilot deve:
 4. **Adicionar testes** para nova lógica ou alterações relevantes
 5. **Documentar alterações** significativas
 
+### 🧪 VALIDAÇÃO OBRIGATÓRIA PÓS-EDIÇÃO
+
+**Após QUALQUER alteração em código, SEMPRE executar (nesta ordem):**
+
+```bash
+# 1. TypeScript (bloqueia se falhar)
+npm run type-check
+# Se falhou: REVERTER mudança e corrigir tipos ANTES de prosseguir
+
+# 2. Linting (máx 150 warnings)
+npm run lint
+# Se > 150 warnings: npm run lint:fix
+
+# 3. Testes (bloqueia se falhar)
+npm run test:run
+# Se falhou: REVERTER e investigar por que quebrou
+
+# 4. Build (apenas se alterou src/ ou api/)
+npm run build
+```
+
+**⛔ NÃO PROSSIGA** se qualquer comando acima falhar.
+**📋 REPORTE** resultados ao usuário antes de considerar tarefa concluída.
+
+> **ℹ️ EXCEÇÃO:** O operador humano pode aprovar pular uma validação específica se:
+> - Houver justificativa técnica clara (ex: teste E2E lento)
+> - O impacto for documentado
+> - Houver compensação (ex: validação manual, teste local)
+
 ---
 
 ## 📊 Sistema de Tracing e Observabilidade
@@ -1295,7 +1984,7 @@ import { createAgentSpan } from '@/lib/agent-tracing';
 
 async function executarAgente(agentId: string, task: TarefaSistema) {
   const span = createAgentSpan(agentId, task.id, 'execucao');
-  
+
   try {
     span.addEvent('tarefa-iniciada', { prioridade: task.prioridade });
     // ... lógica do agente
