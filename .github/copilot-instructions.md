@@ -162,7 +162,7 @@ class DJENConnectorAgent(Agent):
 
 from fastapi import APIRouter
 
-router = APIRouter(prefix="/api/extensoes/brasil", tags=["brasil"])
+router = APIRouter(prefix="/extensoes/brasil", tags=["brasil"])
 
 @router.post("/djen-feed")
 async def receber_djen(publicacao: Dict):
