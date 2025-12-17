@@ -1,6 +1,11 @@
 {
   "name": "Assistente Jurídico PJe",
   "image": "mcr.microsoft.com/devcontainers/typescript-node:22",
+  "hostRequirements": {
+    "cpus": 8,
+    "memory": "32gb",
+    "storage": "32gb"
+  },
   "features": {
     "ghcr.io/devcontainers/features/node:1": {
       "version": "22"
@@ -32,7 +37,9 @@
         "coderabbit.coderabbit-vscode",
         "ms-azuretools.vscode-azure-github-copilot",
         "ms-codespaces-tools.ado-codespaces-auth",
-        "frenco.vscode-vercel"
+        "frenco.vscode-vercel",
+        "ms-edgedevtools.vscode-edge-devtools",
+        "QuentinN42.sentry-issues-viewer"
       ],
       "settings": {
         // ========================================

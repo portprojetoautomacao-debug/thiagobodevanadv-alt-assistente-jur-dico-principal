@@ -61,20 +61,14 @@ export function initializeOpenTelemetry(): void {
   }
 
   try {
-    // Criar resource com metadados do serviço
-    const resource = new Resource({
-      [ATTR_SERVICE_NAME]: SERVICE_NAME,
-      [ATTR_SERVICE_VERSION]: SERVICE_VERSION,
-      "deployment.environment": import.meta.env.MODE || "development",
-      "service.namespace": "legal-ai",
-      "telemetry.sdk.name": "opentelemetry",
-      "telemetry.sdk.language": "typescript",
-      "telemetry.sdk.version": "1.28.0",
-    });
-
     // Criar tracer provider
     tracerProvider = new WebTracerProvider({
-      resource,
+      resource: {
+        attributes: {
+          [ATTR_SERVICE_NAME]: SERVICE_NAME,
+          [ATTR_SERVICE_VERSION]: SERVICE_VERSION,
+        },
+      } as any,
     });
 
     // Configurar exportador OTLP
@@ -88,18 +82,18 @@ export function initializeOpenTelemetry(): void {
     });
 
     // Adicionar span processor em batch (melhor performance)
-    tracerProvider.addSpanProcessor(
-      new BatchSpanProcessor(otlpExporter, {
-        // Tamanho máximo da fila
-        maxQueueSize: 100,
-        // Número máximo de spans por batch
-        maxExportBatchSize: 10,
-        // Delay antes de exportar (ms)
-        scheduledDelayMillis: 1000,
-        // Timeout de exportação (ms)
-        exportTimeoutMillis: 5000,
-      })
-    );
+    const spanProcessor = new BatchSpanProcessor(otlpExporter, {
+      // Tamanho máximo da fila
+      maxQueueSize: 100,
+      // Número máximo de spans por batch
+      maxExportBatchSize: 10,
+      // Delay antes de exportar (ms)
+      scheduledDelayMillis: 1000,
+      // Timeout de exportação (ms)
+      exportTimeoutMillis: 5000,
+    });
+
+    (tracerProvider as any).addSpanProcessor(spanProcessor);
 
     // Registrar provider globalmente (API moderna)
     trace.setGlobalTracerProvider(tracerProvider);
