@@ -210,6 +210,86 @@ audit:
   export_to_sentry: true
 
 # ═══════════════════════════════════════════════════════════════════
+# 9️⃣  DELEGAÇÃO ATIVA - MIGRAÇÃO MICROSOFT MULTI-AGENT ENGINE
+# ═══════════════════════════════════════════════════════════════════
+
+migration:
+  enabled: true
+  status: "approved"
+  pr_approved: 443
+  approved_by: "Thiago Bodevan"
+  approved_date: "2025-12-17"
+  
+  delegation:
+    agent_id: "agentepersonalizado"
+    agent_name: "Agente de Manutenção e Monitoramento"
+    documentation: ".github/CLOUD_AGENT_DELEGATION.md"
+    status_tracking: ".github/MIGRATION_STATUS.md"
+    
+  authorization:
+    # ✅ Autorizado a executar todas as 6 fases da migração
+    execute_phases: true
+    
+    # ✅ Autorizado a criar conectores/adaptadores (NÃO agentes customizados)
+    create_connectors: true
+    create_custom_agents: false  # ❌ PROIBIDO
+    
+    # ✅ Autorizado a fazer deploy Azure em sandbox/staging
+    deploy_azure_sandbox: true
+    deploy_azure_production: false  # ⚠️ Requer validação prévia
+    
+    # ✅ Autorizado a executar scripts de migração
+    run_migration_scripts: true
+    
+    # ✅ Autorizado a fazer rollback se necessário
+    execute_rollback: true
+    
+  constraints:
+    # 🚨 CRÍTICO: NUNCA modificar código Microsoft Multi-Agent Engine
+    modify_microsoft_code: false
+    
+    # 🚨 CRÍTICO: SEMPRE criar conectores, NUNCA agentes customizados
+    integration_method: "connectors_only"
+    
+    # 🚨 CRÍTICO: Validar ANTES de cada fase
+    require_validation: true
+    
+    # ⚠️ Notificar operador em casos P0/P1
+    notify_on_critical: true
+    
+  phases:
+    phase_1:
+      name: "Validação de Ambiente"
+      status: "pending"
+      duration_estimate: "10-15 min"
+      
+    phase_2:
+      name: "Setup Azure Infrastructure"
+      status: "pending"
+      duration_estimate: "20-30 min"
+      
+    phase_3:
+      name: "Integrações Brasil (DJEN + DataJud + PJe)"
+      status: "pending"
+      duration_estimate: "2-3 horas"
+      
+    phase_4:
+      name: "Extensões de Prompts (se necessário)"
+      status: "pending"
+      duration_estimate: "30-60 min"
+      condition: "only_if_required"
+      
+    phase_5:
+      name: "Migração de Dados (Upstash → Cosmos DB)"
+      status: "pending"
+      duration_estimate: "1-2 horas"
+      
+    phase_6:
+      name: "Cutover e Monitoramento"
+      status: "pending"
+      duration_estimate: "24 horas"
+
+# ═══════════════════════════════════════════════════════════════════
 
 # RESUMO DE PERMISSÕES:
 # ✅ GitHub Actions: Escrita total (commits, PRs, issues, deployments)
@@ -218,5 +298,7 @@ audit:
 # ✅ Secrets: Sincronizados automaticamente
 # ✅ Logs: Centralizados com Sentry
 # ✅ Sem necessidade de aprovação/confirmação manual
+# ✅ Migração Microsoft: Delegação autorizada (PR #443)
 
 # STATUS: 🟢 AGENTES EM NUVEM OPERACIONAIS COM PERMISSÕES LIVRES
+# DELEGAÇÃO: 🟢 MIGRAÇÃO APROVADA E PRONTA PARA EXECUÇÃO
