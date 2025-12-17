@@ -200,13 +200,13 @@ microsoft_agent.system_prompt += BRAZILIAN_LEGAL_CONTEXT
 # NÃO criar agentes novos
 
 MAPEAMENTO_AGENTES = {
-    # Nossas funções atuais → Agentes Microsoft equivalentes
-    "harvey": "Strategic Planning Agent (Microsoft)",
-    "justine": "Document Analysis Agent (Microsoft)",
-    "analise_documental": "Document Processing Agent (Microsoft)",
-    "gestao_prazos": "Task Management Agent (Microsoft)",
-    "redacao_peticoes": "Document Generation Agent (Microsoft)",
-    "pesquisa_juris": "Research Agent (Microsoft) + Azure AI Search",
+    # Nossas funções atuais → IDs reais de agentes Microsoft equivalentes
+    # ATENÇÃO: Substituir os valores abaixo pelos IDs/nome canônico de agentes
+    # existentes no Microsoft Multi-Agent Engine (consultar documentação/registro).
+    "analise_documental": "<ID_AGENTE_MICROSOFT_DOCUMENT_PROCESSING>",
+    "gestao_prazos": "<ID_AGENTE_MICROSOFT_TASK_MANAGEMENT>",
+    "redacao_peticoes": "<ID_AGENTE_MICROSOFT_DOCUMENT_GENERATION>",
+    "pesquisa_juris": "<ID_AGENTE_MICROSOFT_RESEARCH_COM_AZURE_AI_SEARCH>",
     # ... e assim por diante
 }
 
