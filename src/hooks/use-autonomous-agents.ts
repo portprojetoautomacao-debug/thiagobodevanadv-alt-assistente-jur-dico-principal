@@ -1,23 +1,21 @@
-import { metricsCollector, getUnhealthyAgents } from "@/lib/agent-metrics";
-import { toast } from "sonner";
 import { useKV } from "@/hooks/use-kv";
+import { getUnhealthyAgents, metricsCollector } from "@/lib/agent-metrics";
 import {
-  type Agent,
-  type AgentTask,
-  type AgentTaskResult,
   canResumeAfterHuman,
   initializeAgents,
   shouldPauseForHuman,
+  type Agent,
+  type AgentTask,
+  type AgentTaskResult,
 } from "@/lib/agents";
+import { toast } from "sonner";
 // ✨ NOVO: Importar validadores Zod
-import {
-  validateAgent,
-  validateAgentTask,
-  type Agent as _AgentValidated,
-  type AgentTask as _AgentTaskValidated,
-} from "@/schemas/agent.schema";
 import { executeHybridTask, hasHybridVersion } from "@/lib/hybrid-agents-integration";
 import { processTaskWithRealAI, processTaskWithStreamingAI } from "@/lib/real-agent-client";
+import {
+  validateAgent,
+  validateAgentTask
+} from "@/schemas/agent.schema";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 // Type alias for activity result (success, warning, or error)
@@ -276,14 +274,16 @@ export function useAutonomousAgents() {
   const [useStreaming, setUseStreaming] = useState(true); // Streaming habilitado por padrão
 
   const processingRef = useRef<Set<string>>(new Set());
+  const agentsInitializedRef = useRef(false);
 
-  // Garante sempre 15 agentes
+  // Garante sempre 15 agentes (apenas na inicialização)
   useEffect(() => {
-    if (agents && agents.length !== 15) {
+    if (!agentsInitializedRef.current && agents && agents.length !== 15) {
       console.log("[Agents] Corrigindo → 15 agentes obrigatórios");
       setAgents(initializeAgents());
+      agentsInitializedRef.current = true;
     }
-  }, [agents, setAgents]);
+  }, []);
 
   // =============================
   // SYNC COM SERVIDOR (Logs e Memória)

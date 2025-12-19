@@ -218,5 +218,11 @@
   "python.testing.unittestArgs": ["-v", "-s", ".", "-p", "*test.py"],
   "python.testing.pytestEnabled": false,
   "python.testing.unittestEnabled": true,
-  "chat.tools.terminal.autoReplyToPrompts": true
+  "chat.tools.terminal.autoReplyToPrompts": true,
+  "python-envs.defaultEnvManager": "ms-python.python:system",
+  "python-envs.pythonProjects": [],
+  "sonarlint.connectedMode.project": {
+    "connectionId": "thiagobodevan-a11y-assistente-juridico-p",
+    "projectKey": "thiagobodevan-a11y_assistente-juridico-p"
+  }
 }
