@@ -12,10 +12,7 @@ import { toast } from "sonner";
 // ✨ NOVO: Importar validadores Zod
 import { executeHybridTask, hasHybridVersion } from "@/lib/hybrid-agents-integration";
 import { processTaskWithRealAI, processTaskWithStreamingAI } from "@/lib/real-agent-client";
-import {
-  validateAgent,
-  validateAgentTask
-} from "@/schemas/agent.schema";
+import { validateAgent, validateAgentTask } from "@/schemas/agent.schema";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 // Type alias for activity result (success, warning, or error)

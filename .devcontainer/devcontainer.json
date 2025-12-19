@@ -25,7 +25,8 @@
         "google.geminicodeassist",
         "MS-SarifVSCode.sarif-viewer",
         "trailofbits.sarif-explorer",
-        "ms-dotnettools.vscode-dotnet-runtime"
+        "ms-dotnettools.vscode-dotnet-runtime",
+        "github.vscode-github-actions"
       ],
       "settings": {
         // ========================================
