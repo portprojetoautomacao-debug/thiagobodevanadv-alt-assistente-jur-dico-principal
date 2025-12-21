@@ -43,7 +43,7 @@
     "@doist/todoist-api-typescript": "^6.1.10",
     "@floating-ui/react": "^0.27.16",
     "@hookform/resolvers": "^5.2.2",
-    "@langchain/core": "^1.1.4",
+    "@langchain/core": "^1.1.7",
     "@langchain/langgraph": "^1.0.4",
     "@microsoft/applicationinsights-react-js": "^17.3.6",
     "@microsoft/applicationinsights-web": "^3.3.10",
