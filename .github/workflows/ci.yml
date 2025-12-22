@@ -66,6 +66,12 @@ jobs:
       - name: Report installed SARIF tools
         run: npm run check:sarif-tools || true
 
+      - name: Clean build artifacts before lint
+        run: |
+          echo "Cleaning build artifacts to avoid linting generated files..."
+          rm -rf dist/ chrome-extension-pje/dist/ || true
+          echo "✅ Build artifacts cleaned"
+
       - name: Run linter
         run: |
           echo "Running ESLint..."

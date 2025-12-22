@@ -1,5 +1,6 @@
 # Build outputs
 dist/
+dist
 build/
 *.min.js
 
@@ -8,8 +9,10 @@ node_modules/
 .pnp
 .pnp.js
 
-# Chrome extension dist
+# Chrome extension dist (specific path)
 chrome-extension-pje/dist/
+chrome-extension-pje/dist
+chrome-extension-pje/build/
 
 # Test coverage
 coverage/
