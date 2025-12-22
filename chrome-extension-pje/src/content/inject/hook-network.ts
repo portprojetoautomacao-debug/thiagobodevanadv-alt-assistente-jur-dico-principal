@@ -1,4 +1,3 @@
-// @ts-nocheck
 /*
  * Script injetado no contexto da página para interceptar XHR e fetch
  * - Captura requests/responses para endpoints do PJe
@@ -109,7 +108,7 @@
                 ) {
                   try {
                     body = JSON.parse(responseText);
-                  } catch (e) {
+                  } catch {
                     // Não é JSON válido, ignorar corpo
                   }
                 }
@@ -198,7 +197,7 @@
               if (url && allowedHostPattern.test(url)) {
                 const start = Date.now();
                 const originalSuccess = settings.success;
-                settings.success = function (data: any) {
+                settings.success = function (data: any, ...restArgs: any[]) {
                   try {
                     sendToContent({
                       type: "jquery-ajax",
@@ -206,16 +205,20 @@
                       duration: Date.now() - start,
                       payloadSize: JSON.stringify(data).length,
                     });
-                  } catch (e) {}
-                  if (originalSuccess) originalSuccess.apply(this, arguments as any);
+                  } catch {
+                    // Erro ao processar callback
+                  }
+                  if (originalSuccess) originalSuccess.call(this, data, ...restArgs);
                 };
               }
-            } catch (e) {}
+            } catch {
+              // Erro ao configurar hook jQuery
+            }
             return origAjax.apply(this, args as any);
           };
         }
-      } catch (e) {
-        // ignore
+      } catch {
+        // jQuery não disponível ou erro ao criar hook
       }
     })();
   } catch (err) {
