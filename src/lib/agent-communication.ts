@@ -7,8 +7,8 @@
  * - compartilhem contexto estruturado
  */
 
-import type { Agent, AgentTask } from "./agents";
-import { isValidAgentId, sanitizeString } from "./agents";
+import type { Agent, AgentTask } from "./agents.js";
+import { isValidAgentId, sanitizeString } from "./agents.js";
 
 export type AgentMessageType = "request" | "response" | "notification" | "alert";
 export type AgentMessagePriority = "low" | "medium" | "high" | "critical";

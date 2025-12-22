@@ -6,7 +6,7 @@
  */
 
 import type { Appointment } from "@/types";
-import { googleCalendarService, type DeadlineEvent } from "./google-calendar-service";
+import { googleCalendarService, type DeadlineEvent } from "./google-calendar-service.js";
 
 // Tipos para integração
 export type AnalysisDeadlineType = "úteis" | "corridos";

@@ -1141,4 +1141,4 @@ export {
   type HybridExecutionConfig,
   type HybridExecutionResult,
   type HybridStats,
-} from "./hybrid-agents-integration";
+} from "./hybrid-agents-integration.js";

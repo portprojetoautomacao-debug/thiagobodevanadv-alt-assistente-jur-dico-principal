@@ -5,7 +5,7 @@
  * para análise complexa, revisão de código e debug
  */
 
-import { kimiService } from "./kimi-service";
+import { kimiService } from "./kimi-service.js";
 
 /**
  * Exemplo 1: Análise Jurídica Complexa

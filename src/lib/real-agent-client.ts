@@ -4,13 +4,13 @@
  * Agora com suporte a STREAMING para respostas em tempo real
  */
 
-import type { Agent, AgentTask, AgentTaskResult } from "./agents";
+import type { Agent, AgentTask, AgentTaskResult } from "./agents.js";
 import {
   finishAgentInvokeSpan,
   finishAIChatSpan,
   startAgentInvokeSpan,
   startAIChatSpan,
-} from "./sentry-ai-monitoring";
+} from "./sentry-ai-monitoring.js";
 
 interface ProcessTaskAPIResponse {
   result: AgentTaskResult;

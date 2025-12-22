@@ -5,11 +5,11 @@
  * Fornece instrumentação automática para execução de agentes e processamento de tarefas.
  */
 
-import { tracingService } from "./tracing";
+import { tracingService } from "./tracing.js";
 
-import type { AgentSpan, SpanAttributes } from "./tracing";
+import type { AgentSpan, SpanAttributes } from "./tracing.js";
 
-import type { Agent, AgentTask, AgentTaskResult } from "./agents";
+import type { Agent, AgentTask, AgentTaskResult } from "./agents.js";
 
 // ============================================================================
 // AGENT EXECUTION TRACING
@@ -438,5 +438,5 @@ export function getLLMMetrics(): {
 // EXPORTS
 // ============================================================================
 
-export { tracingService, withTracing } from "./tracing";
-export type { AgentSpan, Span, TraceContext } from "./tracing";
+export { tracingService, withTracing } from "./tracing.js";
+export type { AgentSpan, Span, TraceContext } from "./tracing.js";

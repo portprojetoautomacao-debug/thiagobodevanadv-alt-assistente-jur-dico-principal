@@ -13,7 +13,7 @@ import type {
   UnifiedPublication,
   PublicationSearchParams,
   PublicationSourceConfig,
-} from "./publication-sources-types";
+} from "./publication-sources-types.js";
 
 export interface DiarioOficialConfig extends PublicationSourceConfig {
   source: "diario_oficial";

@@ -49,10 +49,6 @@ if (tracingEnabled && otlpEndpoint) {
     });
     console.log("[Tracing] ✅ OTLP Exporter configurado com sucesso");
   } catch (error) {
-    console.warn("[Tracing] ⚠️  Erro ao configurar OTLP, usando console apenas:", error);
-    spanProcessor = new BatchSpanProcessor(new ConsoleSpanExporter());
-  }
-  } catch (error) {
     console.warn("[Tracing] ⚠️ Erro ao configurar OTLP, usando ConsoleSpanExporter:", error);
     spanProcessor = new BatchSpanProcessor(new ConsoleSpanExporter());
   }

@@ -8,8 +8,8 @@
 import { generatePeticao } from "@/lib/gemini-service";
 import { createInvokeAgentSpan } from "@/lib/sentry-gemini-integration-v2";
 import type { Minuta } from "@/types";
-import { googleCalendarService, type DeadlineEvent } from "./google-calendar-service";
-import { googleDocsService } from "./google-docs-service";
+import { googleCalendarService, type DeadlineEvent } from "./google-calendar-service.js";
+import { googleDocsService } from "./google-docs-service.js";
 
 // Mesmo shape do módulo de integração de prazos (deadline-integration)
 export interface MinutaAgentDeadline {

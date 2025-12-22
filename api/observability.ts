@@ -11,8 +11,8 @@
  */
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { requireApiKey } from "./lib/auth";
-import { rateLimitMiddleware } from "./lib/rate-limit";
+import { requireApiKey } from "./lib/auth.js";
+import { rateLimitMiddleware } from "./lib/rate-limit.js";
 
 // ============================================================================
 // TYPES

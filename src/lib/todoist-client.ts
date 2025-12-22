@@ -1,5 +1,5 @@
 import { TodoistApi } from "@doist/todoist-api-typescript";
-import { config } from "./config";
+import { config } from "./config.js";
 
 /**
  * Cliente Todoist para integração com o assistente jurídico

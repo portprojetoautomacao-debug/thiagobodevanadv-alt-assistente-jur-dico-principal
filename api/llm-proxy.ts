@@ -11,11 +11,11 @@
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { z } from "zod";
-import { requireApiKey } from "./lib/auth";
-import { rateLimitMiddleware } from "./lib/rate-limit";
-import { retryWithBackoff } from "./lib/retry";
-import { escapeHtml } from "./lib/sanitize";
-import { withTimeout } from "./lib/timeout";
+import { requireApiKey } from "./lib/auth.js";
+import { rateLimitMiddleware } from "./lib/rate-limit.js";
+import { retryWithBackoff } from "./lib/retry.js";
+import { escapeHtml } from "./lib/sanitize.js";
+import { withTimeout } from "./lib/timeout.js";
 
 // Tipos para mensagens e dados
 interface ChatMessage {

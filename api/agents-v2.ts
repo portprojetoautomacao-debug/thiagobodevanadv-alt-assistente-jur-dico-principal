@@ -5,14 +5,14 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
-import { executeHybridTask, hasHybridVersion } from "../src/lib/hybrid-agents-integration";
-import { requireApiKey } from "./lib/auth";
-import { redactPii } from "./lib/pii";
-import { rateLimitMiddleware } from "./lib/rate-limit";
-import { retryWithBackoff } from "./lib/retry";
-import { escapeHtml } from "./lib/sanitize";
-import { withTimeout } from "./lib/timeout";
-import { AgentTaskInputSchema, handleValidationError } from "./lib/validation";
+import { executeHybridTask, hasHybridVersion } from "../src/lib/hybrid-agents-integration.js";
+import { requireApiKey } from "./lib/auth.js";
+import { redactPii } from "./lib/pii.js";
+import { rateLimitMiddleware } from "./lib/rate-limit.js";
+import { retryWithBackoff } from "./lib/retry.js";
+import { escapeHtml } from "./lib/sanitize.js";
+import { withTimeout } from "./lib/timeout.js";
+import { AgentTaskInputSchema, handleValidationError } from "./lib/validation.js";
 
 const AgentsV2Schema = z.object({
   agentId: z.string().min(1),

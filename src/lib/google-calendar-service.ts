@@ -9,7 +9,7 @@ import type {
   GoogleAuthResponse,
   GoogleGisGlobal,
   TokenClient,
-} from "./google-types";
+} from "./google-types.js";
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
 const GOOGLE_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || "";

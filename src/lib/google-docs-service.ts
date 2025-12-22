@@ -1,5 +1,5 @@
 import type { Minuta } from "@/types";
-import { config } from "./config";
+import { config } from "./config.js";
 import type {
   DocsClient,
   DocsDocument,
@@ -9,7 +9,7 @@ import type {
   GoogleGisGlobal,
   ParagraphElement,
   TokenClient,
-} from "./google-types";
+} from "./google-types.js";
 
 const GOOGLE_DOCS_CLIENT_ID = config.google.clientId;
 const GOOGLE_DOCS_API_KEY = config.google.apiKey;

@@ -8,7 +8,7 @@
  */
 
 import * as Sentry from "@sentry/react";
-import type { Agent, AgentTask } from "./agents";
+import type { Agent, AgentTask } from "./agents.js";
 
 /**
  * Atributos comuns para spans de AI Agents

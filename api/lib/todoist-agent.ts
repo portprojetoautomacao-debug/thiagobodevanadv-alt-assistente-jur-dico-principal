@@ -7,9 +7,9 @@
  * 3. Executar ações automáticas baseadas em eventos
  */
 
-import { callGemini } from "./gemini";
-import { llmService } from "./llm";
-import { addLegalTasks, updateLegalTask } from "./todoist-integration";
+import { callGemini } from "./gemini.js";
+import { llmService } from "./llm.js";
+import { addLegalTasks, updateLegalTask } from "./todoist-integration.js";
 
 // Tipos para eventos do Todoist
 interface TodoistWebhookEvent {

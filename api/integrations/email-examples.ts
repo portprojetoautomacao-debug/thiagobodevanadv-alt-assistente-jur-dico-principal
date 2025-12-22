@@ -341,18 +341,18 @@ export async function logEmailSent(
  * COMO USAR ESTES EXEMPLOS:
  *
  * 1. Em um cron job (api/cron.ts):
- *    import { exampleSendUrgentDeadlineAlert } from './integrations/email-examples'
+ *    import { exampleSendUrgentDeadlineAlert } from './integrations/email-examples.js'
  *    await exampleSendUrgentDeadlineAlert('user@example.com', '1234...', '2024-12-25')
  *
  * 2. Com retry:
- *    import { sendEmailWithRetry } from './integrations/email-examples'
+ *    import { sendEmailWithRetry } from './integrations/email-examples.js'
  *    await sendEmailWithRetry({ type: 'test', to: 'user@example.com' })
  *
  * 3. Em batch:
- *    import { sendEmailsBatch } from './integrations/email-examples'
+ *    import { sendEmailsBatch } from './integrations/email-examples.js'
  *    const results = await sendEmailsBatch([...payloads])
  *
  * 4. Diretamente:
- *    import { sendNotificationEmail } from './lib/email-service'
+ *    import { sendNotificationEmail } from './lib/email-service.js'
  *    await sendNotificationEmail('user@example.com', 'Título', 'Mensagem')
  */

@@ -15,7 +15,7 @@ import type {
   UnifiedPublication,
   PublicationSearchParams,
   PublicationSourceConfig,
-} from "./publication-sources-types";
+} from "./publication-sources-types.js";
 
 export interface PJeConfig extends PublicationSourceConfig {
   source: "pje_direct";

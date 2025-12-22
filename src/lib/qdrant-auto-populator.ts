@@ -22,10 +22,10 @@
  */
 
 import type { Expediente } from "@/types";
-import type { DataJudService } from "./datajud-service";
-import type { GeminiEmbeddingService } from "./gemini-embedding-service";
-import type { QdrantService } from "./qdrant-service";
-import type { TemaExtracao, TemaExtractorService } from "./tema-extractor";
+import type { DataJudService } from "./datajud-service.js";
+import type { GeminiEmbeddingService } from "./gemini-embedding-service.js";
+import type { QdrantService } from "./qdrant-service.js";
+import type { TemaExtracao, TemaExtractorService } from "./tema-extractor.js";
 
 /**
  * KV Store helper (via API)

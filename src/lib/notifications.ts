@@ -10,7 +10,7 @@
 
 import { Redis } from "@upstash/redis";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getEnv } from "./env-helper";
+import { getEnv } from "./env-helper.js";
 
 /**
  * Get color based on notification priority

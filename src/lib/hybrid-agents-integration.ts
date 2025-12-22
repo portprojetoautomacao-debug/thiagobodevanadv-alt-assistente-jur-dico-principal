@@ -24,7 +24,7 @@ let hasWarnedDisabled = false;
 function warnDisabledOnce(): void {
   // Evita poluir logs de testes/CI e também não spam o console.
   const isBrowser = typeof globalThis.window !== "undefined";
-  const isDev = Boolean(import.meta.env?.DEV);
+  const isDev = process.env.NODE_ENV === "development";
 
   if (!isBrowser || !isDev) return;
   if (hasWarnedDisabled) return;

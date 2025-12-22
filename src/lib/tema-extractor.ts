@@ -11,7 +11,7 @@
  */
 
 import type { Expediente } from "@/types";
-import { GeminiClient } from "./ai-providers";
+import { GeminiClient } from "./ai-providers.js";
 
 export interface TemaExtracao {
   temaPrimario: string;

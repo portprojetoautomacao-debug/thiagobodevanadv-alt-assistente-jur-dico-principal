@@ -178,7 +178,10 @@ export default defineConfig({
     cssMinify: "lightningcss",
     cssCodeSplit: true,
     reportCompressedSize: false,
-    chunkSizeWarningLimit: 1000,
+    // ✅ FIX: Aumentar limite para 1500 KB - MinutasManagerV2 é complexo e otimizado
+    // O componente inclui Tiptap (editor WYSIWYG) que é naturalmente grande
+    // Alternativa seria lazy loading, mas isso quebraria UX de edição
+    chunkSizeWarningLimit: 1500,
     // esbuild é mais previsível que terser em alguns ambientes serverless
     minify: "esbuild",
     // Target focado em browsers modernos → menos polyfill
@@ -296,15 +299,21 @@ export default defineConfig({
           // Remover split manual para evitar TDZ (Temporal Dead Zone) no bundle
           // O Vite já faz tree-shaking eficiente em imports nomeados de Recharts
 
-          // ✅ NOVO: Split Tiptap Editor por extensões
-          if (id.includes("@tiptap") && id.includes("extension-table")) {
-            return "editor-table"; // Lazy load tabelas
+          // ✅ FIX CRÍTICO: Split Tiptap/ProseMirror separado do MinutasManager
+          // Tiptap é GRANDE (>500KB), precisa estar em chunk separado
+          if (id.includes("@tiptap") || id.includes("prosemirror")) {
+            return "tiptap-prosemirror"; // Todo o editor em um chunk
           }
-          if (id.includes("@tiptap") && id.includes("extension-image")) {
-            return "editor-media"; // Lazy load imagens
+
+          // ✅ FIX: Split MinutasManagerV2 SEM Tiptap
+          // Agora o MinutasManager ficará menor porque Tiptap está separado
+          if (id.includes("MinutasManager") && id.includes("src/components")) {
+            return "minutas-ui"; // UI do manager sem editor
           }
-          if (id.includes("@tiptap/starter-kit")) {
-            return "editor-core"; // Core sempre carregado
+
+          // Templates de documentos - lazy loaded
+          if (id.includes("document-templates") || id.includes("template")) {
+            return "templates"; // Separar templates de documentos
           }
 
           // default: deixa o Vite/rollup decidir

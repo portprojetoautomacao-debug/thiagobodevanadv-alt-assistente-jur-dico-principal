@@ -1,6 +1,6 @@
 import type { PremonicaoJuridica, Process } from "@/types";
 
-import { extractJSON } from "./json-utils";
+import { extractJSON } from "./json-utils.js";
 
 /**
  * Gera a informação do processo formatada

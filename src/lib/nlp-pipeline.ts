@@ -6,7 +6,7 @@
 // - Information Extraction
 // - Batch Processing
 
-import { llmService, type LLMRequestConfig } from "./llm-service";
+import { llmService, type LLMRequestConfig } from "./llm-service.js";
 
 // Entity types for legal documents
 export type EntityType =

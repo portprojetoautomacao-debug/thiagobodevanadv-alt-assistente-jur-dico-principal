@@ -11,8 +11,8 @@
  * Integrated with OpenTelemetry-compatible tracing
  */
 
-import { llm as llmCall } from "./llm-client";
-import { tracingService } from "./tracing";
+import { llm as llmCall } from "./llm-client.js";
+import { tracingService } from "./tracing.js";
 
 // LLM Models supported
 export type LLMModel = "gpt-4o" | "gpt-4" | "gpt-3.5-turbo";
