@@ -364,18 +364,18 @@ jobs:
         run: |
           echo "🐋 Pulling Qdrant image..."
           docker pull qdrant/qdrant:latest
-          
+
           echo "🚀 Starting Qdrant container..."
           docker run -d \
             --name qdrant \
             -p 6333:6333 \
             -e QDRANT__SERVICE__HTTP_PORT=6333 \
-            --health-cmd="curl -f http://localhost:6333/health || exit 1" \
+            --health-cmd="curl -f http://localhost:6333/ || exit 1" \
             --health-interval=5s \
             --health-timeout=3s \
             --health-retries=20 \
             qdrant/qdrant:latest
-          
+
           echo "⏳ Waiting for Qdrant to be healthy (up to 120s)..."
           SECONDS=0
           while [ $SECONDS -lt 120 ]; do
@@ -389,7 +389,7 @@ jobs:
             fi
             sleep 2
           done
-          
+
           # Final check
           if ! docker inspect --format='{{.State.Health.Status}}' qdrant 2>/dev/null | grep -q "healthy"; then
             echo "❌ Qdrant failed to become healthy after 120s"
@@ -397,33 +397,33 @@ jobs:
             docker logs qdrant
             exit 1
           fi
-          
+
           echo "🔍 Testing connectivity..."
-          curl -f http://localhost:6333/health || exit 1
+          curl -f http://localhost:6333/ || exit 1
           echo "✅ Qdrant is ready and responding"
         if: success()
 
       - name: Test Qdrant connectivity
         run: |
           echo "🔍 Testing Qdrant health endpoint..."
-          
+
           # Verify container is running
           if ! docker ps | grep -q qdrant; then
             echo "❌ Qdrant container is not running"
             docker ps -a | grep qdrant
             exit 1
           fi
-          
+
           # Test health endpoint
           for i in {1..10}; do
-            if curl -f http://localhost:6333/health 2>/dev/null; then
+            if curl -f http://localhost:6333/ 2>/dev/null; then
               echo "✅ Qdrant health check passed"
               exit 0
             fi
             echo "⏳ Attempt $i/10 failed, retrying..."
             sleep 2
           done
-          
+
           echo "❌ Qdrant health check failed after 10 attempts"
           docker logs qdrant --tail 50
           exit 1
@@ -485,18 +485,18 @@ jobs:
         run: |
           echo "🐋 Pulling Qdrant image for backend tests..."
           docker pull qdrant/qdrant:latest
-          
+
           echo "🚀 Starting Qdrant container for backend tests..."
           docker run -d \
             --name qdrant-ci \
             -p 6333:6333 \
             -e QDRANT__SERVICE__HTTP_PORT=6333 \
-            --health-cmd="curl -f http://localhost:6333/health || exit 1" \
+            --health-cmd="curl -f http://localhost:6333/ || exit 1" \
             --health-interval=5s \
             --health-timeout=3s \
             --health-retries=20 \
             qdrant/qdrant:latest
-          
+
           echo "⏳ Waiting for Qdrant to be healthy (up to 120s)..."
           SECONDS=0
           while [ $SECONDS -lt 120 ]; do
@@ -510,14 +510,14 @@ jobs:
             fi
             sleep 2
           done
-          
+
           # Final check
           if ! docker inspect --format='{{.State.Health.Status}}' qdrant-ci 2>/dev/null | grep -q "healthy"; then
             echo "❌ Qdrant backend failed to become healthy"
             docker logs qdrant-ci
             exit 1
           fi
-          
+
           echo "✅ Qdrant backend is ready"
 
       - name: Run Node API tests
