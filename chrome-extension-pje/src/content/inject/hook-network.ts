@@ -157,9 +157,12 @@
                 if (text && (text.trim().startsWith("{") || text.trim().startsWith("["))) {
                   try {
                     body = JSON.parse(text);
-                  } catch (_) {}
+                  } catch (parseErr) {
+                    // JSON parse failed - body não é JSON válido, ignora
+                  }
                 }
-              } catch (_) {
+              } catch (readErr) {
+                // Erro ao ler response text - pode ser binário ou inacessível
                 len = -1;
               }
 
@@ -177,8 +180,8 @@
               return response;
             });
           }
-        } catch (e) {
-          // ignore
+        } catch (hookErr) {
+          // Erro ao configurar hook fetch - URL inválida ou problema no interceptor
         }
         return origFetch(input, init);
       };
@@ -205,23 +208,23 @@
                       duration: Date.now() - start,
                       payloadSize: JSON.stringify(data).length,
                     });
-                  } catch {
-                    // Erro ao processar callback
+                  } catch (cbErr) {
+                    // Erro ao processar callback - serialização ou envio falhou
                   }
                   if (originalSuccess) originalSuccess.call(this, data, ...restArgs);
                 };
               }
-            } catch {
-              // Erro ao configurar hook jQuery
+            } catch (configErr) {
+              // Erro ao configurar hook jQuery - settings inválidos
             }
             return origAjax.apply(this, args as any);
           };
         }
-      } catch {
-        // jQuery não disponível ou erro ao criar hook
+      } catch (jqueryErr) {
+        // jQuery não disponível ou erro ao criar hook - ignora
       }
     })();
-  } catch (err) {
-    // fail silently
+  } catch (globalErr) {
+    // Falha geral ao injetar hooks - fail silently para não quebrar a página
   }
 })();
