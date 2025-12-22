@@ -79,8 +79,10 @@ test.describe("Chrome Extension E2E - PJe Sync", () => {
     if (server) server.close();
   });
 
-  test("should load extension, inject content script and call backend sync", async ({ page: _page }, testInfo) => {
-    // Using chromium.launchPersistentContext to load extension  
+  test("should load extension, inject content script and call backend sync", async ({
+    page: _page,
+  }, testInfo) => {
+    // Using chromium.launchPersistentContext to load extension
     const userDataDir = path.join(os.tmpdir(), `playwright-user-data-${Date.now()}`);
     const context = await chromium.launchPersistentContext(userDataDir, {
       headless: false,
