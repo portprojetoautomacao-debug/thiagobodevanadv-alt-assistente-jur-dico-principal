@@ -224,7 +224,18 @@ export default defineConfig({
         entryFileNames: "assets/[name]-[hash].js",
         assetFileNames: "assets/[name]-[hash][extname]",
         manualChunks(id) {
-          // React core + Phosphor Icons - crítico, carrega primeiro
+          // ✅ FIX CRÍTICO: CSS utilities PRIMEIRO - evita ReferenceError
+          // clsx e tailwind-merge precisam estar disponíveis ANTES de qualquer component
+          // que use a função cn() (className utility)
+          if (
+            id.includes("clsx") ||
+            id.includes("class-variance-authority") ||
+            id.includes("tailwind-merge")
+          ) {
+            return "css-utils";
+          }
+
+          // React core + Phosphor Icons - crítico, carrega segundo
           // ✅ FIX: Phosphor Icons incluído aqui para evitar dependência circular
           // O erro "Cannot set properties of undefined (setting 'Activity')"
           // acontecia porque editor-vendor era importado antes do React estar pronto
@@ -241,7 +252,7 @@ export default defineConfig({
           // Tiptap/ProseMirror agora é bundled naturalmente com MinutasManager (lazy)
           // Isso evita que react-vendor precise importar de editor-vendor
 
-          // Radix UI components - separar em chunks menores
+          // Radix UI components - usa cn(), então vem DEPOIS de css-utils
           if (id.includes("@radix-ui")) {
             return "ui-vendor";
           }
@@ -269,15 +280,6 @@ export default defineConfig({
           // Date utilities - usado frequentemente
           if (id.includes("date-fns")) {
             return "date-utils";
-          }
-
-          // CSS utilities - crítico
-          if (
-            id.includes("clsx") ||
-            id.includes("class-variance-authority") ||
-            id.includes("tailwind-merge")
-          ) {
-            return "css-utils";
           }
 
           // Sentry - lazy loaded com delay
