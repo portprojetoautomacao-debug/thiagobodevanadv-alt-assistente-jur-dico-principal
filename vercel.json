@@ -10,10 +10,13 @@
       "memory": 1024,
       "includeFiles": "api/lib/**"
     },
-    "api/auth/github.ts": {
+    "api/auth/github/login.ts": {
       "maxDuration": 30,
-      "memory": 256,
-      "includeFiles": "api/lib/**"
+      "memory": 256
+    },
+    "api/auth/github/callback.ts": {
+      "maxDuration": 30,
+      "memory": 256
     },
     "api/backup.ts": {
       "maxDuration": 60,
