@@ -122,6 +122,9 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
+    // ✅ FIX: Incluir clsx e tailwind-merge para pre-bundling
+    // Garante que cn() esteja disponível antes de qualquer componente
+    include: ["clsx", "tailwind-merge"],
     // Evita que o Vite tente pré-bundlar esse pacote (usa o stub)
     exclude: ["@doist/todoist-api-typescript"],
   },

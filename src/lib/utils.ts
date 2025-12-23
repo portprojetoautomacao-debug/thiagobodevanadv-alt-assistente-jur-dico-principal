@@ -3,9 +3,12 @@ import { twMerge } from "tailwind-merge";
 
 // ==== CLASSES (Tailwind + clsx) =============================================
 
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+/**
+ * Utility para combinar classes Tailwind com merge inteligente
+ * ✅ FIX: Definido como const arrow function para evitar TDZ (Temporal Dead Zone)
+ * Garante que está disponível imediatamente quando o módulo carrega
+ */
+export const cn = (...inputs: ClassValue[]) => twMerge(clsx(inputs));
 
 // ==== CSV EXPORT ============================================================
 
