@@ -483,6 +483,256 @@ function MyComponent() {
 
 ---
 
+## 🔌 Sistema de Comunicação Entre Agentes
+
+### Arquitetura de Comunicação
+
+O sistema utiliza um **AgentCommunicationHub** centralizado que implementa:
+
+#### 🎯 Padrão Pub/Sub (Publish-Subscribe)
+- Agentes podem se inscrever para receber mensagens
+- Mensagens diretas (ponto-a-ponto) ou broadcast
+- Notificação assíncrona isolada via `queueMicrotask`
+
+#### 🔒 Controle de Concorrência
+- **Message Lock**: Previne race conditions em operações de escrita
+- **Context Lock**: Protege acesso a contextos compartilhados
+- **Timeout**: 5 segundos para adquirir lock
+
+#### 💾 Gerenciamento de Estado
+- **LRU Cache**: Até 500 contextos compartilhados
+- **Limite de mensagens**: Máximo 1000 mensagens em memória
+- **Cleanup automático**: Remove mensagens antigas (24h por padrão)
+
+### Tipos de Mensagens
+
+```typescript
+type AgentMessageType = "request" | "response" | "notification" | "alert";
+type AgentMessagePriority = "low" | "medium" | "high" | "critical";
+
+interface AgentMessage {
+  id: string;
+  timestamp: string;
+  fromAgentId: string;
+  toAgentId?: string; // undefined = broadcast
+  type: AgentMessageType;
+  priority: AgentMessagePriority;
+  content: string;
+  data?: Record<string, unknown>;
+}
+```
+
+### Segurança e Limites
+
+#### Proteção contra DoS
+- **Max Content Length**: 5.000 caracteres
+- **Max Data Size**: 100 KB
+- **Max Message Size**: 10 KB (JSON total)
+- **Sanitização automática**: Remove XSS/scripts maliciosos
+
+#### Validação
+- AgentId validado contra lista permitida
+- Conteúdo sanitizado (HTML, scripts)
+- Tamanho verificado antes de persistir
+
+### Comunicação Direta
+
+```typescript
+// Enviar mensagem para agente específico
+await communicationHub.sendMessage({
+  fromAgentId: 'monitor-djen',
+  toAgentId: 'gestao-prazos',
+  type: 'request',
+  priority: 'high',
+  content: 'Calcular prazo para intimação',
+  data: {
+    publicationDate: '2025-01-15',
+    processNumber: '1234567-89.2025.8.26.0000'
+  }
+});
+
+// Inscrever para receber mensagens
+const unsubscribe = communicationHub.subscribe('gestao-prazos', (message) => {
+  if (message.type === 'request') {
+    // Processar e responder
+    const result = calcularPrazo(message.data);
+
+    communicationHub.sendMessage({
+      fromAgentId: 'gestao-prazos',
+      toAgentId: message.fromAgentId,
+      type: 'response',
+      priority: message.priority,
+      content: 'Prazo calculado',
+      data: result
+    });
+  }
+});
+```
+
+### Broadcast (Todos os Agentes)
+
+```typescript
+// Enviar alerta para todos os agentes
+await communicationHub.broadcastAlert(
+  'monitor-djen',
+  'Intimação urgente detectada! Prazo de 24h.',
+  {
+    processNumber: '1234567-89.2025.8.26.0000',
+    deadline: '2025-01-16T17:00:00Z',
+    priority: 'critical'
+  }
+);
+```
+
+### Contexto Compartilhado
+
+Agentes podem compartilhar contexto estruturado (análises, dados intermediários):
+
+```typescript
+// Compartilhar contexto de análise
+await communicationHub.shareContext(
+  'analise-documental', // quem criou
+  'analise-intimacao',  // tipo
+  {
+    documentoId: '123',
+    tipoIntimacao: 'citacao',
+    prazoCalculado: 15,
+    entidadesExtraidas: ['autor', 'reu', 'advogados']
+  },
+  ['justine', 'gestao-prazos'] // quem pode acessar
+);
+
+// Recuperar contexto
+const ctx = await communicationHub.getContext('analise-intimacao', 'analise-documental');
+
+// Atualizar contexto (merge)
+await communicationHub.setContext('analise-intimacao', 'analise-documental', {
+  urgencia: 'alta',
+  alertaEnviado: true
+});
+```
+
+### Padrões de Colaboração
+
+#### 1. Request-Response (Síncrono)
+```
+Monitor DJEN → [request] → Análise Documental → [response] → Monitor DJEN
+```
+
+#### 2. Pipeline (Assíncrono)
+```
+Monitor DJEN → [notify] → Análise Documental → [notify] → Gestão Prazos → [notify] → Redação
+```
+
+#### 3. Broadcast Alert (Todos)
+```
+Monitor DJEN → [alert: ALL] → {harvey, justine, analise-documental, gestao-prazos, ...}
+```
+
+#### 4. Context Sharing (Colaborativo)
+```
+Análise Documental → [shareContext] → Context Hub ← [getContext] ← Redação Petições
+```
+
+### Métricas e Monitoramento
+
+```typescript
+const stats = communicationHub.getStats();
+// {
+//   totalMessages: 1543,
+//   messagesByType: {
+//     request: 432,
+//     response: 398,
+//     notification: 612,
+//     alert: 101
+//   },
+//   activeContexts: 47,
+//   subscribedAgents: 9
+// }
+```
+
+### Performance
+
+- **Latência de mensagem**: < 5ms (memória)
+- **Throughput**: 500+ mensagens/s
+- **Isolamento de falhas**: Callback de subscriber não afeta outros
+- **Garbage collection**: Mensagens antigas removidas automaticamente
+
+---
+
+## 🌊 Streaming de Respostas (Tempo Real)
+
+### Arquitetura de Streaming
+
+Todos os agentes híbridos suportam **streaming SSE (Server-Sent Events)** para respostas em tempo real:
+
+#### Fluxo de Streaming
+
+```
+Frontend → API /llm-stream → Gemini 2.5 Pro → SSE Stream → Frontend UI
+```
+
+#### Callbacks de Streaming
+
+```typescript
+interface StreamingCallbacks {
+  onChunk: (chunk: string) => void;    // Cada chunk recebido
+  onComplete: () => void;               // Stream completo
+  onError: (error: Error) => void;      // Erro durante stream
+}
+
+// Processar tarefa com streaming
+await processTaskWithStreamingAI(task, agent, {
+  onChunk: (chunk) => {
+    console.log('Chunk recebido:', chunk);
+    updateUI(chunk); // Atualiza UI em tempo real
+  },
+  onComplete: () => {
+    console.log('Stream completo!');
+  },
+  onError: (error) => {
+    console.error('Erro:', error);
+  }
+});
+```
+
+#### Formato SSE
+
+```
+data: {"type":"chunk","content":"Analisando intimação..."}
+
+data: {"type":"chunk","content":" Prazo identificado: 15 dias"}
+
+data: {"type":"chunk","content":" úteis a partir de 15/01/2025"}
+
+data: {"type":"done"}
+```
+
+#### Integração com UI
+
+```typescript
+// Hook React para streaming
+const { streamingContent, isStreaming } = useAIStreaming({
+  agentId: 'justine',
+  sessionId: crypto.randomUUID(),
+  onChunk: (chunk) => {
+    // UI atualiza automaticamente
+  }
+});
+
+// Componente exibe conteúdo em tempo real
+<div>{streamingContent['justine']}</div>
+```
+
+### Benefícios do Streaming
+
+- ✅ **Feedback imediato**: Usuário vê resposta sendo gerada
+- ✅ **Melhor UX**: Não espera 10-30s por resposta completa
+- ✅ **Cancelável**: Pode cancelar stream a qualquer momento
+- ✅ **Monitoramento**: Rastreamento via Sentry AI Monitoring
+
+---
+
 ## 🎯 Próximos Passos
 
 1. **Integração com IA Real (Spark LLM)**
@@ -509,11 +759,12 @@ function MyComponent() {
 
 - [AGENTS_SYSTEM.md](./AGENTS_SYSTEM.md) - Documentação técnica completa
 - [AGENTS_IMPROVEMENTS_SUMMARY.md](./AGENTS_IMPROVEMENTS_SUMMARY.md) - Resumo de melhorias
-- [lib/ai/agents-registry.ts](./lib/ai/agents-registry.ts) - Registry V2 com prompts completos
+- [src/lib/agent-communication.ts](./src/lib/agent-communication.ts) - Sistema de comunicação
+- [src/lib/real-agent-client.ts](./src/lib/real-agent-client.ts) - Cliente com streaming
 - [src/lib/agents.ts](./src/lib/agents.ts) - Implementação core
 
 ---
 
-**Última atualização:** 23/11/2025
+**Última atualização:** 24/12/2025
 **Versão:** 2.0.0
 **Status:** ✅ Produção

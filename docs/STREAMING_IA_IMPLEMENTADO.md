@@ -16,7 +16,7 @@ Implementação completa de **streaming otimizado** para que os agentes de IA es
 function insertStreamingText(editor: ClassicEditor, textChunk: string, isHtml = false): void {
   editor.model.change((writer) => {
     const insertPosition = editor.model.document.selection.getFirstPosition();
-    
+
     if (isHtml) {
       // Para HTML rico (tabelas, listas, etc.)
       const viewFragment = editor.data.processor.toView(textChunk);
@@ -57,7 +57,7 @@ editor.model.document.on("change:data", () => {
     editor.model.change((writer) => {
       // ... remove /ai command
     });
-    
+
     // Executa streaming
     runAIStreaming(aiCommand);
   }
@@ -123,7 +123,7 @@ const runAIStreaming = useCallback(
 
     // Acumula chunks
     buffer += chunk;
-    
+
     // Flush quando necessário
     if (buffer.length >= BUFFER_SIZE || chunk.includes("\n")) {
       flushBuffer();
@@ -213,10 +213,10 @@ Detecta automaticamente e renderiza:
 **Alteração:**
 ```diff
 - **Editor/Documentos**: `src/components/editor/TiptapEditor.tsx`...
-+ **Editor/Documentos**: `src/components/editor/ProfessionalEditor.tsx` (CKEditor 5) 
-+ com streaming fluido de IA via `writer.insertText`, suporte a comandos `/ai`, 
-+ variáveis `{{variavel}}` e HTML rico. 
-+ Documentação completa em `docs/CKEDITOR5_AI_STREAMING.md` 
++ **Editor/Documentos**: `src/components/editor/ProfessionalEditor.tsx` (CKEditor 5)
++ com streaming fluido de IA via `writer.insertText`, suporte a comandos `/ai`,
++ variáveis `{{variavel}}` e HTML rico.
++ Documentação completa em `docs/CKEDITOR5_AI_STREAMING.md`
 + e exemplos em `docs/EXEMPLO_USO_EDITOR_IA.md`.
 ```
 
@@ -231,7 +231,7 @@ import { ProfessionalEditor } from '@/components/editor/ProfessionalEditor';
 
 function RedatorPeticoes({ expediente }: { expediente: Expediente }) {
   const [content, setContent] = useState('');
-  
+
   return (
     <ProfessionalEditor
       content={content}
