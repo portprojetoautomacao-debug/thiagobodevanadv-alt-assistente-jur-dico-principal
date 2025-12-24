@@ -144,3 +144,9 @@ pkg/
 
 # Diretórios de teste temporários
 src/lib/tolkitagentetest/
+
+# Arquivos de debug e logs
+*.debug.js
+*.debug.ts
+console-*.txt
+console-*.log
