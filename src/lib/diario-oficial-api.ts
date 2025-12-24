@@ -152,7 +152,7 @@ export async function consultarQueridoDiario(
 
     const url = `${baseUrl}/gazettes?${queryParams.toString()}`;
 
-    const response = await fetch(url, {
+    const response = await fetch(url.toString(), {
       headers: {
         Accept: "application/json",
       },

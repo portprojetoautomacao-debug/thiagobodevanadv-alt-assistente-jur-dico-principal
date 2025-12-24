@@ -225,7 +225,7 @@ async function consultarPublicacoesTribunal(
   const timeoutId = setTimeout(() => controller.abort(), timeout);
 
   try {
-    const response = await fetch(url, {
+    const response = await fetch(url.toString(), {
       method: "GET",
       headers: {
         "User-Agent": "PJe-DataCollector/1.0",
