@@ -57,8 +57,9 @@ echo ""
 # ============================================
 echo "🔐 2/10 - Google OAuth & AI..."
 add_secret "VITE_GOOGLE_CLIENT_ID" "572929400457-lufh2hv2dt7129mikbr1e9k5h1copv4s.apps.googleusercontent.com"
-add_secret "VITE_GOOGLE_API_KEY" "AIzaSyB0dbI9WQqYmGuVLn4nYrOtuMKGLuydBZ0"
-add_secret "VITE_GEMINI_API_KEY" "AIzaSyB0dbI9WQqYmGuVLn4nYrOtuMKGLuydBZ0"
+add_secret "VITE_GOOGLE_API_KEY" "AIzaSyCpQSA3H1t_eD6GyRXx1JQrrFS0rfX4vvQ"
+add_secret "VITE_GEMINI_API_KEY" "AIzaSyCpQSA3H1t_eD6GyRXx1JQrrFS0rfX4vvQ"
+add_secret "GEMINI_API_KEY" "AIzaSyCpQSA3H1t_eD6GyRXx1JQrrFS0rfX4vvQ"
 echo ""
 
 # ============================================

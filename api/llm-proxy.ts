@@ -175,16 +175,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // Require LLM proxy API key in non-development environments unless explicitly allowed
   // Security: Avoid open LLM proxy in production
-  // ✅ CORREÇÃO: Detectar localhost/127.0.0.1 como desenvolvimento
-  const isLocalhost = req.headers.host?.includes("localhost") || 
-                      req.headers.host?.includes("127.0.0.1") ||
-                      req.headers.host?.includes("[::1]");
-  const isDev = process.env.NODE_ENV === "development" || isLocalhost;
+  // ✅ CORREÇÃO: Detectar localhost/127.0.0.1 e portas de desenvolvimento
+  const isLocalhost =
+    req.headers.host?.includes("localhost") ||
+    req.headers.host?.includes("127.0.0.1") ||
+    req.headers.host?.includes("[::1]") ||
+    req.headers.host?.includes(":517"); // Detecta portas Vite (5173, 5174)
+  const isDev =
+    process.env.NODE_ENV === "development" ||
+    process.env.VERCEL_ENV === "development" ||
+    isLocalhost;
   const allowPublic = process.env.LLM_PROXY_ALLOW_PUBLIC === "true";
-  
+
+  // ✅ CORREÇÃO: Em desenvolvimento, NÃO exigir API key para permitir testes locais
   if (!isDev && !allowPublic) {
     // Always require API key in production by default
     if (!requireApiKey(req, res, "LLM_PROXY_API_KEY")) return;
+  }
+
+  // Log para debug em desenvolvimento
+  if (isDev) {
+    console.log("[LLM Proxy] Modo desenvolvimento - API Key não exigida");
   }
 
   // rate limit middleware
@@ -223,7 +234,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       name: "Gemini",
       baseUrl: "https://generativelanguage.googleapis.com/v1beta/models",
       apiKey:
-        process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY,
+        process.env.VITE_GEMINI_API_KEY ||
+        process.env.GEMINI_API_KEY ||
+        process.env.GOOGLE_API_KEY ||
+        // ✅ FALLBACK: Tenta importar do .env local em desenvolvimento
+        (isDev ? process.env.GEMINI_API_KEY_DEV : undefined),
       headers: () => ({
         "Content-Type": "application/json",
       }),
@@ -231,6 +246,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       transformResponse: transformFromGemini,
     },
   ];
+
+  // ✅ VALIDAÇÃO: Verificar se API keys estão configuradas
+  const hasAnyKey = providers.some((p) => p.apiKey && p.apiKey.trim().length > 0);
+  if (!hasAnyKey) {
+    console.error("[LLM Proxy] ERRO: Nenhuma API key configurada para provedores LLM");
+    return res.status(500).json({
+      error: "No LLM API keys configured",
+      message: "Configure OPENAI_API_KEY, GEMINI_API_KEY ou GITHUB_TOKEN nas variáveis de ambiente",
+      providers: providers.map((p) => ({ name: p.name, hasKey: !!p.apiKey })),
+    });
+  }
 
   // Encontrar provedor disponível
   const provider = providers.find((p) => p.apiKey);
@@ -393,16 +419,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const errorText = await response.text();
         // ✅ FIX: Log detalhado para debug de erros 429/500
         console.error(`[${provider.name}] HTTP ${response.status}:`, {
-          url: targetUrl.replace(/key=[^&]+/, 'key=***'),
+          url: targetUrl.replace(/key=[^&]+/, "key=***"),
           status: response.status,
-          error: errorText.substring(0, 500)
+          error: errorText.substring(0, 500),
         });
-        
+
         // ✅ FIX: Tratamento específico para 429 (Rate Limit)
         if (response.status === 429) {
           throw new Error(`${provider.name} Rate Limit: ${errorText.substring(0, 200)}`);
         }
-        
+
         throw new Error(`${provider.name} API error: ${response.status} - ${errorText}`);
       }
       return response.json();
@@ -436,27 +462,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.error("[LLM Proxy] Error:", {
       provider: provider?.name,
       error: errorMessage,
-      stack: error instanceof Error ? error.stack?.substring(0, 300) : undefined
+      stack: error instanceof Error ? error.stack?.substring(0, 300) : undefined,
     });
-    
+
     // Update circuit failure count
     const name = provider?.name || "unknown";
     const st = circuit.get(name) || { failures: 0 };
     st.failures = (st.failures || 0) + 1;
-    
+
     // ✅ FIX: Circuit breaker mais agressivo para Rate Limit
     const FAILURE_THRESHOLD = errorMessage.includes("Rate Limit") ? 2 : 5;
     const OPEN_TIME_MS = errorMessage.includes("Rate Limit") ? 120_000 : 60_000; // 2min para rate limit
-    
+
     if (st.failures >= FAILURE_THRESHOLD) {
       st.openedUntil = Date.now() + OPEN_TIME_MS;
       console.warn(`[LLM Proxy] Circuit breaker ABERTO para ${name} (${st.failures} falhas)`);
     }
     circuit.set(name, st);
-    
+
     // ✅ FIX: Retornar 429 se for rate limit, 500 caso contrário
     const statusCode = errorMessage.includes("Rate Limit") ? 429 : 500;
-    
+
     res.status(statusCode).json({
       error: "Failed to process LLM request",
       message: errorMessage,

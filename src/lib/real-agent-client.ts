@@ -69,6 +69,24 @@ function processStreamingChunk(
   }
 
   if (chunk.type === "error" && chunk.message) {
+    // ✅ CORREÇÃO: Detectar erro de API key expirada e fornecer mensagem útil
+    const isApiKeyExpired =
+      chunk.message.includes("API key expired") || chunk.message.includes("API_KEY_INVALID");
+
+    if (isApiKeyExpired) {
+      const errorMessage =
+        `🔑 API Key do Gemini EXPIRADA ou INVÁLIDA\n\n` +
+        `Ação necessária:\n` +
+        `1. Acesse https://makersuite.google.com/app/apikey\n` +
+        `2. Gere uma nova API key\n` +
+        `3. Atualize a variável VITE_GEMINI_API_KEY no arquivo .env\n` +
+        `4. Reinicie o servidor de desenvolvimento\n\n` +
+        `Erro original: ${chunk.message}`;
+
+      console.error("[Real Agent Client] ", errorMessage);
+      return { content: currentContent, shouldThrow: new Error(errorMessage) };
+    }
+
     return { content: currentContent, shouldThrow: new Error(chunk.message) };
   }
 

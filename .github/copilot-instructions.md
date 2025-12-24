@@ -404,7 +404,7 @@ npm run dev &                  # Servidor em background
 npm run test                   # Testes em watch mode
 
 # Verificações rápidas
-npm run type-check             # TypeScript sem build
+npm run type-check             # Verificação TypeScript
 npm run lint                   # ESLint
 npm run test:run               # Testes sem watch
 
@@ -1354,5 +1354,3 @@ export class LegalAgentOrchestrator {
   // ...implementation
 }
 ```
-
----

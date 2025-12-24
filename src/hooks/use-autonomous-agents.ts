@@ -239,7 +239,14 @@ function getInitialAgents(): Agent[] {
 
       // Return valid stored agents SOMENTE se tiver exatamente 16
       if (Array.isArray(parsed) && parsed.length === 16) {
-        console.log("[Agents] Carregados 16 agentes do localStorage ✓");
+        // ✅ CORREÇÃO: Log apenas uma vez (throttle) para evitar spam no console
+        const lastLogTime = (globalThis as any).__lastAgentsLogTime || 0;
+        const now = Date.now();
+        if (now - lastLogTime > 10000) {
+          // Log apenas a cada 10 segundos
+          console.log("[Agents] ✓ 16 agentes ativos do localStorage");
+          (globalThis as any).__lastAgentsLogTime = now;
+        }
         return parsed;
       }
 

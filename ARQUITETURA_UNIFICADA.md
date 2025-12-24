@@ -1,7 +1,7 @@
 # 🏗️ Arquitetura Unificada - Assistente Jurídico PJe
 
-**Versão:** 2.0 (Unificada)  
-**Data:** 23/11/2025  
+**Versão:** 2.0 (Unificada)
+**Data:** 23/11/2025
 **Status:** ✅ Produção
 
 ---
@@ -388,6 +388,35 @@ Ambos trabalham em harmonia para fornecer um sistema de agentes IA completo, esc
 
 ---
 
-**Última atualização:** 23/11/2025  
-**Versão:** 2.0 Unificada  
+**Última atualização:** 23/11/2025
+**Versão:** 2.0 Unificada
 **Status:** ✅ Produção
+
+---
+
+# Instruções para o Copilot
+
+1. **Contexto do Projeto:**
+   - Este projeto é um assistente jurídico baseado em IA, integrado ao sistema PJe.
+   - O assistente é composto por múltiplos agentes, cada um com funções específicas (ex: análise de processos, gestão de prazos).
+
+2. **Objetivos do Copilot:**
+   - Ajudar na escrita e revisão de código, especialmente nas linguagens e frameworks utilizados no projeto (TypeScript, React, etc.).
+   - Sugerir melhorias na arquitetura do código, garantindo boas práticas de desenvolvimento.
+   - Auxiliar na criação de documentação técnica e de usuário.
+
+3. **Informações Adicionais:**
+   - O projeto já possui uma arquitetura definida, com agentes core e agents registry.
+   - Existem 15 agentes implementados, cada um com sua personalidade e conjunto de permissões.
+   - O sistema possui integração com APIs externas para funcionalidades como consulta de processos e envio de mensagens.
+
+4. **Restrições:**
+   - O código deve ser escrito em TypeScript.
+   - Devem ser respeitadas as estruturas de pastas e arquivos já existentes no projeto.
+   - É importante manter a consistência com o estilo de código já utilizado.
+
+5. **Exemplos de Comandos Úteis:**
+   - `git status`: Verifica o estado atual do repositório.
+   - `git add .`: Adiciona todas as mudanças ao staging.
+   - `git commit -m "mensagem"`: Faz um commit das mudanças.
+   - `git push`: Envia as mudanças para o repositório remoto.

@@ -50,3 +50,5 @@ O projeto já contém os arquivos de configuração necessários:
 
 ---
 **Precisa de ajuda?** Consulte a documentação oficial do GitLab Duo ou contate o administrador do grupo.
+
+Consulte também as instruções adicionais em [.github/copilot-instructions.md](.github/copilot-instructions.md)
