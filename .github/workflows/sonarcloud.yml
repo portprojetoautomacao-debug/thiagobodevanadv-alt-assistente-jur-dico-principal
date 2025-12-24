@@ -1,28 +1,15 @@
 name: SonarCloud Analysis
 
-# ✅ CONFIGURAÇÃO COMPLETA
-# Token configurado em: Settings > Secrets and variables > Actions > SONAR_TOKEN
-# Valor: f1060772d31980c6b46dc9f5219fba8fd8745b18
-#
-# Análise automática para:
-# - Push na branch main
-# - Pull Requests (opened, synchronize, reopened)
-# - Execução manual via workflow_dispatch
-#
-# Integração: JS/TS e Web (React + TypeScript + Vite)
+# ⚠️ DESABILITADO TEMPORARIAMENTE - Requer configuração de SONAR_TOKEN
+# Para reativar, configure o token em: Settings > Secrets > SONAR_TOKEN
+# e descomente a seção 'on:' abaixo
 
 on:
-  push:
-    branches: [main, feat/optimize-workflows-enterprise-grade]
-  pull_request:
-    types: [opened, synchronize, reopened]
-  workflow_dispatch: # Permite execução manual para teste
-    inputs:
-      test_comment:
-        description: "Simulate comment permission test (create and delete a test comment)"
-        required: false
-        default: false
-        type: boolean
+  workflow_dispatch: # Apenas execução manual
+  # push:
+  #   branches: [main, feat/optimize-workflows-enterprise-grade]
+  # pull_request:
+  #   types: [opened, synchronize, reopened]
 
 concurrency:
   group: sonarcloud-${{ github.workflow }}-${{ github.ref }}

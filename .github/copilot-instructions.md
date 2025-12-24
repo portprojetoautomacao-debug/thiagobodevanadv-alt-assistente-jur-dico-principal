@@ -48,9 +48,9 @@ applyTo: "**"
 | Prioridade     | Tipo                                | Ação                     |
 | -------------- | ----------------------------------- | ------------------------ |
 | 🔴 **Crítica** | Sistema fora do ar, perda de dados  | Corrigir IMEDIATAMENTE   |
-| 🟠 **Alta**    | Funcionalidade principal quebrada   | Corrigir em até 24h      |
-| 🟡 **Média**   | Bug que afeta UX mas tem workaround | Corrigir quando possível |
-| 🟢 **Baixa**   | Melhorias cosméticas, typos         | Avaliar necessidade      |
+| 🟠 **Alta**    | Funcionalidade principal quebrada   | Corrigir IMEDIATAMENTE     |
+| 🟡 **Média**   | Bug que afeta UX mas tem workaround | Corrigir IMEDIAMENTE
+| 🟢 **Baixa**   | Melhorias cosméticas, typos         | Avaliar se vai melhorar desempenho e corrigir|
 
 ---
 

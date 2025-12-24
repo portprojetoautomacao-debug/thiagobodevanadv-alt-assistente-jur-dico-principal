@@ -10,9 +10,9 @@
  */
 
 import type {
-  UnifiedPublication,
   PublicationSearchParams,
   PublicationSourceConfig,
+  UnifiedPublication,
 } from "./publication-sources-types.js";
 
 export interface DiarioOficialConfig extends PublicationSourceConfig {

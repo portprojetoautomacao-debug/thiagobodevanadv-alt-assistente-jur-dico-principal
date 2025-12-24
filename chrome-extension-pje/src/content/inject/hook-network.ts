@@ -142,9 +142,14 @@
     (function () {
       if (!(window as any).fetch) return;
       const origFetch = window.fetch.bind(window as any);
-      window.fetch = function (input: RequestInfo, init?: RequestInit) {
+      window.fetch = function (input: RequestInfo | URL, init?: RequestInit) {
         try {
-          const url = typeof input === "string" ? input : (input as Request).url;
+          const url =
+            typeof input === "string"
+              ? input
+              : input instanceof URL
+                ? input.href
+                : (input as Request).url;
           if (url && allowedHostPattern.test(url)) {
             const start = Date.now();
             return origFetch(input, init).then(async (response: Response) => {
