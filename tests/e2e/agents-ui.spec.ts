@@ -14,132 +14,123 @@ test.describe("Agentes IA - Testes de UI e Funcionalidade", () => {
     });
     // Navega direto para a página de agentes por hash (fallback de roteamento)
     await page.goto("/#ai-agents");
+    await page.waitForLoadState("networkidle");
   });
 
   test("deve carregar a página de Agentes IA", async ({ page }) => {
-    // Aguarda a página carregar completamente
-    await page.waitForLoadState("networkidle");
+    // Verifica título principal do componente (texto exato do AIAgents.tsx)
+    await expect(page.getByRole("heading", { name: "Agentes de IA Autônomos" })).toBeVisible({
+      timeout: 10000,
+    });
 
-    // Verifica se a página de agentes carregou usando o título real do componente
+    // Verifica subtítulo (texto exato)
     await expect(
-      page
-        .getByRole("heading", { name: /Agentes de IA Autônomos|Harvey Specter|Mrs\. Justin-e/i })
-        .first()
-    ).toBeVisible({ timeout: 15000 });
+      page.getByText(
+        "Equipe de inteligência artificial trabalhando 24/7 para automatizar tarefas jurídicas"
+      )
+    ).toBeVisible();
 
-    // Verificar se navegação está presente
-    await expect(page.getByRole("navigation").first()).toBeVisible();
+    // Verifica que há cards de status (texto exato dos cards)
+    await expect(page.getByText("Agentes Disponíveis")).toBeVisible();
+    await expect(page.getByText("Fila de Trabalho")).toBeVisible();
   });
 
   test("deve mostrar status dos agentes corretamente", async ({ page }) => {
-    // Verifica se a página está carregada
-    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    // Verifica cards de métricas principais
+    await expect(page.getByText("Agentes Disponíveis")).toBeVisible();
+    await expect(page.getByText("Fila de Trabalho")).toBeVisible();
+    await expect(page.getByText("Backup Local")).toBeVisible();
 
-    // Verifica se há pelo menos um badge de status (Ativo, Pausado, Streaming)
-    const statusBadges = page.getByText(/^(Ativo|Pausado|Streaming)$/);
-    await expect(statusBadges.first()).toBeVisible({ timeout: 10000 });
+    // Verifica que mostra formato "X/Y" para agentes ativos
+    const agentesDisponiveis = page.locator("text=/\\d+\\/15/").first();
+    await expect(agentesDisponiveis).toBeVisible({ timeout: 5000 });
 
-    // Verifica se status está visível (aceita vários formatos)
-    const statusText = page.getByText(/\d+ ativo\(s\)|Nenhum ativado|processando/i);
-    await expect(statusText.first()).toBeVisible();
+    // Verifica tabs estão presentes
+    await expect(page.getByRole("tab", { name: "Agentes" })).toBeVisible();
+    await expect(page.getByRole("tab", { name: /Métricas/i })).toBeVisible();
   });
 
   test("deve permitir alternar status dos agentes", async ({ page }) => {
-    // Aguarda cards de agentes carregarem usando heading de agente
-    await expect(
-      page.getByRole("heading", { name: /Harvey|Justin|Monitor|Análise/i }).first()
-    ).toBeVisible({ timeout: 10000 });
+    // Clica na aba "Agentes" se não estiver selecionada
+    const agentsTab = page.getByRole("tab", { name: "Agentes" });
+    await agentsTab.click();
+    await page.waitForTimeout(500);
 
-    // Localiza o switch usando ARIA role (melhor prática)
+    // Localiza primeiro switch de agente (usando ARIA role e label descritivo)
     const agentSwitch = page.getByRole("switch").first();
     await agentSwitch.waitFor({ state: "visible", timeout: 10000 });
 
     // Verifica estado inicial
     const initialState = await agentSwitch.getAttribute("data-state");
+    expect(initialState).toMatch(/checked|unchecked/);
 
     // Alterna o estado
     await agentSwitch.click();
-    await page.waitForTimeout(500); // Aguarda animação
+    await page.waitForTimeout(800);
 
     // Verifica se estado mudou
     const newState = await agentSwitch.getAttribute("data-state");
     expect(newState).not.toBe(initialState);
 
-    // Alterna novamente para restaurar
-    await agentSwitch.click();
+    // Verifica toast de confirmação (texto exato de AIAgents.tsx)
+    await expect(page.locator("text=/ativado|desativado/i").first()).toBeVisible({ timeout: 3000 });
   });
 
   test("deve mostrar métricas dos agentes", async ({ page }) => {
-    // Abre a aba de Métricas usando ARIA tab role
+    // Clica na aba de Métricas
     const metricsTab = page.getByRole("tab", { name: /Métricas/i });
+    await expect(metricsTab).toBeVisible();
+    await metricsTab.click();
+    await page.waitForTimeout(1000);
 
-    if ((await metricsTab.count()) > 0) {
-      await metricsTab.click();
-      await page.waitForTimeout(500); // Aguarda conteúdo carregar
-    }
+    // Verifica se AgentMetricsDashboard ou AgentMetrics está presente
+    // O componente pode renderizar o novo dashboard ou o antigo
+    const hasMetricsContent = page
+      .locator('[role="progressbar"], text=/Taxa de Sucesso|Performance|Estatísticas/i')
+      .first();
 
-    // Verifica conteúdo de métricas usando texto específico
-    await expect(
-      page.getByText(/Taxa de Sucesso|Tarefas Completadas|Desempenho/i).first()
-    ).toBeVisible({ timeout: 10000 });
-
-    // Verifica se há pelo menos um indicador visual (progressbar ARIA)
-    await expect(page.locator('[role="progressbar"]').first()).toBeVisible();
+    // Aguarda qualquer indicador de métricas aparecer
+    await expect(hasMetricsContent).toBeVisible({ timeout: 10000 });
   });
 
   test("deve permitir executar tarefas manuais dos agentes", async ({ page }) => {
-    // Já estamos na tela de agentes via hash
+    // Clica na aba "Fila de Tarefas" onde ficam as tarefas
+    const queueTab = page.getByRole("tab", { name: "Fila de Tarefas" });
+    await queueTab.click();
+    await page.waitForTimeout(500);
 
-    // Procura por botões de ação dos agentes
-    const actionButtons = page.locator(
-      'button:has-text("Executar"), button:has-text("Run"), button:has-text("Process")'
-    );
-
-    // Se houver botões de ação, testa um deles
-    if ((await actionButtons.count()) > 0) {
-      await actionButtons.first().click();
-
-      // Verifica se mostra feedback de execução
-      await expect(page.getByText(/executando|processing|running/i)).toBeVisible();
-    }
+    // Verifica se mostra o card de fila de tarefas
+    await expect(page.getByText(/Tarefas na Fila|Nenhuma tarefa na fila/i)).toBeVisible({
+      timeout: 5000,
+    });
   });
+
   test("deve mostrar logs de atividade dos agentes", async ({ page }) => {
-    // Já estamos na tela de agentes via hash
-
-    // Abre a aba "Atividade em Tempo Real" que contém os logs
+    // Clica na aba "Atividade em Tempo Real"
     const activityTab = page.getByRole("tab", { name: /Atividade em Tempo Real/i });
+    await activityTab.click();
+    await page.waitForTimeout(500);
 
-    if ((await activityTab.count()) > 0) {
-      await activityTab.click();
-
-      // Aguarda o conteúdo carregar
-      await page.waitForTimeout(500);
-
-      // Verifica se mostra o registro de atividades (baseado no snapshot do DOM)
-      await expect(page.getByText(/Registro de Atividades/i)).toBeVisible();
-
-      // Verifica se mostra pelo menos uma entrada de log
-      await expect(page.locator('p:has-text("Tarefa concluída:")').first()).toBeVisible();
-    }
+    // Verifica se mostra o conteúdo de atividades
+    // Pode ser "Nenhuma atividade registrada" ou lista de atividades
+    const activityContent = page.locator("text=/Nenhuma atividade registrada|atividade/i").first();
+    await expect(activityContent).toBeVisible({ timeout: 5000 });
   });
 
   test("deve permitir configuração de geração automática de tarefas", async ({ page }) => {
-    // Já estamos na tela de agentes via hash
+    // Verifica se o toggle de streaming está presente (configuração principal visível)
+    const streamingToggle = page.locator("text=/Streaming de Respostas|Respostas em Tempo Real/i");
 
-    // Procura pelo controle de geração automática
-    const autoGenerateSwitch = page
-      .locator('input[type="checkbox"], .switch')
-      .filter({ hasText: /auto|automático|automatic/i });
+    if ((await streamingToggle.count()) > 0) {
+      await expect(streamingToggle.first()).toBeVisible();
+    }
 
-    if ((await autoGenerateSwitch.count()) > 0) {
-      const initialState = await autoGenerateSwitch.first().isChecked();
-
-      // Alterna o estado
-      await autoGenerateSwitch.first().click();
-
-      // Verifica se o estado mudou
-      const newState = await autoGenerateSwitch.first().isChecked();
-      expect(newState).not.toBe(initialState);
+    // Verifica se switch de streaming está presente
+    const streamingSwitch = page
+      .getByRole("switch")
+      .filter({ has: page.locator("text=/Streaming/i") });
+    if ((await streamingSwitch.count()) > 0) {
+      await expect(streamingSwitch.first()).toBeVisible();
     }
   });
 

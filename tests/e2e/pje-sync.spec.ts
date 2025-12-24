@@ -7,11 +7,10 @@ test.describe("PJe Sync E2E", () => {
 
   test("should return 401 with invalid api key and 200 with valid key (expedientes)", async ({
     request,
-    page,
   }) => {
     // invalid key -> 401
     const invalidResp = await request.post(`${apiBase}/pje-sync`, {
-      headers: { "Content-Type": "application/json", "X-API-Key": "invalid-key" },
+      headers: { "Content-Type": "application/json", "X-API-Key": "invalid-key-xxx" },
       data: { type: "SYNC_EXPEDIENTES", data: [] },
     });
     expect(invalidResp.status()).toBe(401);
