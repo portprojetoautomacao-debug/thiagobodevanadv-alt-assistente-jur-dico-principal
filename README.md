@@ -1318,10 +1318,10 @@ Para interrupções de serviço, erros críticos ou comportamento anômalo, cons
 
 **Links Rápidos:**
 
-- 🔴 [Interrupção Total do Serviço](docs/RUNBOOK.md#-interrupção-total-do-serviço)
-- 🟠 [Erro Crítico em Produção](docs/RUNBOOK.md#-erro-crítico-em-produção)
-- 🟡 [Degradação de Performance](docs/RUNBOOK.md#-degradação-de-performance)
-- 🔵 [Agentes com Comportamento Anômalo](docs/RUNBOOK.md#-agentes-ia-com-comportamento-anômalo)
+- 🔴 [Interrupção Total do Serviço](docs/RUNBOOK.md#interrupção-total-do-serviço)
+- 🟠 [Erro Crítico em Produção](docs/RUNBOOK.md#erro-crítico-em-produção)
+- 🟡 [Degradação de Performance](docs/RUNBOOK.md#degradação-de-performance)
+- 🔵 [Agentes com Comportamento Anômalo](docs/RUNBOOK.md#agentes-ia-com-comportamento-anômalo)
 
 ### ✅ Checklist Diário Obrigatório
 
@@ -2712,10 +2712,10 @@ Para interrupções de serviço, erros críticos ou comportamento anômalo, cons
 
 **Links Rápidos:**
 
-- 🔴 [Interrupção Total do Serviço](docs/RUNBOOK.md#-interrupção-total-do-serviço)
-- 🟠 [Erro Crítico em Produção](docs/RUNBOOK.md#-erro-crítico-em-produção)
-- 🟡 [Degradação de Performance](docs/RUNBOOK.md#-degradação-de-performance)
-- 🔵 [Agentes com Comportamento Anômalo](docs/RUNBOOK.md#-agentes-ia-com-comportamento-anômalo)
+- 🔴 [Interrupção Total do Serviço](docs/RUNBOOK.md#interrupção-total-do-serviço)
+- 🟠 [Erro Crítico em Produção](docs/RUNBOOK.md#erro-crítico-em-produção)
+- 🟡 [Degradação de Performance](docs/RUNBOOK.md#degradação-de-performance)
+- 🔵 [Agentes com Comportamento Anômalo](docs/RUNBOOK.md#agentes-ia-com-comportamento-anômalo)
 
 ### ✅ Checklist Diário Obrigatório
 
@@ -4106,10 +4106,10 @@ Para interrupções de serviço, erros críticos ou comportamento anômalo, cons
 
 **Links Rápidos:**
 
-- 🔴 [Interrupção Total do Serviço](docs/RUNBOOK.md#-interrupção-total-do-serviço)
-- 🟠 [Erro Crítico em Produção](docs/RUNBOOK.md#-erro-crítico-em-produção)
-- 🟡 [Degradação de Performance](docs/RUNBOOK.md#-degradação-de-performance)
-- 🔵 [Agentes com Comportamento Anômalo](docs/RUNBOOK.md#-agentes-ia-com-comportamento-anômalo)
+- 🔴 [Interrupção Total do Serviço](docs/RUNBOOK.md#interrupção-total-do-serviço)
+- 🟠 [Erro Crítico em Produção](docs/RUNBOOK.md#erro-crítico-em-produção)
+- 🟡 [Degradação de Performance](docs/RUNBOOK.md#degradação-de-performance)
+- 🔵 [Agentes com Comportamento Anômalo](docs/RUNBOOK.md#agentes-ia-com-comportamento-anômalo)
 
 ### ✅ Checklist Diário Obrigatório
 
