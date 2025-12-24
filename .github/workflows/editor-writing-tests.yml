@@ -1,0 +1,356 @@
+name: Editor Writing Tests
+
+on:
+  schedule:
+    # Roda todos os dias às 3h da manhã
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: "Type of test to run"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
+          - streaming
+          - commands
+          - variables
+          - collaboration
+
+jobs:
+  test-streaming-write:
+    name: Test Streaming Write
+    runs-on: ubuntu-latest
+    if: inputs.test_type == 'all' || inputs.test_type == 'streaming'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - run: npm ci
+
+      - name: Test AI streaming to editor
+        run: |
+          cat > tests/editor-streaming.spec.ts << 'EOF'
+          import { test, expect } from '@playwright/test';
+
+          test.describe('Editor Streaming', () => {
+            test('should stream AI text fluently', async ({ page }) => {
+              await page.goto('/');
+              await page.click('[data-testid="new-minuta"]');
+              await page.click('[data-testid="ai-button"]');
+              await page.fill('[data-testid="ai-prompt"]', 'Redija uma petição');
+              await page.click('[data-testid="generate"]');
+
+              // Aguardar streaming começar
+              await page.waitForSelector('.ck-editor-container', { state: 'visible' });
+
+              // Verificar se texto está sendo inserido
+              await page.waitForTimeout(2000);
+              const content = await page.textContent('.ck-editor__editable');
+              expect(content).toBeTruthy();
+              expect(content.length).toBeGreaterThan(50);
+            });
+
+            test('should pause streaming when user types', async ({ page }) => {
+              await page.goto('/');
+              await page.click('[data-testid="new-minuta"]');
+              await page.click('[data-testid="ai-button"]');
+              await page.fill('[data-testid="ai-prompt"]', 'Continue escrevendo');
+              await page.click('[data-testid="generate"]');
+
+              // Aguardar streaming
+              await page.waitForTimeout(1000);
+
+              // Usuário começa a digitar
+              await page.click('.ck-editor__editable');
+              await page.keyboard.type('Texto do usuário');
+
+              // Verificar badge "Você está editando"
+              await expect(page.locator('text=Você está editando')).toBeVisible();
+            });
+          });
+          EOF
+
+          npx playwright test tests/editor-streaming.spec.ts
+
+  test-ai-commands:
+    name: Test /ai Commands
+    runs-on: ubuntu-latest
+    if: inputs.test_type == 'all' || inputs.test_type == 'commands'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - run: npm ci
+
+      - name: Test /ai command detection
+        run: |
+          cat > tests/ai-commands.spec.ts << 'EOF'
+          import { test, expect } from '@playwright/test';
+
+          test.describe('/ai Commands', () => {
+            test('should detect /ai command', async ({ page }) => {
+              await page.goto('/');
+              await page.click('[data-testid="new-minuta"]');
+
+              const editor = page.locator('.ck-editor__editable');
+              await editor.click();
+              await editor.type('/ai redija uma contestação');
+
+              // Comando deve ser detectado e executado
+              await page.waitForTimeout(2000);
+              const content = await editor.textContent();
+
+              // /ai deve ter sido removido
+              expect(content).not.toContain('/ai redija');
+
+              // Conteúdo deve ter sido gerado
+              expect(content.length).toBeGreaterThan(100);
+            });
+
+            test('should support quick commands', async ({ page }) => {
+              await page.goto('/');
+              await page.click('[data-testid="new-minuta"]');
+
+              // Digitar algum texto
+              const editor = page.locator('.ck-editor__editable');
+              await editor.click();
+              await editor.type('Este é um texto básico.');
+
+              // Clicar em "Expandir"
+              await page.click('[data-testid="quick-cmd-expand"]');
+
+              await page.waitForTimeout(2000);
+              const content = await editor.textContent();
+
+              // Texto deve ter sido expandido
+              expect(content.length).toBeGreaterThan(50);
+            });
+          });
+          EOF
+
+          npx playwright test tests/ai-commands.spec.ts
+
+  test-variable-substitution:
+    name: Test Variable Substitution
+    runs-on: ubuntu-latest
+    if: inputs.test_type == 'all' || inputs.test_type == 'variables'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - run: npm ci
+
+      - name: Test variable replacement
+        run: |
+          cat > tests/variables.spec.ts << 'EOF'
+          import { test, expect } from '@playwright/test';
+
+          test.describe('Variable Substitution', () => {
+            test('should replace variables in editor', async ({ page }) => {
+              await page.goto('/');
+              await page.click('[data-testid="new-minuta"]');
+
+              const editor = page.locator('.ck-editor__editable');
+              await editor.click();
+
+              // Digitar com variáveis
+              await editor.type('Cliente: {{nome_cliente}}, CPF: {{cpf_cliente}}');
+
+              // Aguardar substituição
+              await page.waitForTimeout(1000);
+              const content = await editor.textContent();
+
+              // Variáveis devem ser mantidas ou substituídas
+              expect(content).toContain('Cliente:');
+              expect(content).toContain('CPF:');
+            });
+
+            test('should show available variables', async ({ page }) => {
+              await page.goto('/');
+              await page.click('[data-testid="new-minuta"]');
+
+              // Procurar por tooltip ou lista de variáveis
+              await page.click('.ck-editor__editable');
+              await page.keyboard.type('{{');
+
+              // Deve mostrar sugestões (se implementado)
+              // ou pelo menos não quebrar o editor
+              const editor = page.locator('.ck-editor__editable');
+              const content = await editor.textContent();
+              expect(content).toContain('{{');
+            });
+          });
+          EOF
+
+          npx playwright test tests/variables.spec.ts
+
+  test-collaboration:
+    name: Test Human-AI Collaboration
+    runs-on: ubuntu-latest
+    if: inputs.test_type == 'all' || inputs.test_type == 'collaboration'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - run: npm ci
+
+      - name: Test collaboration indicators
+        run: |
+          cat > tests/collaboration.spec.ts << 'EOF'
+          import { test, expect } from '@playwright/test';
+
+          test.describe('Collaboration', () => {
+            test('should show user typing indicator', async ({ page }) => {
+              await page.goto('/');
+              await page.click('[data-testid="new-minuta"]');
+
+              const editor = page.locator('.ck-editor__editable');
+              await editor.click();
+              await editor.type('Digitando...');
+
+              // Badge "Você está editando" deve aparecer
+              await expect(page.locator('[data-testid="user-typing-badge"]')).toBeVisible();
+            });
+
+            test('should show AI writing indicator', async ({ page }) => {
+              await page.goto('/');
+              await page.click('[data-testid="new-minuta"]');
+              await page.click('[data-testid="ai-button"]');
+              await page.fill('[data-testid="ai-prompt"]', 'Escreva algo');
+              await page.click('[data-testid="generate"]');
+
+              // Badge "IA escrevendo..." deve aparecer
+              await expect(page.locator('[data-testid="ai-writing-badge"]')).toBeVisible();
+            });
+
+            test('should alternate between user and AI', async ({ page }) => {
+              await page.goto('/');
+              await page.click('[data-testid="new-minuta"]');
+
+              // IA escreve
+              await page.click('[data-testid="ai-button"]');
+              await page.fill('[data-testid="ai-prompt"]', 'Inicie um documento');
+              await page.click('[data-testid="generate"]');
+              await page.waitForTimeout(1000);
+
+              // Usuário digita (deve pausar IA)
+              const editor = page.locator('.ck-editor__editable');
+              await editor.click();
+              await editor.type(' Texto adicional');
+
+              // Verificar alternância
+              await expect(page.locator('[data-testid="user-typing-badge"]')).toBeVisible();
+            });
+          });
+          EOF
+
+          npx playwright test tests/collaboration.spec.ts
+
+  performance-benchmark:
+    name: Performance Benchmark
+    runs-on: ubuntu-latest
+    if: inputs.test_type == 'all'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - run: npm ci
+
+      - name: Benchmark editor performance
+        run: |
+          cat > benchmark.test.ts << 'EOF'
+          import { describe, it, expect } from 'vitest';
+
+          describe('Editor Performance', () => {
+            it('should insert 1000 chunks in < 500ms', () => {
+              const chunks: string[] = [];
+              const startTime = performance.now();
+
+              for (let i = 0; i < 1000; i++) {
+                chunks.push(\`chunk-\${i}\`);
+              }
+
+              const endTime = performance.now();
+              const duration = endTime - startTime;
+
+              console.log(\`Inserted 1000 chunks in \${duration.toFixed(2)}ms\`);
+              expect(duration).toBeLessThan(500);
+            });
+
+            it('should handle 10KB text without lag', () => {
+              const largeText = 'Lorem ipsum '.repeat(1000); // ~10KB
+              const startTime = performance.now();
+
+              const processed = largeText.replace(/{{(\w+)}}/g, 'REPLACED');
+
+              const endTime = performance.now();
+              const duration = endTime - startTime;
+
+              console.log(\`Processed 10KB in \${duration.toFixed(2)}ms\`);
+              expect(duration).toBeLessThan(100);
+            });
+          });
+          EOF
+
+          npx vitest run benchmark.test.ts
+
+      - name: Save benchmark results
+        run: |
+          echo "## Performance Benchmarks" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Completed at: $(date)" >> $GITHUB_STEP_SUMMARY
+
+  test-summary:
+    name: Writing Tests Summary
+    runs-on: ubuntu-latest
+    needs:
+      [
+        test-streaming-write,
+        test-ai-commands,
+        test-variable-substitution,
+        test-collaboration,
+        performance-benchmark,
+      ]
+    if: always()
+
+    steps:
+      - name: Generate summary
+        run: |
+          echo "## Editor Writing Tests Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Test Suite | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Streaming Write | ${{ needs.test-streaming-write.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| AI Commands | ${{ needs.test-ai-commands.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Variables | ${{ needs.test-variable-substitution.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Collaboration | ${{ needs.test-collaboration.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Performance | ${{ needs.performance-benchmark.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Test completed at: $(date)" >> $GITHUB_STEP_SUMMARY

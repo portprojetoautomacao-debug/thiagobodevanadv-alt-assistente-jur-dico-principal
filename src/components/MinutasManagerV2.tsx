@@ -226,11 +226,38 @@ export default function MinutasManagerV2() {
           throw new Error("Stream abortado antes de iniciar");
         }
 
+        // Monta contexto completo para o agente
+        const contexto = selectedMinuta
+          ? `
+CONTEXTO DA MINUTA:
+- Título: ${selectedMinuta.titulo}
+- Tipo: ${selectedMinuta.tipo}
+- Processo: ${selectedMinuta.processId || "Não informado"}
+- Status: ${selectedMinuta.status}
+- Criada em: ${new Date(selectedMinuta.criadoEm).toLocaleDateString("pt-BR")}
+
+INSTRUÇÕES:
+1. Use linguagem jurídica formal e técnica
+2. Mantenha variáveis no formato {{variavel}} para dados dinâmicos
+3. Estruture o documento profissionalmente
+4. Cite legislação pertinente quando aplicável
+5. Use formatação HTML rica quando necessário (tabelas, listas)
+`
+          : "";
+
         await streamChat([
           {
             role: "system",
-            content:
-              "Você é um advogado brasileiro experiente. Escreva em português formal e técnico.",
+            content: `Você é um advogado brasileiro experiente especializado em redação de petições e documentos jurídicos.
+
+DIRETRIZES:
+- Escreva em português formal e técnico
+- Use variáveis no formato {{nome_variavel}} para dados que podem mudar
+- Gere HTML rico quando apropriado (use <table>, <ul>, <ol>, <strong>, <em>)
+- Mantenha estrutura profissional: Cabeçalho → Fatos → Direito → Pedidos
+- Cite artigos de lei e jurisprudência quando relevante
+
+${contexto}`,
           },
           { role: "user", content: prompt },
         ]);
@@ -471,6 +498,30 @@ export default function MinutasManagerV2() {
                   onChange={handleContentChange}
                   placeholder="Digite o conteúdo da minuta..."
                   onAIStream={handleAIStream}
+                  variables={{
+                    // Dados do processo
+                    numero_processo: selectedMinuta.processId || "000000-00.0000.0.00.0000",
+                    // Dados da minuta
+                    titulo_minuta: selectedMinuta.titulo,
+                    tipo_minuta: selectedMinuta.tipo,
+                    data_criacao: new Date(selectedMinuta.criadoEm).toLocaleDateString("pt-BR"),
+                    data_hoje: new Date().toLocaleDateString("pt-BR"),
+                    // Dados do usuário/escritório (exemplo - ajustar conforme dados reais)
+                    nome_advogado: "Dr. [Nome do Advogado]",
+                    oab: "OAB/XX 000.000",
+                    escritorio: "[Nome do Escritório]",
+                    endereco_escritorio: "[Endereço Completo]",
+                    // Dados do cliente (exemplo - integrar com dados reais do processo)
+                    nome_cliente: "{{nome_cliente}}",
+                    cpf_cliente: "{{cpf_cliente}}",
+                    endereco_cliente: "{{endereco_cliente}}",
+                    // Dados processuais
+                    comarca: "{{comarca}}",
+                    vara: "{{vara}}",
+                    juiz: "{{nome_juiz}}",
+                    valor_causa: "{{valor_causa}}",
+                  }}
+                  showCollaboration={true}
                   className="h-full"
                 />
               </TabsContent>
