@@ -1,15 +1,22 @@
 name: SonarCloud Analysis
 
-# ⚠️ DESABILITADO TEMPORARIAMENTE - Requer configuração de SONAR_TOKEN
-# Para reativar, configure o token em: Settings > Secrets > SONAR_TOKEN
-# e descomente a seção 'on:' abaixo
+# ✅ CONFIGURAÇÃO COMPLETA
+# Token configurado em: Settings > Secrets and variables > Actions > SONAR_TOKEN
+# Valor: ee56ba2495fdc4b7309be1de290112ed4c3e9a50
+#
+# Análise automática para:
+# - Push na branch main
+# - Pull Requests (opened, synchronize, reopened)
+# - Execução manual via workflow_dispatch
+#
+# Integração: JS/TS e Web (React + TypeScript + Vite)
 
 on:
-  workflow_dispatch: # Apenas execução manual
-  # push:
-  #   branches: [main, feat/optimize-workflows-enterprise-grade]
-  # pull_request:
-  #   types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch: # Permite execução manual
 
 concurrency:
   group: sonarcloud-${{ github.workflow }}-${{ github.ref }}
@@ -204,7 +211,7 @@ jobs:
         uses: actions/github-script@v7
         continue-on-error: true
         with:
-          github-token: ${{ secrets.BOT_GH_TOKEN != '' && secrets.BOT_GH_TOKEN || secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.BOT_GH_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
             try {
               if (context.eventName !== 'pull_request' && context.payload.pull_request == null) {
