@@ -275,7 +275,7 @@ ${contexto}`,
         callbacks.onError(error instanceof Error ? error : new Error("Erro desconhecido"));
       }
     },
-    [streamChat]
+    [streamChat, selectedMinuta]
   );
 
   return (

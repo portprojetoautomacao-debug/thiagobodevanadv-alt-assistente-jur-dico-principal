@@ -44,7 +44,8 @@ jobs:
 
       - name: Upload coverage
         if: always()
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
+        continue-on-error: true
         with:
           files: ./coverage/coverage-final.json
           flags: editor
@@ -80,7 +81,7 @@ jobs:
     timeout-minutes: 15
 
     env:
-      VITE_GEMINI_API_KEY: ${{ secrets.VITE_GEMINI_API_KEY || 'test-key' }}
+      VITE_GEMINI_API_KEY: test-key
 
     steps:
       - name: Checkout code
@@ -175,7 +176,7 @@ jobs:
 
       - name: Upload test results
         if: always() && steps.check_tests.outputs.tests_exist == 'true'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: playwright-results
           path: |
@@ -384,7 +385,7 @@ jobs:
           fi
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: build-dist
           path: dist/
