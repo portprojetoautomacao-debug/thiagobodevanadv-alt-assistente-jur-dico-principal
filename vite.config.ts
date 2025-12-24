@@ -228,12 +228,13 @@ export default defineConfig({
         assetFileNames: "assets/[name]-[hash][extname]",
         manualChunks(id) {
           // ✅ FIX CRÍTICO: CSS utilities PRIMEIRO - evita ReferenceError
-          // clsx e tailwind-merge precisam estar disponíveis ANTES de qualquer component
-          // que use a função cn() (className utility)
+          // clsx, tailwind-merge E src/lib/utils.ts (que contém cn()) precisam
+          // estar disponíveis ANTES de qualquer componente que use cn()
           if (
             id.includes("clsx") ||
             id.includes("class-variance-authority") ||
-            id.includes("tailwind-merge")
+            id.includes("tailwind-merge") ||
+            id.includes("src/lib/utils")
           ) {
             return "css-utils";
           }
