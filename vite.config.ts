@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 
-import { phosphorIconOptimizer } from "./vite-icon-optimizer";
+import { phosphorIconOptimizer } from "./vite-icon-optimizer.js";
 
 // Resolve robusto para ESM (funciona em Windows/Linux)
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
@@ -329,6 +329,8 @@ export default defineConfig({
     // Sourcemaps desligados em produção (pode ligar se quiser debugging remoto)
     sourcemap: false,
   },
+  // ✅ Configuração de testes (Vitest)
+  // @ts-expect-error - 'test' não está nos tipos do Vite, mas é válido para Vitest
   test: {
     globals: true,
     // ✅ jsdom como padrão para componentes React
