@@ -48,9 +48,9 @@ applyTo: "**"
 | Prioridade     | Tipo                                | Ação                     |
 | -------------- | ----------------------------------- | ------------------------ |
 | 🔴 **Crítica** | Sistema fora do ar, perda de dados  | Corrigir IMEDIATAMENTE   |
-| 🟠 **Alta**    | Funcionalidade principal quebrada   | Corrigir IMEDIATAMENTE     |
-| 🟡 **Média**   | Bug que afeta UX mas tem workaround | Corrigir IMEDIAMENTE
-| 🟢 **Baixa**   | Melhorias cosméticas, typos         | Avaliar se vai melhorar desempenho e corrigir|
+| 🟠 **Alta**    | Funcionalidade principal quebrada corrigir imediatamente    |
+| 🟡 **Média**   | Bug que afeta UX mas tem workaround | Corrigir imediatamente|
+| 🟢 **Baixa**   | Melhorias cosméticas, typos, analisar se melhorara o desempenho e assim corrigir |
 
 ---
 
@@ -70,7 +70,7 @@ Este documento fornece instruções detalhadas para o GitHub Copilot trabalhar e
 - **Extensão Chrome PJe Sync**: Projeto separado em `chrome-extension-pje/` com Manifest v3, TypeScript, Webpack. Content Script extrai processos do PJe, Background Service Worker sincroniza com `/api/pje-sync`, Popup UI configura API Key. 31 testes, build em `dist/`. Documentação: `chrome-extension-pje/README.md` e `INSTALL.md`.
 - **Fluxo de agentes**: DJEN/DataJud/Chrome Extension alimenta `expedientes`, `use-autonomous-agents` cria tarefas para 16 agentes descritos em `src/lib/agents.ts`/`TODOS_OS_16_AGENTES.md`. `redacao-peticoes` usa Gemini 2.5 (`src/lib/gemini-service.ts`) e entrega minutas ao `MinutasManager` com campos `criadoPorAgente`, `confidence`, `templateId`, `status`.
 - **Conectividade dos agentes**: Todos os agentes devem manter comunicação por streaming (tempo real) com os serviços centrais; qualquer novo agente precisa expor interface streaming compatível com `use-autonomous-agents`.
-- **Editor/Documentos**: `src/components/editor/TiptapEditor.tsx`, `src/components/MinutasManager.tsx`, `src/lib/document-templates.ts` controlam commandos `/ai` e placeholders `{{variavel}}`. Alterou template? atualize `replaceTemplateVariables` + `docs/FLUXO_MINUTAS_AUTOMATICAS.md`.
+- **Editor/Documentos**: `src/components/editor/ProfessionalEditor.tsx` (CKEditor 5) com streaming fluido de IA via `writer.insertText`, suporte a comandos `/ai`, variáveis `{{variavel}}` e HTML rico. Documentação completa em `docs/CKEDITOR5_AI_STREAMING.md` e exemplos em `docs/EXEMPLO_USO_EDITOR_IA.md`. `src/components/MinutasManager.tsx`, `src/lib/document-templates.ts` controlam templates. Alterou template? atualize `replaceTemplateVariables` + `docs/FLUXO_MINUTAS_AUTOMATICAS.md`.
  - **Integrações críticas**: Google OAuth/Calendar (`src/lib/google-calendar-service.ts`), DJEN/DataJud (`src/lib/djen-api.ts`, `src/lib/datajud-api.ts`), PJe via Chrome Extension (`chrome-extension-pje/`, endpoint `/api/pje-sync`), Qdrant (`src/lib/qdrant-service.ts` - optional, cloud), DSPy Bridge (`scripts/dspy_bridge.py` - optional, Railway), Email API (`api/emails.ts`), Todoist apenas via stub `src/lib/todoist-stub.ts` no client (pacote official restrito a `/api`).
 - **Cron/automação**: Jobs descritos em `api/cron.ts` e `vercel.json` (DJEN monitor, filas de agentes, backup). Novos jobs exigem atualizar ambos + README.
 - **Build/Testes**: `npm run dev`, `npm run build`, `npm run lint`, `npm run test`, `npm run test:e2e`. Extensão Chrome: `cd chrome-extension-pje && npm run build`. Scripts novos precisam refletir em `.github/workflows/*`.
