@@ -69,7 +69,7 @@
 
   // Prettier como formatador padrão
   "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.defaultFormatter": "vscode.typescript-language-features",
     "editor.formatOnSave": true
   },
   "[typescriptreact]": {
@@ -111,6 +111,10 @@
   "typescript.preferences.importModuleSpecifier": "non-relative",
   "typescript.updateImportsOnFileMove.enabled": "always",
   "javascript.updateImportsOnFileMove.enabled": "always",
+
+  // TypeScript Go experimental (se instalado e configurado)
+  // Desabilita TS/JS language features para usar TypeScript Go extension
+  "typescript.experimental.useTsgo": true,
 
   // Inlay Hints (sugestões visuais)
   "typescript.inlayHints.parameterNames.enabled": "all",
@@ -180,6 +184,8 @@
   // ========================================
 
   "sonarlint.pathToNodeExecutable": "/usr/local/share/nvm/versions/node/v22.21.1/bin/node",
+  "sonarlint.pathToNpmExecutable": "/usr/local/share/nvm/versions/node/v22.21.1/bin/npm",
+  "sonarlint.pathToNpxExecutable": "/usr/local/share/nvm/versions/node/v22.21.1/bin/npx",
   "sonarlint.ls.javaHome": "/usr/local/sdkman/candidates/java/current",
   "sonarlint.output.showAnalyzerLogs": true,
   "sonarlint.output.showVerboseLogs": true,
@@ -192,19 +198,19 @@
     {
       "connectionId": "sonarcloud-assistente-juridico",
       "organizationKey": "thiagobodevanadv-alt",
-      "token": "ee13b3dd049fe0da3696d783020804f4a9e93566",
+      "token": "sqco_CnrgczDksDQ98hsZ04usL02I5mJS0QS5ryqcpxEr4c1kiuIOASAdGoLZZa2",
       "region": "EU"
     },
     {
       "connectionId": "thiagobodevanadv-alt",
       "organizationKey": "thiagobodevanadv-alt",
-      "token": "ee13b3dd049fe0da3696d783020804f4a9e93566",
+      "token": "sqco_CnrgczDksDQ98hsZ04usL02I5mJS0QS5ryqcpxEr4c1kiuIOASAdGoLZZa2",
       "region": "EU"
     }
   ],
   "sonarlint.connectedMode.project": {
     "connectionId": "sonarcloud-assistente-juridico",
-    "projectKey": "thiagobodevanadv-alt_assistente-jur-dico-principal"
+    "projectKey": "portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal"
   },
 
   "sonarlint.rules": {
@@ -287,5 +293,177 @@
   "go.goroot": "/usr/local/go",
   "go.gopath": "/home/node/go",
   "go.toolsManagement.autoUpdate": true,
-  "git.ignoreLimitWarning": true
+  "git.ignoreLimitWarning": true,
+
+  // ========================================
+  // 🌐 REST CLIENT - API TESTING
+  // ========================================
+
+  // Ambientes para testes (local, staging, produção)
+  "rest-client.environmentVariables": {
+    "$shared": {
+      "apiKey": "test-api-key",
+      "version": "v1"
+    },
+    "local": {
+      "host": "localhost:5173",
+      "protocol": "http",
+      "baseUrl": "http://localhost:5173"
+    },
+    "production": {
+      "host": "assistente-juridico-github.vercel.app",
+      "protocol": "https",
+      "baseUrl": "https://assistente-juridico-github.vercel.app"
+    }
+  },
+
+  // Headers padrão
+  "rest-client.defaultHeaders": {
+    "User-Agent": "vscode-restclient-assistente-juridico",
+    "Accept": "application/json"
+  },
+
+  // Configurações de visualização
+  "rest-client.previewOption": "exchange",
+  "rest-client.previewResponsePanelTakeFocus": true,
+  "rest-client.showResponseInDifferentTab": false,
+  "rest-client.fontSize": 13,
+  "rest-client.fontFamily": "Menlo, Monaco, Consolas, 'Courier New', monospace",
+
+  // Funcionalidades
+  "rest-client.enableSendRequestCodeLens": true,
+  "rest-client.enableCustomVariableReferencesCodeLens": true,
+  "rest-client.rememberCookiesForSubsequentRequests": true,
+  "rest-client.followredirect": true,
+  "rest-client.timeoutinmilliseconds": 30000,
+
+  // Logs e debugging
+  "rest-client.logLevel": "info",
+  "rest-client.enableTelemetry": false,
+
+  "chat.mcp.serverSampling": {
+    "thiagobodevanadv-alt-assistente-jur-dico-principal/.vscode/mcp.json: azure-ai-foundry/mcp-foundry": {
+      "allowedModels": [
+        "copilot/auto",
+        "copilot/claude-haiku-4.5",
+        "copilot/claude-opus-41",
+        "copilot/claude-opus-4.5",
+        "aitk-foundry/Microsoft Foundry/claude-opus-4-5",
+        "copilot/claude-sonnet-4",
+        "copilot/claude-sonnet-4.5",
+        "aitk-foundry/Microsoft Foundry/claude-sonnet-4-5",
+        "copilot/gemini-2.5-pro",
+        "copilot/gemini-3-flash-preview",
+        "copilot/gemini-3-pro-preview",
+        "copilot/gpt-4.1",
+        "copilot/gpt-4o",
+        "copilot/gpt-5",
+        "copilot/gpt-5-mini",
+        "copilot/gpt-5-codex",
+        "copilot/gpt-5.1",
+        "copilot/gpt-5.1-codex",
+        "copilot/gpt-5.1-codex-max",
+        "copilot/gpt-5.1-codex-mini",
+        "copilot/gpt-5.2",
+        "aitk-github/GitHub/grok-3",
+        "aitk-github/GitHub/grok-3-mini",
+        "copilot/grok-code-fast-1",
+        "aitk-foundry/Microsoft Foundry/gpt-4.1",
+        "aitk-foundry/Microsoft Foundry/gpt-4.1-mini",
+        "copilot/oswe-vscode-prime"
+      ]
+    },
+    "Assistente Jurídico/.vscode/mcp.json: io.github.github/github-mcp-server": {
+      "allowedModels": [
+        "copilot/auto",
+        "copilot/claude-haiku-4.5",
+        "copilot/claude-opus-41",
+        "aitk-foundry/Microsoft Foundry/claude-opus-4-5",
+        "copilot/claude-sonnet-4",
+        "copilot/claude-sonnet-4.5",
+        "aitk-foundry/Microsoft Foundry/claude-sonnet-4-5",
+        "copilot/gemini-2.5-pro",
+        "copilot/gemini-3-flash-preview",
+        "copilot/gemini-3-pro-preview",
+        "copilot/gpt-4.1",
+        "copilot/gpt-4o",
+        "copilot/gpt-5",
+        "copilot/gpt-5-mini",
+        "copilot/gpt-5-codex",
+        "copilot/gpt-5.1",
+        "copilot/gpt-5.1-codex",
+        "copilot/gpt-5.1-codex-max",
+        "copilot/gpt-5.1-codex-mini",
+        "copilot/gpt-5.2",
+        "aitk-github/GitHub/grok-3",
+        "aitk-github/GitHub/grok-3-mini",
+        "copilot/grok-code-fast-1",
+        "aitk-foundry/Microsoft Foundry/gpt-4.1",
+        "aitk-foundry/Microsoft Foundry/gpt-4.1-mini",
+        "copilot/oswe-vscode-prime"
+      ]
+    },
+    "Assistente Jurídico/.vscode/mcp.json: microsoft/playwright-mcp": {
+      "allowedModels": [
+        "copilot/claude-sonnet-4.5",
+        "copilot/auto",
+        "copilot/claude-haiku-4.5",
+        "copilot/claude-opus-41",
+        "copilot/claude-opus-4.5",
+        "aitk-foundry/Microsoft Foundry/claude-opus-4-5",
+        "copilot/claude-sonnet-4",
+        "aitk-foundry/Microsoft Foundry/claude-sonnet-4-5",
+        "copilot/gemini-2.5-pro",
+        "copilot/gemini-3-flash-preview",
+        "copilot/gemini-3-pro-preview",
+        "copilot/gpt-4.1",
+        "copilot/gpt-4o",
+        "copilot/gpt-5",
+        "copilot/gpt-5-mini",
+        "copilot/gpt-5-codex",
+        "copilot/gpt-5.1",
+        "copilot/gpt-5.1-codex",
+        "copilot/gpt-5.1-codex-max",
+        "copilot/gpt-5.1-codex-mini",
+        "copilot/gpt-5.2",
+        "aitk-github/GitHub/grok-3",
+        "aitk-github/GitHub/grok-3-mini",
+        "copilot/grok-code-fast-1",
+        "aitk-foundry/Microsoft Foundry/gpt-4.1",
+        "aitk-foundry/Microsoft Foundry/gpt-4.1-mini",
+        "copilot/oswe-vscode-prime"
+      ]
+    },
+    "Assistente Jurídico/.vscode/mcp.json: huggingface/hf-mcp-server": {
+      "allowedModels": [
+        "copilot/auto",
+        "copilot/claude-haiku-4.5",
+        "copilot/claude-opus-41",
+        "copilot/claude-opus-4.5",
+        "aitk-foundry/Microsoft Foundry/claude-opus-4-5",
+        "copilot/claude-sonnet-4",
+        "copilot/claude-sonnet-4.5",
+        "aitk-foundry/Microsoft Foundry/claude-sonnet-4-5",
+        "copilot/gemini-2.5-pro",
+        "copilot/gemini-3-flash-preview",
+        "copilot/gemini-3-pro-preview",
+        "copilot/gpt-4.1",
+        "copilot/gpt-4o",
+        "copilot/gpt-5",
+        "copilot/gpt-5-mini",
+        "copilot/gpt-5-codex",
+        "copilot/gpt-5.1",
+        "copilot/gpt-5.1-codex",
+        "copilot/gpt-5.1-codex-max",
+        "copilot/gpt-5.1-codex-mini",
+        "copilot/gpt-5.2",
+        "aitk-github/GitHub/grok-3",
+        "aitk-github/GitHub/grok-3-mini",
+        "copilot/grok-code-fast-1",
+        "aitk-foundry/Microsoft Foundry/gpt-4.1",
+        "aitk-foundry/Microsoft Foundry/gpt-4.1-mini",
+        "copilot/oswe-vscode-prime"
+      ]
+    }
+  }
 }

@@ -794,6 +794,36 @@ O **Assistente Jurídico PJe** representa o estado da arte em automação juríd
 
 ## 🚀 NOVO: Automação Copilot 24/7
 
+## 🎓 Sistema de Training (Sonar Copilot)
+
+O projeto inclui um **sistema de aprendizado contínuo** que registra padrões de correção de código para treinar o GitHub Copilot.
+
+### Comandos Disponíveis:
+
+```bash
+npm run training:test       # Testar sistema com padrões de exemplo
+npm run training:report     # Gerar relatório de padrões registrados
+npm run training:integrate  # Executar análise completa + ESLint
+npm run training:record     # Registrar padrão manualmente
+```
+
+### Quando Usar:
+
+- **`training:integrate`**: Execute semanalmente ou após grandes refatorações
+- **`training:report`**: Antes de PRs para ver estatísticas de qualidade
+- **`training:record`**: Ao fazer correções manuais importantes
+
+### Benefícios:
+
+- ✅ **Copilot aprende** estilos de código do projeto
+- ✅ **Sugestões mais precisas** baseadas em histórico
+- ✅ **Evita repetição** de sugestões rejeitadas
+- ✅ **Métricas de qualidade** com taxa de sucesso
+
+📖 **Documentação completa**: [`.sonar-copilot/training/README.md`](.sonar-copilot/training/README.md)
+
+---
+
 <table>
 <tr>
 <td width="50%">

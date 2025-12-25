@@ -127,6 +127,11 @@ class AgentCommunicationHub {
   private readonly contextsByAgent = new Map<string, Set<string>>();
   private readonly contextsByType = new Map<string, Set<string>>();
 
+  // Error throttling para evitar log spam
+  private readonly ERROR_LOG_THROTTLE_MS = 5000; // Log no máximo 1 erro a cada 5 segundos
+  private lastErrorLogTime = 0;
+  private throttledErrorCount = 0;
+
   constructor() {
     // Setup eviction callback to keep indices consistent
     this.contexts.setOnEvict((id: string, context: SharedContext) => {
@@ -392,8 +397,8 @@ class AgentCommunicationHub {
           try {
             callback(fullMessage);
           } catch (error) {
-            console.error(
-              `[AgentCommunicationHub] Subscriber callback error (target=${fullMessage.toAgentId}):`,
+            this.logErrorThrottled(
+              `Subscriber callback error (target=${fullMessage.toAgentId})`,
               error
             );
           }
@@ -408,14 +413,29 @@ class AgentCommunicationHub {
             try {
               callback(fullMessage);
             } catch (error) {
-              console.error(
-                "[AgentCommunicationHub] Subscriber callback error (broadcast):",
-                error
-              );
+              this.logErrorThrottled("Subscriber callback error (broadcast)", error);
             }
           });
         });
       });
+    }
+  }
+
+  private logErrorThrottled(message: string, error: unknown): void {
+    const now = Date.now();
+    if (now - this.lastErrorLogTime >= this.ERROR_LOG_THROTTLE_MS) {
+      if (this.throttledErrorCount > 0) {
+        console.error(
+          `[AgentCommunicationHub] ${message} (${this.throttledErrorCount} errors throttled):`,
+          error
+        );
+        this.throttledErrorCount = 0;
+      } else {
+        console.error(`[AgentCommunicationHub] ${message}:`, error);
+      }
+      this.lastErrorLogTime = now;
+    } else {
+      this.throttledErrorCount++;
     }
   }
 

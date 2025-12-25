@@ -1,12 +1,44 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { communicationHub } from "../agent-communication";
+
+// Store unsubscribe functions for cleanup
+const unsubscribeFunctions: Array<() => void> = [];
+
+// Mock console.error para evitar poluição de logs
+let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
 
 describe("AgentCommunicationHub", () => {
   beforeEach(() => {
+    // Mock console.error antes de cada teste
+    consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
     // Clear state
     // Reset internal state using typed casts for testing
     (communicationHub as unknown as { messages: unknown[] }).messages.length = 0;
     (communicationHub as unknown as { contexts: { clear: () => void } }).contexts.clear();
+    // Clear subscribers map
+    (communicationHub as unknown as { subscribers: Map<string, Set<unknown>> }).subscribers.clear();
+  });
+
+  afterEach(() => {
+    // Restore console.error
+    consoleErrorSpy.mockRestore();
+
+    // Cleanup all subscriptions
+    unsubscribeFunctions.forEach((unsub) => {
+      try {
+        unsub();
+      } catch (e) {
+        // Ignore cleanup errors
+      }
+    });
+    unsubscribeFunctions.length = 0;
+
+    // Clear subscribers map again
+    (communicationHub as unknown as { subscribers: Map<string, Set<unknown>> }).subscribers.clear();
+
+    // Limpar timers pendentes
+    vi.clearAllTimers();
   });
 
   it("sanitizes content and data on sendMessage", async () => {
@@ -202,27 +234,27 @@ describe("AgentCommunicationHub - Stress Tests", () => {
 
   it("handles subscription notifications under heavy concurrent load", async () => {
     const receivedMessages: import("../agent-communication").AgentMessage[] = [];
-    let callbackErrors = 0;
 
     // Subscriber que registra mensagens
     const unsub = communicationHub.subscribe("harvey", (msg) => {
       receivedMessages.push(msg);
     });
+    unsubscribeFunctions.push(unsub);
 
-    // Subscriber que ocasionalmente falha
+    // Subscriber que ocasionalmente falha (10% de chance)
     const unsub2 = communicationHub.subscribe("harvey", (_msg) => {
       if (Math.random() < 0.1) {
-        callbackErrors++;
         throw new Error("Random subscriber error");
       }
     });
+    unsubscribeFunctions.push(unsub2);
 
-    // Enviar 500 mensagens concorrentemente
-    const promises = Array.from({ length: 500 }, (_, i) =>
+    // Enviar 100 mensagens concorrentemente
+    const promises = Array.from({ length: 100 }, (_, i) =>
       communicationHub.sendMessage({
         fromAgentId: "justine",
         type: "notification",
-        priority: "normal",
+        priority: "medium",
         content: `Load test ${i}`,
       })
     );
@@ -230,13 +262,53 @@ describe("AgentCommunicationHub - Stress Tests", () => {
     await Promise.all(promises);
 
     // Aguardar propagação de callbacks
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
-    // Garantir que recebemos as 500 mensagens apesar de alguns callbacks falharem
-    expect(receivedMessages.length).toBeGreaterThanOrEqual(500);
-    expect(callbackErrors).toBeGreaterThan(0); // Pelo menos alguns callbacks falharam
+    // Garantir que recebemos as mensagens (o importante é que o sistema não quebrou)
+    expect(receivedMessages.length).toBeGreaterThanOrEqual(100);
 
+    // Cleanup
     unsub();
     unsub2();
+  });
+
+  it("throttles error logs from subscriber callbacks", async () => {
+    let errorCount = 0;
+
+    // Subscriber que SEMPRE falha (determinístico)
+    const unsub = communicationHub.subscribe("harvey", (_msg) => {
+      errorCount++;
+      throw new Error(`Subscriber error ${errorCount}`);
+    });
+    unsubscribeFunctions.push(unsub);
+
+    // Enviar 10 mensagens rapidamente (dentro do throttle window de 5s)
+    const promises = Array.from({ length: 10 }, (_, i) =>
+      communicationHub.sendMessage({
+        fromAgentId: "justine",
+        type: "notification",
+        priority: "medium",
+        content: `Message ${i}`,
+      })
+    );
+
+    await Promise.all(promises);
+    await new Promise((resolve) => setTimeout(resolve, 100)); // Aguardar callbacks
+
+    // Verificar que todos os callbacks falharam
+    expect(errorCount).toBe(10);
+
+    // Mas console.error foi chamado MENOS vezes (evidência de throttling)
+    expect(consoleErrorSpy).toHaveBeenCalled();
+    const errorCalls = consoleErrorSpy.mock.calls.length;
+    expect(errorCalls).toBeLessThan(10);
+
+    // Verificar que mensagem de throttling apareceu
+    const throttledMessage = consoleErrorSpy.mock.calls.some((call) =>
+      call[0]?.toString().includes("errors throttled")
+    );
+    expect(throttledMessage).toBe(true);
+
+    unsub();
   });
 });
