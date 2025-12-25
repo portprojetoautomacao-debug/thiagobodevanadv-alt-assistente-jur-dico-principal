@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "label": "CI Build",
-  "message": "failure",
-  "color": "red",
+  "message": "passing",
+  "color": "brightgreen",
   "namedLogo": "github"
 }
