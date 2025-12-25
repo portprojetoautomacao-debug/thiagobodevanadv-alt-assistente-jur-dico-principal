@@ -112,7 +112,7 @@ function parseJsonResponse(responseText: string): Record<string, unknown> {
  */
 function normalizeProbability(value: unknown): number {
   let prob = Number(value);
-  if (!Number.Number.isFinite(prob)) prob = 50;
+  if (!Number.isFinite(prob)) prob = 50;
   return Math.min(100, Math.max(0, prob));
 }
 

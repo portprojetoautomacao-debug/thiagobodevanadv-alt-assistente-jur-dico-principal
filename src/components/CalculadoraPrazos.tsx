@@ -75,7 +75,7 @@ export default function CalculadoraPrazos() {
 
   const handleCalcular = () => {
     const inicio = new Date(`${dataInicio}T00:00:00`);
-    const dias = Number.Number.parseInt(diasCorridos, 10);
+    const dias = Number.parseInt(diasCorridos, 10);
 
     if (Number.isNaN(dias) || dias <= 0) {
       toast.error("Dias inválidos", {
@@ -130,7 +130,7 @@ export default function CalculadoraPrazos() {
     }
 
     // Se já tiver quantidade de dias válida, dispara cálculo automaticamente
-    const dias = Number.Number.parseInt(diasCorridos, 10);
+    const dias = Number.parseInt(diasCorridos, 10);
     if (!Number.isNaN(dias) && dias > 0) {
       handleCalcular();
     }
@@ -158,7 +158,7 @@ export default function CalculadoraPrazos() {
       return;
     }
 
-    const dias = Number.Number.parseInt(diasCorridos, 10);
+    const dias = Number.parseInt(diasCorridos, 10);
     if (Number.isNaN(dias) || dias <= 0) {
       toast.error("Dias inválidos", {
         description: "Informe um número válido de dias",

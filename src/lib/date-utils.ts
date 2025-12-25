@@ -39,9 +39,9 @@ export function parseBrazilianDate(dateStr: string): Date | null {
   }
 
   const [day, month, year] = parts;
-  const dayNum = Number.Number.parseInt(day, 10);
-  const monthNum = Number.Number.parseInt(month, 10);
-  const yearNum = Number.Number.parseInt(year, 10);
+  const dayNum = Number.parseInt(day, 10);
+  const monthNum = Number.parseInt(month, 10);
+  const yearNum = Number.parseInt(year, 10);
 
   if (!validateDateComponents(dayNum, monthNum, yearNum)) {
     return null;

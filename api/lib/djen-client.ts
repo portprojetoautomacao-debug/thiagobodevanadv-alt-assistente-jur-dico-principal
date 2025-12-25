@@ -177,15 +177,15 @@ function extractRateLimitInfo(response: Response): RateLimitInfo {
   const limit = response.headers.get("x-ratelimit-limit");
   const remaining = response.headers.get("x-ratelimit-remaining");
   return {
-    limit: limit ? Number.Number.parseInt(limit, 10) : undefined,
-    remaining: remaining ? Number.Number.parseInt(remaining, 10) : undefined,
+    limit: limit ? Number.parseInt(limit, 10) : undefined,
+    remaining: remaining ? Number.parseInt(remaining, 10) : undefined,
   };
 }
 
 function handleRateLimit(response: Response, retryCount: number): ConsultaResult {
   const retryAfterHeader = response.headers.get("retry-after");
   const retryAfter = retryAfterHeader
-    ? Number.Number.parseInt(retryAfterHeader, 10)
+    ? Number.parseInt(retryAfterHeader, 10)
     : RETRY_DELAY * Math.pow(2, retryCount);
 
   logger.warn("Rate limit DJEN atingido", { retryAfter, retryCount });

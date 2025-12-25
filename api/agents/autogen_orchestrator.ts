@@ -83,7 +83,7 @@ function validateAuth(req: VercelRequest): boolean {
 
   let result = 0;
   for (let i = 0; i < token.length; i++) {
-    result |= token.codePointAt(i) ^ apiKey.codePointAt(i);
+    result |= (token.codePointAt(i) ?? 0) ^ (apiKey.codePointAt(i) ?? 0);
   }
 
   return result === 0;

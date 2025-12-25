@@ -237,7 +237,7 @@ export class FullTextExtractor {
     // Extrai headings
     const headings = element.querySelectorAll("h1, h2, h3, h4, h5, h6");
     headings.forEach((h) => {
-      const level = Number.Number.parseInt(h.tagName[1], 10);
+      const level = Number.parseInt(h.tagName[1], 10);
       const content = h.textContent?.trim();
       if (content) {
         sections.push({

@@ -105,7 +105,7 @@ function sortAndLimit(
 
   // Limit results
   const maxResults =
-    typeof limit === "string" && !Number.isNaN(Number(limit)) ? Number.Number.parseInt(limit, 10) : 50;
+    typeof limit === "string" && !Number.isNaN(Number(limit)) ? Number.parseInt(limit, 10) : 50;
 
   return publications.slice(0, maxResults);
 }

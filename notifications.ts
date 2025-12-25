@@ -15,9 +15,10 @@ import { getEnv } from "./env-helper.js";
 /**
  * Get color based on notification priority
  */
-function getPriorityColor(priority: string): string {
-  if (priority === "urgent") return "#ff0000";
-  if (priority === "high") return "#ff9900";
+function getPriorityColor ( priority: string ): string
+{
+  if ( priority === "urgent" ) return "#ff0000";
+  if ( priority === "high" ) return "#ff9900";
   return "#36a64f";
 }
 
@@ -30,7 +31,8 @@ const KV_KEYS = {
 } as const;
 
 // Tipos
-interface Notification {
+interface Notification
+{
   id: string;
   type: "new_publication" | "deadline_reminder" | "system_alert" | "custom";
   title: string;
@@ -43,7 +45,7 @@ interface Notification {
     lawyerId?: string;
     processNumber?: string;
     tribunal?: string;
-    [key: string]: unknown;
+    [ key: string ]: unknown;
   };
   status: "pending" | "sent" | "failed";
   attempts: number;
@@ -52,7 +54,8 @@ interface Notification {
   error?: string;
 }
 
-interface WebhookConfig {
+interface WebhookConfig
+{
   id: string;
   name: string;
   url: string;
@@ -63,7 +66,8 @@ interface WebhookConfig {
   createdAt: string;
 }
 
-interface NotificationSettings {
+interface NotificationSettings
+{
   emailEnabled: boolean;
   webhookEnabled: boolean;
   emailFrom?: string;
@@ -74,30 +78,34 @@ interface NotificationSettings {
   minPriority: "low" | "normal" | "high" | "urgent";
 }
 
-interface SendResult {
+interface SendResult
+{
   channel: string;
   success: boolean;
   error?: string;
 }
 
 // Redis client
-async function getKv(): Promise<Redis> {
-  const url = getEnv("UPSTASH_REDIS_REST_URL");
-  const token = getEnv("UPSTASH_REDIS_REST_TOKEN");
+async function getKv (): Promise<Redis>
+{
+  const url = getEnv( "UPSTASH_REDIS_REST_URL" );
+  const token = getEnv( "UPSTASH_REDIS_REST_TOKEN" );
 
-  if (!url || !token) {
-    throw new Error("Upstash Redis not configured");
+  if ( !url || !token )
+  {
+    throw new Error( "Upstash Redis not configured" );
   }
 
-  return new Redis({
+  return new Redis( {
     url: url.trim(),
     token: token.trim(),
-  });
+  } );
 }
 
 // Gera ID único
-function generateId(): string {
-  return `notif_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+function generateId (): string
+{
+  return `notif_${ Date.now() }_${ Math.random().toString( 36 ).substring( 2, 9 ) }`;
 }
 
 // Mapas de prioridade
@@ -122,55 +130,58 @@ const PRIORITY_COLOR_INT = {
   urgent: 0xff0000,
 } as const;
 
-const PRIORITY_ORDER = ["low", "normal", "high", "urgent"] as const;
+const PRIORITY_ORDER = [ "low", "normal", "high", "urgent" ] as const;
 
 /**
  * Formata campos de metadata para exibição
  */
-function formatMetadataFields(
+function formatMetadataFields (
   metadata: Record<string, unknown>
-): Array<{ name: string; value: string; inline?: boolean }> {
-  return Object.entries(metadata)
-    .filter(([, v]) => v !== undefined)
-    .map(([k, v]) => ({
+): Array<{ name: string; value: string; inline?: boolean }>
+{
+  return Object.entries( metadata )
+    .filter( ( [ , v ] ) => v !== undefined )
+    .map( ( [ k, v ] ) => ( {
       name:
-        k.charAt(0).toUpperCase() + k.slice(1).replaceAll(/([A-Z])/g, " $1"),
-      value: String(v),
+        k.charAt( 0 ).toUpperCase() + k.slice( 1 ).replaceAll( /([A-Z])/g, " $1" ),
+      value: String( v ),
       inline: true,
-    }));
+    } ) );
 }
 
 /**
  * Formata campos de metadata para formato "title/value"
  */
-function formatMetadataFieldsAlt(
+function formatMetadataFieldsAlt (
   metadata: Record<string, unknown>
-): Array<{ title: string; value: string; short?: boolean }> {
-  return Object.entries(metadata)
-    .filter(([, v]) => v !== undefined)
-    .map(([k, v]) => ({
+): Array<{ title: string; value: string; short?: boolean }>
+{
+  return Object.entries( metadata )
+    .filter( ( [ , v ] ) => v !== undefined )
+    .map( ( [ k, v ] ) => ( {
       title:
-        k.charAt(0).toUpperCase() + k.slice(1).replaceAll(/([A-Z])/g, " $1"),
-      value: String(v),
+        k.charAt( 0 ).toUpperCase() + k.slice( 1 ).replaceAll( /([A-Z])/g, " $1" ),
+      value: String( v ),
       short: true,
-    }));
+    } ) );
 }
 
 // Envia webhook para Slack
-async function sendSlackWebhook(
+async function sendSlackWebhook (
   webhookUrl: string,
   notification: Notification
-): Promise<boolean> {
-  try {
+): Promise<boolean>
+{
+  try
+  {
     const payload = {
       blocks: [
         {
           type: "header",
           text: {
             type: "plain_text",
-            text: `${PRIORITY_EMOJI[notification.priority]} ${
-              notification.title
-            }`,
+            text: `${ PRIORITY_EMOJI[ notification.priority ] } ${ notification.title
+              }`,
             emoji: true,
           },
         },
@@ -184,42 +195,45 @@ async function sendSlackWebhook(
       ],
       attachments: notification.metadata
         ? [
-            {
-              color: getPriorityColor(notification.priority),
-              fields: formatMetadataFieldsAlt(notification.metadata),
-            },
-          ]
+          {
+            color: getPriorityColor( notification.priority ),
+            fields: formatMetadataFieldsAlt( notification.metadata ),
+          },
+        ]
         : undefined,
     };
 
-    const response = await fetch(webhookUrl, {
+    const response = await fetch( webhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+      body: JSON.stringify( payload ),
+    } );
 
     return response.ok;
-  } catch (error) {
-    console.error("[Notification] Slack webhook error:", error);
+  } catch ( error )
+  {
+    console.error( "[Notification] Slack webhook error:", error );
     return false;
   }
 }
 
 // Envia webhook para Discord
-async function sendDiscordWebhook(
+async function sendDiscordWebhook (
   webhookUrl: string,
   notification: Notification
-): Promise<boolean> {
-  try {
+): Promise<boolean>
+{
+  try
+  {
     const payload = {
       embeds: [
         {
           title: notification.title,
           description: notification.message,
-          color: PRIORITY_COLOR_INT[notification.priority],
+          color: PRIORITY_COLOR_INT[ notification.priority ],
           timestamp: new Date().toISOString(),
           fields: notification.metadata
-            ? formatMetadataFields(notification.metadata)
+            ? formatMetadataFields( notification.metadata )
             : [],
           footer: {
             text: "Assistente Jurídico PJe",
@@ -228,143 +242,154 @@ async function sendDiscordWebhook(
       ],
     };
 
-    const response = await fetch(webhookUrl, {
+    const response = await fetch( webhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+      body: JSON.stringify( payload ),
+    } );
 
     return response.ok;
-  } catch (error) {
-    console.error("[Notification] Discord webhook error:", error);
+  } catch ( error )
+  {
+    console.error( "[Notification] Discord webhook error:", error );
     return false;
   }
 }
 
 // Envia webhook para Microsoft Teams
-async function sendTeamsWebhook(
+async function sendTeamsWebhook (
   webhookUrl: string,
   notification: Notification
-): Promise<boolean> {
-  try {
+): Promise<boolean>
+{
+  try
+  {
     const payload = {
       "@type": "MessageCard",
       "@context": "http://schema.org/extensions",
-      themeColor: PRIORITY_COLOR_HEX[notification.priority],
+      themeColor: PRIORITY_COLOR_HEX[ notification.priority ],
       summary: notification.title,
       sections: [
         {
           activityTitle: notification.title,
-          activitySubtitle: new Date().toLocaleString("pt-BR"),
+          activitySubtitle: new Date().toLocaleString( "pt-BR" ),
           text: notification.message,
           facts: notification.metadata
-            ? Object.entries(notification.metadata)
-                .filter(([, v]) => v !== undefined)
-                .map(([k, v]) => ({
-                  name:
-                    k.charAt(0).toUpperCase() +
-                    k.slice(1).replaceAll(/([A-Z])/g, " $1"),
-                  value: String(v),
-                }))
+            ? Object.entries( notification.metadata )
+              .filter( ( [ , v ] ) => v !== undefined )
+              .map( ( [ k, v ] ) => ( {
+                name:
+                  k.charAt( 0 ).toUpperCase() +
+                  k.slice( 1 ).replaceAll( /([A-Z])/g, " $1" ),
+                value: String( v ),
+              } ) )
             : [],
         },
       ],
     };
 
-    const response = await fetch(webhookUrl, {
+    const response = await fetch( webhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+      body: JSON.stringify( payload ),
+    } );
 
     return response.ok;
-  } catch (error) {
-    console.error("[Notification] Teams webhook error:", error);
+  } catch ( error )
+  {
+    console.error( "[Notification] Teams webhook error:", error );
     return false;
   }
 }
 
 // Envia webhook genérico
-async function sendGenericWebhook(
+async function sendGenericWebhook (
   webhookUrl: string,
   notification: Notification,
   secret?: string
-): Promise<boolean> {
-  try {
+): Promise<boolean>
+{
+  try
+  {
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
 
-    if (secret) {
+    if ( secret )
+    {
       // Simple HMAC signature
       const encoder = new TextEncoder();
       const key = await crypto.subtle.importKey(
         "raw",
-        encoder.encode(secret),
+        encoder.encode( secret ),
         { name: "HMAC", hash: "SHA-256" },
         false,
-        ["sign"]
+        [ "sign" ]
       );
       const signature = await crypto.subtle.sign(
         "HMAC",
         key,
-        encoder.encode(JSON.stringify(notification))
+        encoder.encode( JSON.stringify( notification ) )
       );
-      headers["X-Signature"] = Array.from(new Uint8Array(signature))
-        .map((b) => b.toString(16).padStart(2, "0"))
-        .join("");
+      headers[ "X-Signature" ] = Array.from( new Uint8Array( signature ) )
+        .map( ( b ) => b.toString( 16 ).padStart( 2, "0" ) )
+        .join( "" );
     }
 
-    const response = await fetch(webhookUrl, {
+    const response = await fetch( webhookUrl, {
       method: "POST",
       headers,
-      body: JSON.stringify({
+      body: JSON.stringify( {
         event: notification.type,
         timestamp: new Date().toISOString(),
         data: notification,
-      }),
-    });
+      } ),
+    } );
 
     return response.ok;
-  } catch (error) {
-    console.error("[Notification] Generic webhook error:", error);
+  } catch ( error )
+  {
+    console.error( "[Notification] Generic webhook error:", error );
     return false;
   }
 }
 
 // Envia email via Resend API (se configurado)
-async function sendEmail(
+async function sendEmail (
   notification: Notification,
   settings: NotificationSettings
-): Promise<boolean> {
-  const resendApiKey = getEnv("RESEND_API_KEY");
+): Promise<boolean>
+{
+  const resendApiKey = getEnv( "RESEND_API_KEY" );
 
-  if (!resendApiKey || !notification.recipientEmail) {
-    console.log("[Notification] Email skipped - no API key or recipient");
+  if ( !resendApiKey || !notification.recipientEmail )
+  {
+    console.log( "[Notification] Email skipped - no API key or recipient" );
     return false;
   }
 
-  try {
-    const htmlContent = buildEmailHtml(notification);
-    const response = await fetch("https://api.resend.com/emails", {
+  try
+  {
+    const htmlContent = buildEmailHtml( notification );
+    const response = await fetch( "https://api.resend.com/emails", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${resendApiKey}`,
+        Authorization: `Bearer ${ resendApiKey }`,
       },
-      body: JSON.stringify({
+      body: JSON.stringify( {
         from: settings.emailFrom || "Assistente Juridico <noreply@resend.dev>",
         to: notification.recipientEmail,
-        subject: `[${notification.priority.toUpperCase()}] ${
-          notification.title
-        }`,
+        subject: `[${ notification.priority.toUpperCase() }] ${ notification.title
+          }`,
         html: htmlContent,
-      }),
-    });
+      } ),
+    } );
 
     return response.ok;
-  } catch (error) {
-    console.error("[Notification] Email error:", error);
+  } catch ( error )
+  {
+    console.error( "[Notification] Email error:", error );
     return false;
   }
 }
@@ -372,24 +397,25 @@ async function sendEmail(
 /**
  * Constrói HTML do email de notificação
  */
-function buildEmailHtml(notification: Notification): string {
+function buildEmailHtml ( notification: Notification ): string
+{
   const metadataHtml = notification.metadata
     ? `<div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin-top: 20px;">
         <h4 style="margin: 0 0 10px 0; color: #333;">Detalhes:</h4>
         <ul style="margin: 0; padding-left: 20px;">
-          ${Object.entries(notification.metadata)
-            .filter(([, v]) => v !== undefined)
-            .map(([k, v]) => `<li><strong>${k}:</strong> ${v}</li>`)
-            .join("")}
+          ${ Object.entries( notification.metadata )
+      .filter( ( [ , v ] ) => v !== undefined )
+      .map( ( [ k, v ] ) => `<li><strong>${ k }:</strong> ${ v }</li>` )
+      .join( "" ) }
         </ul>
       </div>`
     : "";
 
   return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <h2 style="color: #333;">${notification.title}</h2>
-      <p style="color: #666; font-size: 16px; line-height: 1.6;">${notification.message}</p>
-      ${metadataHtml}
+      <h2 style="color: #333;">${ notification.title }</h2>
+      <p style="color: #666; font-size: 16px; line-height: 1.6;">${ notification.message }</p>
+      ${ metadataHtml }
       <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
       <p style="color: #999; font-size: 12px;">
         Enviado pelo Assistente Jurídico PJe
@@ -401,34 +427,37 @@ function buildEmailHtml(notification: Notification): string {
 /**
  * Envia para um webhook específico baseado no tipo
  */
-async function sendToWebhook(
+async function sendToWebhook (
   webhook: WebhookConfig,
   notification: Notification
-): Promise<boolean> {
-  switch (webhook.type) {
+): Promise<boolean>
+{
+  switch ( webhook.type )
+  {
     case "slack":
-      return sendSlackWebhook(webhook.url, notification);
+      return sendSlackWebhook( webhook.url, notification );
     case "discord":
-      return sendDiscordWebhook(webhook.url, notification);
+      return sendDiscordWebhook( webhook.url, notification );
     case "teams":
-      return sendTeamsWebhook(webhook.url, notification);
+      return sendTeamsWebhook( webhook.url, notification );
     default:
-      return sendGenericWebhook(webhook.url, notification, webhook.secret);
+      return sendGenericWebhook( webhook.url, notification, webhook.secret );
   }
 }
 
 /**
  * Verifica se notificação deve ser enviada baseado na prioridade
  */
-function shouldSendNotification(
+function shouldSendNotification (
   notificationPriority: string,
   minPriority: string
-): boolean {
+): boolean
+{
   const notifPriorityIndex = PRIORITY_ORDER.indexOf(
-    notificationPriority as (typeof PRIORITY_ORDER)[number]
+    notificationPriority as ( typeof PRIORITY_ORDER )[ number ]
   );
   const minPriorityIndex = PRIORITY_ORDER.indexOf(
-    minPriority as (typeof PRIORITY_ORDER)[number]
+    minPriority as ( typeof PRIORITY_ORDER )[ number ]
   );
   return notifPriorityIndex >= minPriorityIndex;
 }
@@ -436,47 +465,50 @@ function shouldSendNotification(
 /**
  * Handler GET /api/notifications - Lista notificações
  */
-async function handleListNotifications(
+async function handleListNotifications (
   kv: Redis,
   res: VercelResponse
-): Promise<void> {
+): Promise<void>
+{
   const queue =
-    (await kv.get<Notification[]>(KV_KEYS.NOTIFICATION_QUEUE)) || [];
+    ( await kv.get<Notification[]>( KV_KEYS.NOTIFICATION_QUEUE ) ) || [];
   const settings = await kv.get<NotificationSettings>(
     KV_KEYS.NOTIFICATION_SETTINGS
   );
-  const webhooks = (await kv.get<WebhookConfig[]>(KV_KEYS.WEBHOOKS)) || [];
+  const webhooks = ( await kv.get<WebhookConfig[]>( KV_KEYS.WEBHOOKS ) ) || [];
 
-  res.status(200).json({
+  res.status( 200 ).json( {
     success: true,
-    notifications: queue.slice(0, 50),
-    pendingCount: queue.filter((n) => n.status === "pending").length,
+    notifications: queue.slice( 0, 50 ),
+    pendingCount: queue.filter( ( n ) => n.status === "pending" ).length,
     totalCount: queue.length,
     settings: settings || {
       emailEnabled: false,
       webhookEnabled: true,
       minPriority: "normal",
     },
-    webhooks: webhooks.map((w) => ({ ...w, secret: undefined })),
-  });
+    webhooks: webhooks.map( ( w ) => ( { ...w, secret: undefined } ) ),
+  } );
 }
 
 /**
  * Handler POST /api/notifications/send - Envia notificação
  */
-async function handleSendNotification(
+async function handleSendNotification (
   kv: Redis,
   req: VercelRequest,
   res: VercelResponse
-): Promise<void> {
+): Promise<void>
+{
   const { type, title, message, priority, recipientEmail, metadata } = req.body;
 
-  if (!title || !message) {
-    res.status(400).json({ error: "title and message required" });
+  if ( !title || !message )
+  {
+    res.status( 400 ).json( { error: "title and message required" } );
     return;
   }
 
-  const finalRecipientEmail = recipientEmail || getEnv("NOTIFICATION_EMAIL");
+  const finalRecipientEmail = recipientEmail || getEnv( "NOTIFICATION_EMAIL" );
   const notification: Notification = {
     id: generateId(),
     type: type || "custom",
@@ -490,67 +522,74 @@ async function handleSendNotification(
     createdAt: new Date().toISOString(),
   };
 
-  const settings = (await kv.get<NotificationSettings>(
+  const settings = ( await kv.get<NotificationSettings>(
     KV_KEYS.NOTIFICATION_SETTINGS
-  )) || {
+  ) ) || {
     emailEnabled: false,
     webhookEnabled: true,
     minPriority: "normal",
   };
 
-  if (!shouldSendNotification(notification.priority, settings.minPriority)) {
-    res.status(200).json({
+  if ( !shouldSendNotification( notification.priority, settings.minPriority ) )
+  {
+    res.status( 200 ).json( {
       success: true,
       message: "Notification skipped due to priority threshold",
       notification,
-    });
+    } );
     return;
   }
 
-  const results = await sendNotificationToChannels(notification, settings, kv);
+  const results = await sendNotificationToChannels( notification, settings, kv );
 
-  notification.status = results.some((r) => r.success) ? "sent" : "failed";
+  notification.status = results.some( ( r ) => r.success ) ? "sent" : "failed";
   notification.sentAt =
     notification.status === "sent" ? new Date().toISOString() : undefined;
   notification.attempts = 1;
 
   const queue =
-    (await kv.get<Notification[]>(KV_KEYS.NOTIFICATION_QUEUE)) || [];
-  queue.unshift(notification);
-  await kv.set(KV_KEYS.NOTIFICATION_QUEUE, queue.slice(0, 500));
+    ( await kv.get<Notification[]>( KV_KEYS.NOTIFICATION_QUEUE ) ) || [];
+  queue.unshift( notification );
+  await kv.set( KV_KEYS.NOTIFICATION_QUEUE, queue.slice( 0, 500 ) );
 
-  res.status(200).json({ success: true, notification, results });
+  res.status( 200 ).json( { success: true, notification, results } );
 }
 
 /**
  * Envia notificação para todos os canais configurados
  */
-async function sendNotificationToChannels(
+async function sendNotificationToChannels (
   notification: Notification,
   settings: NotificationSettings,
   kv: Redis
-): Promise<SendResult[]> {
+): Promise<SendResult[]>
+{
   const results: SendResult[] = [];
-  const webhooks = (await kv.get<WebhookConfig[]>(KV_KEYS.WEBHOOKS)) || [];
+  const webhooks = ( await kv.get<WebhookConfig[]>( KV_KEYS.WEBHOOKS ) ) || [];
 
-  if (settings.webhookEnabled) {
-    for (const webhook of webhooks.filter((w) => w.enabled)) {
-      try {
-        const success = await sendToWebhook(webhook, notification);
-        results.push({ channel: webhook.name, success });
-      } catch (e) {
-        results.push({
+  if ( settings.webhookEnabled )
+  {
+    for ( const webhook of webhooks.filter( ( w ) => w.enabled ) )
+    {
+      try
+      {
+        const success = await sendToWebhook( webhook, notification );
+        results.push( { channel: webhook.name, success } );
+      } catch ( e )
+      {
+        results.push( {
           channel: webhook.name,
           success: false,
-          error: String(e),
-        });
+          error: String( e ),
+        } );
       }
     }
   }
 
-  if (settings.emailEnabled && notification.recipientEmail) {
-    const emailSuccess = await sendEmail(notification, settings);
-    results.push({ channel: "email", success: emailSuccess });
+  if ( settings.emailEnabled && notification.recipientEmail )
+  {
+    const emailSuccess = await sendEmail( notification, settings );
+    results.push( { channel: "email", success: emailSuccess } );
   }
 
   return results;
@@ -559,15 +598,17 @@ async function sendNotificationToChannels(
 /**
  * Handler POST /api/notifications/webhook - Configura webhook
  */
-async function handleCreateWebhook(
+async function handleCreateWebhook (
   kv: Redis,
   req: VercelRequest,
   res: VercelResponse
-): Promise<void> {
+): Promise<void>
+{
   const { name, url, type, events, secret } = req.body;
 
-  if (!name || !url || !type) {
-    res.status(400).json({ error: "name, url and type required" });
+  if ( !name || !url || !type )
+  {
+    res.status( 400 ).json( { error: "name, url and type required" } );
     return;
   }
 
@@ -577,77 +618,82 @@ async function handleCreateWebhook(
     url,
     type,
     enabled: true,
-    events: events || ["all"],
+    events: events || [ "all" ],
     secret,
     createdAt: new Date().toISOString(),
   };
 
-  const webhooks = (await kv.get<WebhookConfig[]>(KV_KEYS.WEBHOOKS)) || [];
-  webhooks.push(webhook);
-  await kv.set(KV_KEYS.WEBHOOKS, webhooks);
+  const webhooks = ( await kv.get<WebhookConfig[]>( KV_KEYS.WEBHOOKS ) ) || [];
+  webhooks.push( webhook );
+  await kv.set( KV_KEYS.WEBHOOKS, webhooks );
 
-  res.status(201).json({
+  res.status( 201 ).json( {
     success: true,
     webhook: { ...webhook, secret: undefined },
-  });
+  } );
 }
 
 /**
  * Handler DELETE /api/notifications/webhook/:id - Remove webhook
  */
-async function handleDeleteWebhook(
+async function handleDeleteWebhook (
   kv: Redis,
   webhookId: string,
   res: VercelResponse
-): Promise<void> {
-  const webhooks = (await kv.get<WebhookConfig[]>(KV_KEYS.WEBHOOKS)) || [];
-  const filtered = webhooks.filter((w) => w.id !== webhookId);
+): Promise<void>
+{
+  const webhooks = ( await kv.get<WebhookConfig[]>( KV_KEYS.WEBHOOKS ) ) || [];
+  const filtered = webhooks.filter( ( w ) => w.id !== webhookId );
 
-  if (filtered.length === webhooks.length) {
-    res.status(404).json({ error: "Webhook not found" });
+  if ( filtered.length === webhooks.length )
+  {
+    res.status( 404 ).json( { error: "Webhook not found" } );
     return;
   }
 
-  await kv.set(KV_KEYS.WEBHOOKS, filtered);
-  res.status(200).json({ success: true });
+  await kv.set( KV_KEYS.WEBHOOKS, filtered );
+  res.status( 200 ).json( { success: true } );
 }
 
 /**
  * Handler PUT /api/notifications/settings - Atualiza configurações
  */
-async function handleUpdateSettings(
+async function handleUpdateSettings (
   kv: Redis,
   req: VercelRequest,
   res: VercelResponse
-): Promise<void> {
+): Promise<void>
+{
   const settings = req.body as Partial<NotificationSettings>;
 
   const current =
-    (await kv.get<NotificationSettings>(KV_KEYS.NOTIFICATION_SETTINGS)) || {};
+    ( await kv.get<NotificationSettings>( KV_KEYS.NOTIFICATION_SETTINGS ) ) || {};
   const updated = { ...current, ...settings };
 
-  await kv.set(KV_KEYS.NOTIFICATION_SETTINGS, updated);
+  await kv.set( KV_KEYS.NOTIFICATION_SETTINGS, updated );
 
-  res.status(200).json({ success: true, settings: updated });
+  res.status( 200 ).json( { success: true, settings: updated } );
 }
 
 /**
  * Handler POST /api/notifications/test - Testa notificação
  */
-async function handleTestNotification(
+async function handleTestNotification (
   kv: Redis,
   req: VercelRequest,
   res: VercelResponse
-): Promise<void> {
+): Promise<void>
+{
   const { webhookId } = req.body;
 
-  const webhooks = (await kv.get<WebhookConfig[]>(KV_KEYS.WEBHOOKS)) || [];
+  const webhooks = ( await kv.get<WebhookConfig[]>( KV_KEYS.WEBHOOKS ) ) || [];
   const webhook = webhookId
-    ? webhooks.find((w) => w.id === webhookId)
-    : webhooks.find((w) => w.enabled);
+    ? webhooks.find( ( w ) => w.id === webhookId )
+    : webhooks.find( ( w ) => w.enabled );
 
-  if (!webhook) {
-    res.status(404).json({ error: "No webhook configured" });
+  if ( !webhook )
+  {
+    res.status( 404 ).json( { error: "No webhook configured" } );
     return;
   }
 
@@ -667,15 +713,15 @@ async function handleTestNotification(
     },
   };
 
-  const success = await sendToWebhook(webhook, testNotification);
+  const success = await sendToWebhook( webhook, testNotification );
 
-  res.status(200).json({
+  res.status( 200 ).json( {
     success,
     message: success
       ? "Test notification sent successfully"
       : "Failed to send test notification",
     webhook: { name: webhook.name, type: webhook.type },
-  });
+  } );
 }
 
 // ===== Route Matching helpers (reduces S3776 Cognitive Complexity) =====
@@ -686,18 +732,19 @@ type RouteHandler = (
   res: VercelResponse
 ) => Promise<VercelResponse | void>;
 
-interface RouteConfig {
+interface RouteConfig
+{
   method: string;
-  pattern: string | ((path: string) => boolean);
+  pattern: string | ( ( path: string ) => boolean );
   handler: RouteHandler;
-  extractParams?: (path: string) => Record<string, string>;
+  extractParams?: ( path: string ) => Record<string, string>;
 }
 
 const ROUTES: RouteConfig[] = [
   {
     method: "GET",
     pattern: "",
-    handler: (kv, _req, res) => handleListNotifications(kv, res),
+    handler: ( kv, _req, res ) => handleListNotifications( kv, res ),
   },
   {
     method: "POST",
@@ -711,12 +758,13 @@ const ROUTES: RouteConfig[] = [
   },
   {
     method: "DELETE",
-    pattern: (path) => path.startsWith("/webhook/"),
-    handler: async (kv, _req, res) => {
-      const url = new URL(_req.url || "", `http://${_req.headers.host}`);
-      const path = url.pathname.replaceAll("/api/notifications", "");
-      const webhookId = path.replaceAll("/webhook/", "");
-      return handleDeleteWebhook(kv, webhookId, res);
+    pattern: ( path ) => path.startsWith( "/webhook/" ),
+    handler: async ( kv, _req, res ) =>
+    {
+      const url = new URL( _req.url || "", `http://${ _req.headers.host }` );
+      const path = url.pathname.replaceAll( "/api/notifications", "" );
+      const webhookId = path.replaceAll( "/webhook/", "" );
+      return handleDeleteWebhook( kv, webhookId, res );
     },
   },
   {
@@ -731,47 +779,55 @@ const ROUTES: RouteConfig[] = [
   },
 ];
 
-function matchRoute(method: string, path: string): RouteConfig | undefined {
-  return ROUTES.find((route) => {
-    if (route.method !== method) return false;
-    if (typeof route.pattern === "string") return route.pattern === path;
-    return route.pattern(path);
-  });
+function matchRoute ( method: string, path: string ): RouteConfig | undefined
+{
+  return ROUTES.find( ( route ) =>
+  {
+    if ( route.method !== method ) return false;
+    if ( typeof route.pattern === "string" ) return route.pattern === path;
+    return route.pattern( path );
+  } );
 }
 
-function setupCorsHeaders(res: VercelResponse): void {
-  res.setHeader("Access-Control-Allow-Origin", "*");
+function setupCorsHeaders ( res: VercelResponse ): void
+{
+  res.setHeader( "Access-Control-Allow-Origin", "*" );
   res.setHeader(
     "Access-Control-Allow-Methods",
     "GET, POST, PUT, DELETE, OPTIONS"
   );
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader( "Access-Control-Allow-Headers", "Content-Type, Authorization" );
 }
 
 // Handler principal
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  setupCorsHeaders(res);
+export default async function handler ( req: VercelRequest, res: VercelResponse )
+{
+  setupCorsHeaders( res );
 
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
+  if ( req.method === "OPTIONS" )
+  {
+    return res.status( 200 ).end();
   }
 
-  try {
+  try
+  {
     const kv = await getKv();
-    const url = new URL(req.url || "", `http://${req.headers.host}`);
-    const path = url.pathname.replace("/api/notifications", "");
+    const url = new URL( req.url || "", `http://${ req.headers.host }` );
+    const path = url.pathname.replace( "/api/notifications", "" );
 
-    const route = matchRoute(req.method || "", path);
-    if (route) {
-      return route.handler(kv, req, res);
+    const route = matchRoute( req.method || "", path );
+    if ( route )
+    {
+      return route.handler( kv, req, res );
     }
 
-    return res.status(404).json({ error: "Not found" });
-  } catch (error) {
-    console.error("[Notifications API] Error:", error);
-    return res.status(500).json({
+    return res.status( 404 ).json( { error: "Not found" } );
+  } catch ( error )
+  {
+    console.error( "[Notifications API] Error:", error );
+    return res.status( 500 ).json( {
       error: "Internal server error",
       details: error instanceof Error ? error.message : "Unknown error",
-    });
+    } );
   }
 }

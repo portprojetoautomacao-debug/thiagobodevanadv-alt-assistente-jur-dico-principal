@@ -4,10 +4,10 @@
  * - Monitor DJEN
  */
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
 import { analisarExpedientesComCheckpointing } from "@/agents/analise-expedientes-checkpointed";
 import { monitorarDJENComCheckpointing } from "@/agents/monitor-djen-checkpointed";
 import type { Expediente } from "@/types";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock do Gemini Service
 vi.mock("@/lib/gemini-service", () => ({
@@ -19,6 +19,13 @@ vi.mock("@/lib/gemini-service", () => ({
       suggestedActions: ["Preparar manifestação"],
       nextSteps: ["Analisar documentos"],
     });
+  }),
+  callGemini: vi.fn().mockResolvedValue({
+    summary: "Intimação para manifestação",
+    priority: "alta",
+    deadline: { days: 15, type: "úteis", endDate: "15/01/2025" },
+    suggestedActions: ["Preparar manifestação"],
+    nextSteps: ["Analisar documentos"],
   }),
 }));
 
@@ -41,14 +48,20 @@ vi.mock("@/lib/djen-api", () => ({
   }),
 }));
 
-// Mock do Redis/KV
-vi.mock("@upstash/redis", () => ({
-  Redis: vi.fn().mockImplementation(() => ({
-    set: vi.fn().mockResolvedValue("OK"),
-    get: vi.fn().mockResolvedValue(null),
-    del: vi.fn().mockResolvedValue(1),
-  })),
-}));
+// Mock do Redis/KV - compatível com Vitest 4
+vi.mock("@upstash/redis", () => {
+  const MockRedis = vi.fn(function () {
+    return {
+      set: vi.fn().mockResolvedValue("OK"),
+      get: vi.fn().mockResolvedValue(null),
+      del: vi.fn().mockResolvedValue(1),
+    };
+  });
+
+  return {
+    Redis: MockRedis,
+  };
+});
 
 describe("Análise de Expedientes com Checkpointing", () => {
   const mockExpedientes: Expediente[] = [

@@ -118,7 +118,12 @@ export async function executeWithCheckpointing<T>(
     const generator = fn(resumeState);
     let result: T | undefined;
 
-    for await (const value of generator) {
+    // Usar while com .next() ao invés de for await of para capturar o return
+    let iteration = await generator.next();
+
+    while (!iteration.done) {
+      const value = iteration.value;
+
       // Se o yield retornou um checkpoint, salvar
       if (value && typeof value === "object" && "checkpoint" in value) {
         const checkpointData = value.checkpoint;
@@ -135,9 +140,13 @@ export async function executeWithCheckpointing<T>(
           metadata: checkpointData.metadata,
         });
       }
+      // Não atualizar result aqui - apenas yields de checkpoint passam por aqui
 
-      result = value;
+      iteration = await generator.next();
     }
+
+    // Capturar o valor retornado (return) do generator
+    result = iteration.value as T;
 
     // Sucesso! Limpar checkpoints
     await clearCheckpoints(executionId);

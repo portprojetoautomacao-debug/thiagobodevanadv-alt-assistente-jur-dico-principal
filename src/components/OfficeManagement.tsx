@@ -150,7 +150,7 @@ export default function OfficeManagement() {
 
     return Object.entries(byMonth)
       .map(([month, data]) => ({
-        mes: meses[Number.Number.parseInt(month)],
+        mes: meses[Number.parseInt(month)],
         receita: data.receita,
         despesa: data.despesa,
         saldo: data.receita - data.despesa,
@@ -206,7 +206,7 @@ export default function OfficeManagement() {
 
     return Object.entries(byYear)
       .map(([year, procs]) => ({
-        ano: Number.Number.parseInt(year),
+        ano: Number.parseInt(year),
         fechamentos: procs.length,
         emProducao: procs.filter((p) => p.status === "ativo").length,
         transitoJulgado: procs.filter((p) => p.fase === "transitoJulgado").length,
@@ -496,7 +496,7 @@ export default function OfficeManagement() {
                               const colorIndex =
                                 entry.categoria
                                   .split("")
-                                  .reduce((acc, char) => acc + char.codePointAt(0), 0) % 6;
+                                  .reduce((acc, char) => acc + (char.codePointAt(0) ?? 0), 0) % 6;
                               const colors = [
                                 "#ef4444",
                                 "#f97316",

@@ -611,6 +611,6 @@ export function extractTraceContext(
   return {
     traceId: parts[1],
     spanId: parts[2],
-    traceFlags: Number.Number.parseInt(parts[3], 16),
+    traceFlags: Number.parseInt(parts[3], 16),
   };
 }

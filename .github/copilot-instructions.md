@@ -84,11 +84,23 @@ Este documento fornece instruções detalhadas para o GitHub Copilot trabalhar e
 - **Segurança/Performance**: Nada de segredos no repo; use `src/lib/config.ts` + `.env.example`. Respeite `manualChunks` de `vite.config.ts`, CSP de `vercel.json` e monitoração Sentry (`src/services/error-tracking.ts`). Extensão Chrome: API Key armazenada em Chrome Storage, comunicação HTTPS apenas.
 - **Workflow**: Antes de PR, rode lint+testes e reporte resultados; manter `main` verde garante deploy automático Vercel. Para extensão, rode `npm test` em `chrome-extension-pje/`.
 
-### 🔒 REGRA CRÍTICA: Arquivo .env.example É SAGRADO
+### 🔒 REGRA CRÍTICA: Variáveis de Ambiente
+
+#### 📋 Arquivos .env - Política de Uso
+
+**ARQUIVO ÚNICO PARA DESENVOLVIMENTO:**
+- ✅ **USAR APENAS**: `/workspaces/thiagobodevanadv-alt-assistente-jur-dico-principal/.env.local`
+- ❌ **NÃO CRIAR** novos arquivos `.env`, `.env.development`, `.env.production`, etc.
+- ❌ **NÃO CRIAR** `.env` na raiz do projeto
+- ⚠️ **ÚNICA EXCEÇÃO**: `.env.example` (template de referência - SAGRADO)
+
+**Razão:** O projeto usa exclusivamente `.env.local` para desenvolvimento local. Vite carrega automaticamente este arquivo. Múltiplos arquivos .env causam conflitos, duplicação e dificuldade de manutenção.
+
+#### 🔒 Arquivo .env.example É SAGRADO
 
 **NUNCA, em hipótese alguma:**
 
-❌ **NÃO APAGUE** o arquivo `/workspaces/assistente-jur-dico-principal/.env.example`
+❌ **NÃO APAGUE** o arquivo `/workspaces/thiagobodevanadv-alt-assistente-jur-dico-principal/.env.example`
 ❌ **NÃO MODIFIQUE** valores, chaves ou estrutura sem autorização explícita
 ❌ **NÃO REMOVA** seções ou variáveis existentes
 ❌ **NÃO REORGANIZE** a ordem das seções sem permissão
@@ -102,12 +114,15 @@ Este documento fornece instruções detalhadas para o GitHub Copilot trabalhar e
 
 **Se precisar adicionar variável:**
 1. Consulte o operador ANTES de modificar
-2. Documente com comentários claros
-3. Inclua link de onde obter a chave
-4. Adicione na seção correta (não crie seção nova)
-5. Use placeholder genérico (não valores reais)
+2. Adicione em `.env.local` (desenvolvimento) ou Vercel Dashboard (produção)
+3. Documente em `.env.example` com comentários claros
+4. Inclua link de onde obter a chave
+5. Adicione na seção correta (não crie seção nova)
+6. Use placeholder genérico (não valores reais)
 
-**Localização:** `/workspaces/assistente-jur-dico-principal/.env.example`
+**Localizações:**
+- Template: `/workspaces/thiagobodevanadv-alt-assistente-jur-dico-principal/.env.example`
+- Desenvolvimento: `/workspaces/thiagobodevanadv-alt-assistente-jur-dico-principal/.env.local`
 
 ### 🔌 Chrome Extension PJe Sync - Workflow de Desenvolvimento
 
