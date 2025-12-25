@@ -52,7 +52,7 @@ else
     echo "  ❌ KUBE_INGRESS_BASE_DOMAIN não configurada"
     echo ""
     echo "     Configure manualmente em:"
-    echo "     https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/settings/ci_cd"
+    echo "     https://gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/-/settings/ci_cd"
     echo ""
 fi
 
@@ -80,7 +80,7 @@ else
     echo "⚠️  Auto DevOps: INATIVO"
     echo ""
     echo "   Para ativar:"
-    echo "   1. Acesse: https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/settings/ci_cd"
+    echo "   1. Acesse: https://gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/-/settings/ci_cd"
     echo "   2. Expanda 'Auto DevOps'"
     echo "   3. Marque 'Default to Auto DevOps pipeline'"
     echo "   4. Clique em 'Save changes'"
@@ -107,7 +107,7 @@ if [[ "$PIPELINE_STATUS" != "null" ]]; then
     echo "  Status: $PIPELINE_STATUS"
     echo "  Criado: $PIPELINE_CREATED"
     echo ""
-    echo "  🔗 Ver pipeline: https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/pipelines/$PIPELINE_ID"
+    echo "  🔗 Ver pipeline: https://gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/-/pipelines/$PIPELINE_ID"
 else
     echo "  ℹ️  Nenhum pipeline encontrado"
     echo ""

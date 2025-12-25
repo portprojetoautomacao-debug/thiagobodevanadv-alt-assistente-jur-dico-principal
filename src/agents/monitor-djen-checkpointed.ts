@@ -224,9 +224,6 @@ async function* workflowMonitorDJEN(context: MonitorDJENContext, resumeState?: a
     // 📌 CHECKPOINT 3
     yield checkpoint(3, "publicacoes_filtradas", state, {
       progress: 0.8,
-      metadata: {
-        totalPublicacoes: state.publicacoesFiltradas.length,
-      },
     });
   }
 
@@ -294,11 +291,12 @@ async function consultarTribunalComRetry(
     try {
       const config: DJENConfig = {
         tribunais: [tribunal],
-        nomeAdvogado: advogado.nome,
-        oabAdvogado: advogado.oab,
+        searchTerms: {
+          nomeAdvogado: advogado.nome,
+          numeroOAB: advogado.oab,
+        },
         dataInicio,
         dataFim,
-        maxRetries: 1, // Já estamos fazendo retry aqui
       };
 
       const resultado = await consultarDJEN(config);

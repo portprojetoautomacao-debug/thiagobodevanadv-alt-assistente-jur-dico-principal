@@ -1,7 +1,8 @@
-import { createServer } from 'http';
-import { readFileSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+// @ts-check
+import { createServer } from "http";
+import { readFileSync } from "fs";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -10,19 +11,23 @@ const PORT = process.env.PORT || 3000;
 
 const server = createServer((req, res) => {
   // Basic routing for GitHub runtime wrapper
-  if (req.url === '/' || req.url === '/health') {
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({
-      status: 'ok',
-      message: 'GitHub Runtime Wrapper Active',
-      timestamp: new Date().toISOString()
-    }));
+  if (req.url === "/" || req.url === "/health") {
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(
+      JSON.stringify({
+        status: "ok",
+        message: "GitHub Runtime Wrapper Active",
+        timestamp: new Date().toISOString(),
+      })
+    );
   } else {
-    res.writeHead(404, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({
-      error: 'Not Found',
-      message: 'Endpoint not available in wrapper mode'
-    }));
+    res.writeHead(404, { "Content-Type": "application/json" });
+    res.end(
+      JSON.stringify({
+        error: "Not Found",
+        message: "Endpoint not available in wrapper mode",
+      })
+    );
   }
 });
 

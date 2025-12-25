@@ -1101,7 +1101,7 @@ Ao trabalhar com o upgrade dos agentes, use:
 #### 📖 Referências Rápidas
 
 - **Pull Request Original**: Arquitetura Híbrida TOP 1% Mundial com CrewAI + LangGraph + DSPy + AutoGen
-- **Repositório**: thiagobodevan-a11y/assistente-juridico-p
+- **Repositório**: portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
 - **Branch**: main
 - **Data do Upgrade**: 09/12/2024
 - **Versão**: 2.0.0
@@ -1497,7 +1497,7 @@ async function* processIntimacao(expediente: Expediente) {
 
 | Repositório | URL | Propósito |
 |-------------|-----|-----------|
-| **assistente-juridico-p** | https://github.com/thiagobodevan-a11y/assistente-juridico-p | Repositório alvo - Sistema jurídico completo |
+| **assistente-juridico-p** | https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal | Repositório alvo - Sistema jurídico completo |
 
 ### 🤖 Frameworks de Agentes e Orquestração
 

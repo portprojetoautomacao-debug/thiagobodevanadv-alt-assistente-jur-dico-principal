@@ -7,6 +7,8 @@
     "skipLibCheck": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
+    "allowJs": true,
+    "checkJs": false,
 
     /* Bundler mode - compatível com Vite/Vercel */
     "moduleResolution": "bundler",
@@ -31,6 +33,8 @@
   "include": ["src", "api"],
   "exclude": [
     "node_modules",
+    "node_modules/**/*",
+    "**/node_modules/**",
     "**/*.test.ts",
     "**/*.test.tsx",
     "**/*.spec.ts",

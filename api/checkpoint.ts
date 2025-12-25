@@ -10,14 +10,13 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import
-  {
+import {
     clearCheckpoints,
     getCheckpointSummary,
     getLastCheckpoint,
     hasCheckpoints,
     listCheckpoints
-  } from '../src/lib/checkpoint-service';
+} from '../src/lib/checkpoint-service.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Habilitar CORS
@@ -125,9 +124,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   } catch (error) {
     console.error('[Checkpoint API Error]', error);
+    const err = error as Error;
     return res.status(500).json({
       error: 'Erro interno do servidor',
-      message: error.message
+      message: err.message || 'Erro desconhecido'
     });
   }
 }
@@ -148,9 +148,10 @@ async function handleCleanupOldCheckpoints(req: VercelRequest, res: VercelRespon
     });
   } catch (error) {
     console.error('[Checkpoint Cleanup Error]', error);
+    const err = error as Error;
     return res.status(500).json({
       error: 'Erro ao executar limpeza',
-      message: error.message
+      message: err.message || 'Erro desconhecido'
     });
   }
 }

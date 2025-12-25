@@ -144,12 +144,12 @@ vercel logs assistente-juridico-p --follow
 ```
 
 **GitHub Actions**:
-https://github.com/thiagobodevan-a11y/assistente-juridico-p/actions
+https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/actions
 
 ### 🐛 Troubleshooting
 
 **Email não funciona?**
-1. Verificar secret em: https://github.com/thiagobodevan-a11y/assistente-juridico-p/settings/secrets/actions
+1. Verificar secret em: https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/settings/secrets/actions
 2. Verificar logs: `vercel logs assistente-juridico-p --prod`
 3. Verificar Resend: https://resend.com/emails
 
@@ -201,7 +201,7 @@ https://github.com/thiagobodevan-a11y/assistente-juridico-p/actions
 - Docs: https://vercel.com/docs
 
 **Github Issues:**
-- https://github.com/thiagobodevan-a11y/assistente-juridico-p/issues
+- https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/issues
 
 ---
 

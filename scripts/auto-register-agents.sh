@@ -54,7 +54,7 @@ echo "🔄 VERIFICANDO STATUS ATUAL..."
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # Verificar agentes existentes
-EXISTING_AGENTS=$(glab cluster agent list -R thiagobodevan-a11y/assistente-juridico-p 2>/dev/null | grep -E "(assistente-juridico-agent|agente-cluster|agenterevisor)" | wc -l)
+EXISTING_AGENTS=$(glab cluster agent list -R portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal 2>/dev/null | grep -E "(assistente-juridico-agent|agente-cluster|agenterevisor)" | wc -l)
 
 echo "🤖 Agentes já registrados: $EXISTING_AGENTS/7"
 
@@ -63,7 +63,7 @@ echo "🌐 INSTRUÇÕES PARA REGISTRO:"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 echo "1️⃣ Abra o navegador e acesse:"
-echo "   https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/clusters"
+echo "   https://gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/-/clusters"
 echo ""
 echo "2️⃣ Para cada agente, clique 'Connect a cluster' → 'GitLab agent'"
 echo ""

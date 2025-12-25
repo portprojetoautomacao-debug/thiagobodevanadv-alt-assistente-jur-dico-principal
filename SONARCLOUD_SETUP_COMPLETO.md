@@ -6,7 +6,7 @@
 |------|--------|----------|
 | **Token GitHub Actions** | ✅ Configurado | `SONAR_TOKEN` salvo em Settings > Secrets |
 | **Workflow** | ✅ Ativo | `.github/workflows/sonarcloud.yml` |
-| **Projeto SonarCloud** | ✅ Criado | `thiagobodevan-a11y_assistente-juridico-p` |
+| **Projeto SonarCloud** | ✅ Criado | `portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal` |
 | **Badges README** | ✅ Inseridos | Quality Gate + AI Code Assurance |
 | **Auto-análise** | ✅ Ativa | Push main + PRs + Manual |
 
@@ -54,13 +54,13 @@ O SonarCloud executará análise automaticamente em:
 ### Quality Gate Status
 
 ```markdown
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=thiagobodevan-a11y_assistente-juridico-p&metric=alert_status&token=c645526c74f7c19f7b14446c8464ad231ad26023)](https://sonarcloud.io/summary/new_code?id=thiagobodevan-a11y_assistente-juridico-p)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal&metric=alert_status&token=c645526c74f7c19f7b14446c8464ad231ad26023)](https://sonarcloud.io/summary/new_code?id=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal)
 ```
 
 ### AI Code Assurance
 
 ```markdown
-[![AI Code Assurance](https://sonarcloud.io/api/project_badges/ai_code_assurance?project=thiagobodevan-a11y_assistente-juridico-p&token=c645526c74f7c19f7b14446c8464ad231ad26023)](https://sonarcloud.io/summary/new_code?id=thiagobodevan-a11y_assistente-juridico-p)
+[![AI Code Assurance](https://sonarcloud.io/api/project_badges/ai_code_assurance?project=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal&token=c645526c74f7c19f7b14446c8464ad231ad26023)](https://sonarcloud.io/summary/new_code?id=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal)
 ```
 
 **✅ JÁ INSERIDOS** no topo do README.md
@@ -90,7 +90,7 @@ O SonarCloud executará análise automaticamente em:
 
 ### Via GitHub Actions
 
-1. Acesse: https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal/actions
+1. Acesse: https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/actions
 2. Clique em `SonarCloud Analysis`
 3. Clique em `Run workflow`
 4. Selecione branch: `feat/optimize-workflows-enterprise-grade`
@@ -104,7 +104,7 @@ npm install -g sonarqube-scanner
 
 # Executar análise
 sonar-scanner \
-  -Dsonar.projectKey=thiagobodevan-a11y_assistente-juridico-p \
+  -Dsonar.projectKey=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal \
   -Dsonar.organization=thiagobodevan-a11y-assistente-juridico-p \
   -Dsonar.sources=src,api,chrome-extension-pje/src \
   -Dsonar.host.url=https://sonarcloud.io \
@@ -117,18 +117,18 @@ sonar-scanner \
 
 ### Dashboard Principal
 
-https://sonarcloud.io/dashboard?id=thiagobodevan-a11y_assistente-juridico-p
+https://sonarcloud.io/dashboard?id=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal
 
 ### Métricas por Seção
 
 | Seção | URL |
 |-------|-----|
-| **Overview** | https://sonarcloud.io/summary/overall?id=thiagobodevan-a11y_assistente-juridico-p |
-| **Issues** | https://sonarcloud.io/project/issues?id=thiagobodevan-a11y_assistente-juridico-p |
-| **Security** | https://sonarcloud.io/project/security_hotspots?id=thiagobodevan-a11y_assistente-juridico-p |
-| **Measures** | https://sonarcloud.io/component_measures?id=thiagobodevan-a11y_assistente-juridico-p |
-| **Code** | https://sonarcloud.io/code?id=thiagobodevan-a11y_assistente-juridico-p |
-| **Activity** | https://sonarcloud.io/project/activity?id=thiagobodevan-a11y_assistente-juridico-p |
+| **Overview** | https://sonarcloud.io/summary/overall?id=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal |
+| **Issues** | https://sonarcloud.io/project/issues?id=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal |
+| **Security** | https://sonarcloud.io/project/security_hotspots?id=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal |
+| **Measures** | https://sonarcloud.io/component_measures?id=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal |
+| **Code** | https://sonarcloud.io/code?id=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal |
+| **Activity** | https://sonarcloud.io/project/activity?id=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal |
 
 ---
 
@@ -147,7 +147,7 @@ O projeto **FALHA** se:
 
 ### Customizar Quality Gate
 
-1. Acesse: https://sonarcloud.io/project/quality_gates/show?id=thiagobodevan-a11y_assistente-juridico-p
+1. Acesse: https://sonarcloud.io/project/quality_gates/show?id=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal
 2. Edite as condições conforme necessidade
 3. Salve alterações
 
@@ -158,7 +158,7 @@ O projeto **FALHA** se:
 ### Arquivo sonar-project.properties
 
 ```properties
-sonar.projectKey=thiagobodevan-a11y_assistente-juridico-p
+sonar.projectKey=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal
 sonar.organization=thiagobodevan-a11y-assistente-juridico-p
 
 # Project info
@@ -216,7 +216,7 @@ sonar.organization=NOME_REAL
 **Solução**:
 ```bash
 # Ver issues específicos
-# Acesse: https://sonarcloud.io/project/issues?id=thiagobodevan-a11y_assistente-juridico-p
+# Acesse: https://sonarcloud.io/project/issues?id=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal
 
 # Filtrar por severity
 # - Blocker: Corrigir IMEDIATAMENTE

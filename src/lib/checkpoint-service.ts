@@ -143,7 +143,8 @@ export async function saveCheckpoint(
     );
   } catch (error) {
     console.error(`[Checkpoint] Erro ao salvar checkpoint:`, error);
-    throw new Error(`Falha ao salvar checkpoint: ${error.message}`);
+    const err = error as Error;
+    throw new Error(`Falha ao salvar checkpoint: ${err.message || "Erro desconhecido"}`);
   }
 }
 
@@ -288,7 +289,8 @@ export async function clearCheckpoints(executionId: string): Promise<void> {
     console.log(`[Checkpoint] Limpou ${metadata.totalSteps} checkpoints de ${executionId}`);
   } catch (error) {
     console.error(`[Checkpoint] Erro ao limpar checkpoints:`, error);
-    throw new Error(`Falha ao limpar checkpoints: ${error.message}`);
+    const err = error as Error;
+    throw new Error(`Falha ao limpar checkpoints: ${err.message || "Erro desconhecido"}`);
   }
 }
 

@@ -22,7 +22,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo ""
 echo "Para cada agente, siga estes passos na interface do GitLab:"
 echo ""
-echo "1. Vá para: https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/clusters"
+echo "1. Vá para: https://gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/-/clusters"
 echo "2. Clique: 'Connect a cluster'"
 echo "3. Selecione: 'GitLab agent'"
 echo "4. Digite o nome do agente"

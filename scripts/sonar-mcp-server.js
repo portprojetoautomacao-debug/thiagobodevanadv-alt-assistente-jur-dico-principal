@@ -1,3 +1,4 @@
+// @ts-check
 #!/usr/bin/env node
 
 /**

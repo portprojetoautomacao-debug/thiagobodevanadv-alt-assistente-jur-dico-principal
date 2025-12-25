@@ -221,7 +221,7 @@ git status --short
 - 3 moderate
 - 1 low
 
-**Link:** https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal/security/dependabot
+**Link:** https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/security/dependabot
 
 **Recomendação:** Revisar e corrigir vulnerabilidades após merge
 

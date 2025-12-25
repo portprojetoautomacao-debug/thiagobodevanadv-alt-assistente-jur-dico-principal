@@ -60,7 +60,7 @@ function recordPattern(ruleId, filePath, before, after, context = {}) {
   const metadata = loadMetadata();
 
   // Sanitizar ruleId para nome de arquivo (remover caracteres especiais)
-  const safeRuleId = ruleId.replace(/[^a-zA-Z0-9-_]/g, "-");
+  const safeRuleId = ruleId.replaceAll(/[^a-zA-Z0-9-_]/g, "-");
 
   // Criar arquivo de padrão para a regra
   const patternFile = path.join(PATTERNS_DIR, `${safeRuleId}.json`);

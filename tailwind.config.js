@@ -1,3 +1,4 @@
+// @ts-check
 import fs from "fs";
 
 /** @type {import('tailwindcss').Config} */

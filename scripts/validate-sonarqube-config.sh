@@ -41,11 +41,11 @@ echo "📋 Verificando ProjectKey e Organization..."
 PROJECT_KEY=$(grep "^sonar.projectKey=" sonar-project.properties | cut -d'=' -f2)
 ORGANIZATION=$(grep "^sonar.organization=" sonar-project.properties | cut -d'=' -f2)
 
-if [ "$PROJECT_KEY" = "thiagobodevanadv-alt_assistente-jur-dico-principal" ]; then
+if [ "$PROJECT_KEY" = "portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal" ]; then
   echo -e "${GREEN}✅ ProjectKey correto: $PROJECT_KEY${NC}"
 else
   echo -e "${RED}❌ ProjectKey incorreto: $PROJECT_KEY${NC}"
-  echo -e "   Esperado: thiagobodevanadv-alt_assistente-jur-dico-principal"
+  echo -e "   Esperado: portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal"
   ((ERRORS++))
 fi
 
@@ -66,8 +66,8 @@ echo ""
 echo "🔗 Verificando URLs do repositório..."
 
 # Verificar URLs corretas (repositório atual)
-CORRECT_REPO="thiagobodevanadv-alt/assistente-jur-dico-principal"
-INCORRECT_REPO="thiagobodevan-a11y/assistente-juridico-p"
+CORRECT_REPO="portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal"
+INCORRECT_REPO="portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal"
 
 # Homepage
 HOMEPAGE=$(grep "^sonar.links.homepage=" sonar-project.properties | cut -d'=' -f2-)

@@ -167,7 +167,7 @@ Este script verifica:
 ### 1. No GitLab Web (Gratuito)
 
 #### Abrir GitLab Duo Chat
-1. Acesse seu repositório: https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p
+1. Acesse seu repositório: https://gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
 2. Clique em **Duo Chat** (ícone de chat com IA)
 3. Digite seus comandos
 
@@ -242,7 +242,7 @@ function sum(a: number, b: number): number {
 
 2. **Acesse a MR**
    - GitLab cria a MR automaticamente
-   - URL: https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/merge_requests
+   - URL: https://gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/-/merge_requests
 
 3. **Solicitar Revisão do Duo**
    - Clique em **Duo Chat** na MR

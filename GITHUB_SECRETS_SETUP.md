@@ -15,7 +15,7 @@ Como não foi possível configurar via CLI neste ambiente, siga estes passos par
 ## 🛠️ Como Configurar Manualmente
 
 ### Passo 1: Acesse as Configurações do Repositório
-1. Vá para: https://github.com/thiagobodevan-a11y/assistente-juridico-p
+1. Vá para: https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
 2. Clique em **"Settings"** (ícone de engrenagem)
 3. No menu lateral esquerdo, clique em **"Secrets and variables"**
 4. Clique em **"Actions"**

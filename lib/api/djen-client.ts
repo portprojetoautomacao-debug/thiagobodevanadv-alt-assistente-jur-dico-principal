@@ -109,7 +109,7 @@ function normalizeText(text: string): string {
   return text
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .replaceAll(/[\u0300-\u036f]/g, "")
     .trim();
 }
 
@@ -214,10 +214,10 @@ async function consultarComunicacoes(
     // Extrair informações de rate limiting
     const rateLimitInfo = {
       limit: response.headers.get("x-ratelimit-limit")
-        ? parseInt(response.headers.get("x-ratelimit-limit")!)
+        ? Number.parseInt(response.headers.get("x-ratelimit-limit")!)
         : undefined,
       remaining: response.headers.get("x-ratelimit-remaining")
-        ? parseInt(response.headers.get("x-ratelimit-remaining")!)
+        ? Number.parseInt(response.headers.get("x-ratelimit-remaining")!)
         : undefined,
     };
 

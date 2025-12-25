@@ -48,7 +48,7 @@ curl https://assistente-juridico-github.vercel.app/api/health
 vercel logs assistente-juridico-p --follow
 
 # Via Dashboard
-# https://vercel.com/thiagobodevan-a11y/assistente-juridico-p/logs
+# https://vercel.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/logs
 ```
 
 **O que procurar:**
@@ -199,7 +199,7 @@ curl https://assistente-juridico-github.vercel.app/api/health
 #### **1. Verificar Vercel Analytics**
 
 ```
-Dashboard: https://vercel.com/thiagobodevan-a11y/assistente-juridico-p/analytics
+Dashboard: https://vercel.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/analytics
 
 Métricas críticas:
 - LCP (Largest Contentful Paint) < 2.5s
@@ -367,7 +367,7 @@ npm run build
 # ? 0 errors, 0 warnings
 
 # 7. Verificar Métricas Vercel (2 min)
-# https://vercel.com/thiagobodevan-a11y/assistente-juridico-p/analytics
+# https://vercel.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/analytics
 # - LCP < 2.5s
 # - Error Rate < 1%
 

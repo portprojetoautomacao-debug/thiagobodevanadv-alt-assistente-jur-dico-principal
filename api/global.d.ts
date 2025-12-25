@@ -105,7 +105,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // Limita resultados
       const maxResults =
         typeof limit === 'string' && !Number.isNaN(Number(limit))
-          ? Number.parseInt(limit, 10)
+          ? Number.Number.parseInt(limit, 10)
           : 50
 
       publications = publications.slice(0, maxResults)

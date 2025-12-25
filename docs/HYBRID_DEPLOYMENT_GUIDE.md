@@ -37,7 +37,7 @@ Este guia contém todas as instruções para colocar a arquitetura híbrida em p
 
 ```bash
 # Clone o repositório (se ainda não fez)
-git clone https://github.com/thiagobodevan-a11y/assistente-juridico-p.git
+git clone https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal.git
 cd assistente-juridico-p
 
 # Instale dependências Node.js
@@ -360,7 +360,7 @@ jobs:
 ## 📞 Suporte
 
 - **Documentação:** Ver `docs/HYBRID_STUBS_README.md`
-- **Issues:** https://github.com/thiagobodevan-a11y/assistente-juridico-p/issues
+- **Issues:** https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/issues
 - **Testes:** `npm run test:integration`
 
 ---

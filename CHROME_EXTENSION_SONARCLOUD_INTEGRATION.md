@@ -159,7 +159,7 @@ Após próximo commit, verificar no workflow `SonarCloud Analysis`:
 
 ### Verificar no Dashboard SonarCloud
 
-**URL:** https://sonarcloud.io/project/overview?id=thiagobodevan-a11y_assistente-juridico-p
+**URL:** https://sonarcloud.io/project/overview?id=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal
 
 **Verificações:**
 - ✅ Files count aumentou (~50+ files)

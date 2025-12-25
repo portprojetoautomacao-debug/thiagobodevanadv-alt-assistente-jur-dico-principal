@@ -57,7 +57,7 @@ echo "     - https://assistente-juridico-github.vercel.app"
 echo ""
 
 echo "🚀 Como Configurar no Vercel:"
-echo "  1. Acesse: https://vercel.com/thiagobodevan-a11y/assistente-juridico-p/settings/environment-variables"
+echo "  1. Acesse: https://vercel.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/settings/environment-variables"
 echo "  2. Adicione as variáveis:"
 echo "     - VITE_GOOGLE_CLIENT_ID = [seu-client-id].apps.googleusercontent.com"
 echo "     - VITE_REDIRECT_URI = https://assistente-juridico-github.vercel.app (ou github)"

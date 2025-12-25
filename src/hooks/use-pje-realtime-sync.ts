@@ -87,7 +87,9 @@ function convertProcessoPJeToProcess(pje: ProcessoPJe): Process {
     status:
       pje.situacao === "ativo" ? "ativo" : pje.situacao === "baixado" ? "concluido" : "arquivado",
     fase: pje.ultimoMovimento?.descricao || "Em andamento",
-    valor: pje.valor ? parseFloat(pje.valor.replace(/[^\d,]/g, "").replace(",", ".")) : undefined,
+    valor: pje.valor
+      ? Number.parseFloat(pje.valor.replaceAll(/[^\d,]/g, "").replace(",", "."))
+      : undefined,
     dataDistribuicao: pje.distribuicao || now,
     dataUltimaMovimentacao: pje.ultimoMovimento?.timestamp
       ? new Date(pje.ultimoMovimento.timestamp).toISOString()
@@ -105,7 +107,7 @@ function convertProcessoPJeToProcess(pje: ProcessoPJe): Process {
 function convertExpedienteToProcessEvent(exp: Expediente): ProcessEvent {
   return {
     id: exp.id,
-    processId: `pje-${exp.processNumber.replace(/\D/g, "")}`,
+    processId: `pje-${exp.processNumber.replaceAll(/\D/g, "")}`,
     dataHora: exp.createdAt,
     titulo: exp.description,
     descricao: exp.description,

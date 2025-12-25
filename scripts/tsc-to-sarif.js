@@ -1,3 +1,4 @@
+// @ts-check
 #!/usr/bin/env node
 /*
  * Simple tsc -> SARIF converter.
@@ -15,8 +16,8 @@ function parseTscLine(line) {
   const m = line.match(tscRegex);
   if (!m) return null;
   const filePath = m[1];
-  const lineNum = parseInt(m[2], 10);
-  const colNum = parseInt(m[3], 10);
+  const lineNum = Number.parseInt(m[2], 10);
+  const colNum = Number.parseInt(m[3], 10);
   const severity = m[4].toLowerCase();
   const code = m[5];
   const message = m[6];

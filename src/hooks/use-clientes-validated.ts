@@ -48,7 +48,7 @@ export function useClientesValidated() {
       }
 
       // Valida��o espec�fica de CPF/CNPJ
-      const cleanDoc = newCliente.cpfCnpj.replace(/\D/g, "");
+      const cleanDoc = newCliente.cpfCnpj.replaceAll(/\D/g, "");
       const isCPF = cleanDoc.length === 11;
       const isCNPJ = cleanDoc.length === 14;
 
@@ -92,7 +92,7 @@ export function useClientesValidated() {
 
             // Se CPF/CNPJ foi alterado, validar
             if (updates.cpfCnpj) {
-              const cleanDoc = updatedCliente.cpfCnpj.replace(/\D/g, "");
+              const cleanDoc = updatedCliente.cpfCnpj.replaceAll(/\D/g, "");
               const isCPF = cleanDoc.length === 11;
               const isCNPJ = cleanDoc.length === 14;
 
@@ -140,8 +140,8 @@ export function useClientesValidated() {
   // Buscar cliente por CPF/CNPJ
   const getClienteByCpfCnpj = useCallback(
     (cpfCnpj: string) => {
-      const cleanSearch = cpfCnpj.replace(/\D/g, "");
-      return clientes.find((c) => c.cpfCnpj.replace(/\D/g, "") === cleanSearch);
+      const cleanSearch = cpfCnpj.replaceAll(/\D/g, "");
+      return clientes.find((c) => c.cpfCnpj.replaceAll(/\D/g, "") === cleanSearch);
     },
     [clientes]
   );

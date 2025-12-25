@@ -139,7 +139,7 @@ export function validarNumeroCNJ(numero: string): boolean {
 
   if (cleanNumber.length !== 20) return false;
 
-  const ano = Number.parseInt(cleanNumber.slice(9, 13), 10);
+  const ano = Number.Number.parseInt(cleanNumber.slice(9, 13), 10);
   const anoAtual = new Date().getFullYear();
 
   if (Number.isNaN(ano)) return false;

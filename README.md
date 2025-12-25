@@ -1,13 +1,15 @@
 # Assistente Jurídico PJe
 
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=thiagobodevan-a11y_assistente-juridico-p&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=thiagobodevan-a11y_assistente-juridico-p)
-[![AI Code Assurance](https://sonarcloud.io/api/project_badges/ai_code_assurance?project=thiagobodevan-a11y_assistente-juridico-p)](https://sonarcloud.io/summary/new_code?id=thiagobodevan-a11y_assistente-juridico-p)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal)
+[![AI Code Assurance](https://sonarcloud.io/api/project_badges/ai_code_assurance?project=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal)](https://sonarcloud.io/summary/new_code?id=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal)
 
 > ⚠️ **MODO MANUTENÇÃO**: O desenvolvimento de novas funcionalidades está encerrado. O sistema está em produção estável e o foco atual é exclusivamente manter todas as funcionalidades operando corretamente.
 
 **Sistema inteligente de gestão jurídica com IA integrada, desenvolvido com React, TypeScript e Vite.**
 
 **✨ NOVO - Versão 1.4.0 (08/12/2025):** Conformidade total com LGPD + PII Filtering automático
+
+**🔧 NOVO - Configuração Otimizada (25/12/2025):** Type checking completo em TypeScript e JavaScript + VS Code otimizado → [Ver Detalhes](docs/TYPESCRIPT_JAVASCRIPT_CONFIG_25DEC2025.md)
 
 ---
 
@@ -230,7 +232,7 @@ build-optimizations:
 | **Dependabot Auto-merge**    | ✅ Passando | GH_TOKEN configurado                 |
 
 **Branch:** `feat/optimize-workflows-enterprise-grade`
-**Pull Request:** [#50](https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal/pull/50)
+**Pull Request:** [#50](https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/pull/50)
 
 ---
 
@@ -1429,7 +1431,7 @@ npm run type-check && npm run lint && npm run test:run && npm run build
 
 ### 📊 Badges de Status
 
-[![Build Status](https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal/actions/workflows/ci.yml/badge.svg)](https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal/actions)
+[![Build Status](https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/actions/workflows/ci.yml/badge.svg)](https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/actions)
 [![Uptime](https://img.shields.io/badge/uptime-99.9%25-brightgreen)](https://assistente-juridico-github.vercel.app/api/health)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -1654,7 +1656,7 @@ build-optimizations:
 | **Dependabot Auto-merge**    | ✅ Passando | GH_TOKEN configurado                 |
 
 **Branch:** `feat/optimize-workflows-enterprise-grade`
-**Pull Request:** [#50](https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal/pull/50)
+**Pull Request:** [#50](https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/pull/50)
 
 ---
 
@@ -2823,7 +2825,7 @@ npm run type-check && npm run lint && npm run test:run && npm run build
 
 ### 📊 Badges de Status
 
-[![Build Status](https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal/actions/workflows/ci.yml/badge.svg)](https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal/actions)
+[![Build Status](https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/actions/workflows/ci.yml/badge.svg)](https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/actions)
 [![Uptime](https://img.shields.io/badge/uptime-99.9%25-brightgreen)](https://assistente-juridico-github.vercel.app/api/health)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -3048,7 +3050,7 @@ build-optimizations:
 | **Dependabot Auto-merge**    | ✅ Passando | GH_TOKEN configurado                 |
 
 **Branch:** `feat/optimize-workflows-enterprise-grade`
-**Pull Request:** [#50](https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal/pull/50)
+**Pull Request:** [#50](https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/pull/50)
 
 ---
 
@@ -4217,7 +4219,7 @@ npm run type-check && npm run lint && npm run test:run && npm run build
 
 ### 📊 Badges de Status
 
-[![Build Status](https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal/actions/workflows/ci.yml/badge.svg)](https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal/actions)
+[![Build Status](https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/actions/workflows/ci.yml/badge.svg)](https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/actions)
 [![Uptime](https://img.shields.io/badge/uptime-99.9%25-brightgreen)](https://assistente-juridico-github.vercel.app/api/health)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -4442,7 +4444,7 @@ build-optimizations:
 | **Dependabot Auto-merge**    | ✅ Passando | GH_TOKEN configurado                 |
 
 **Branch:** `feat/optimize-workflows-enterprise-grade`
-**Pull Request:** [#50](https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal/pull/50)
+**Pull Request:** [#50](https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/pull/50)
 
 ---
 
@@ -5611,7 +5613,7 @@ npm run type-check && npm run lint && npm run test:run && npm run build
 
 ### 📊 Badges de Status
 
-[![Build Status](https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal/actions/workflows/ci.yml/badge.svg)](https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal/actions)
+[![Build Status](https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/actions/workflows/ci.yml/badge.svg)](https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/actions)
 [![Uptime](https://img.shields.io/badge/uptime-99.9%25-brightgreen)](https://assistente-juridico-github.vercel.app/api/health)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -5836,7 +5838,7 @@ build-optimizations:
 | **Dependabot Auto-merge**    | ✅ Passando | GH_TOKEN configurado                 |
 
 **Branch:** `feat/optimize-workflows-enterprise-grade`
-**Pull Request:** [#50](https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal/pull/50)
+**Pull Request:** [#50](https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/pull/50)
 
 ---
 
@@ -7005,7 +7007,7 @@ npm run type-check && npm run lint && npm run test:run && npm run build
 
 ### 📊 Badges de Status
 
-[![Build Status](https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal/actions/workflows/ci.yml/badge.svg)](https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal/actions)
+[![Build Status](https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/actions/workflows/ci.yml/badge.svg)](https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/actions)
 [![Uptime](https://img.shields.io/badge/uptime-99.9%25-brightgreen)](https://assistente-juridico-github.vercel.app/api/health)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -7230,7 +7232,7 @@ build-optimizations:
 | **Dependabot Auto-merge**    | ✅ Passando | GH_TOKEN configurado                 |
 
 **Branch:** `feat/optimize-workflows-enterprise-grade`
-**Pull Request:** [#50](https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal/pull/50)
+**Pull Request:** [#50](https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/pull/50)
 
 ---
 

@@ -196,7 +196,7 @@ jobs:
                   } else {
                     const status = '${{ job.status }}';
                     const conclusion = status === 'success' ? '✅ Passou' : '⚠️ Precisa atenção';
-                    const message = `## SonarCloud Analysis ${conclusion}\n\nVerifique os detalhes em: https://sonarcloud.io/dashboard?id=thiagobodevan-a11y_assistente-juridico-p`;
+                    const message = `## SonarCloud Analysis ${conclusion}\n\nVerifique os detalhes em: https://sonarcloud.io/dashboard?id=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal`;
                     await github.rest.issues.createComment({ owner: context.repo.owner, repo: context.repo.repo, issue_number, body: message });
                     core.info('SonarCloud comment posted successfully');
                   }

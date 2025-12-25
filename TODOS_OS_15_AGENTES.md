@@ -1,8 +1,10 @@
 # 🤖 Todos os 15 Agentes IA - Visão Completa
 
-## ✅ Status: TODOS IMPLEMENTADOS E INTEGRADOS (Última atualização: 24/12/2025)
+## ✅ Status: TODOS IMPLEMENTADOS E INTEGRADOS (Última atualização: 25/12/2025)
 
 Este documento lista todos os 15 agentes IA do sistema jurídico, suas funções, capacidades, status de implementação e integração com arquitetura híbrida (LangGraph + Traditional).
+
+> **⚠️ SISTEMA CRÍTICO**: A Hybrid Agents Integration é **OBRIGATÓRIA** e deve estar **sempre ativa** em todos os ambientes (desenvolvimento, manutenção e produção). Configure `HYBRID_AGENTS_DISABLED=false` permanentemente.
 
 ---
 
@@ -33,10 +35,12 @@ Este documento lista todos os 15 agentes IA do sistema jurídico, suas funções
 - ❌ Híbrido = Apenas implementação tradicional
 
 **Arquitetura Híbrida:**
+- **Sistema OBRIGATÓRIO** - Sempre ativo em todos os ambientes
 - **9 agentes** com suporte LangGraph (workflows complexos, state machines)
 - **6 agentes** apenas tradicional (tarefas simples, sob demanda)
 - Sistema de fallback automático entre versões
 - Métricas de performance e fallback tracking
+- **NUNCA desabilitar** `HYBRID_AGENTS_DISABLED` - deve estar em `false`
 
 ---
 

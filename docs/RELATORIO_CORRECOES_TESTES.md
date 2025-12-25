@@ -1,7 +1,7 @@
 # 📊 Relatório de Correções dos Testes - Conclusão
 
 **Data:** 8 de dezembro de 2025
-**Repositório:** thiagobodevan-a11y/assistente-juridico-p
+**Repositório:** portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
 **Branch:** main
 **Status:** ✅ Todas as correções prioritárias implementadas
 

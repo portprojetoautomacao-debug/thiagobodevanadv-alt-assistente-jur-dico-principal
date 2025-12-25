@@ -34,6 +34,7 @@
 - **NÃO introduzir novas dependências** sem necessidade crítica
 - **NÃO desabilitar funcionalidades** existentes sem autorização explícita do operador
 - **NÃO remover features** que estão em produção funcionando corretamente
+- **NÃO desabilitar Hybrid Agents Integration** - sistema obrigatório e deve estar sempre ativo
 
 ### 🔧 Critérios para Alterações:
 
@@ -43,6 +44,7 @@
 4. **Rollback fácil**: Se der problema, podemos reverter rapidamente?
 5. **Manter funcionalidades**: NUNCA desabilite ou remova funcionalidades existentes sem autorização explícita
 6. **Compatibilidade Vercel**: Garantir que imports e caminhos funcionem no ambiente serverless do Vercel
+7. **Hybrid Agents sempre ativo**: Sistema de agentes híbridos é OBRIGATÓRIO em todos os ambientes
 
 ### 📊 Prioridade de Correções:
 
@@ -70,6 +72,8 @@ Este documento fornece instruções detalhadas para o GitHub Copilot trabalhar e
 - **Arquitetura**: Frontend React 19 + TypeScript + Vite em `src/`, backend serverless em `api/` (Vercel Functions). Persistência principal via Upstash Redis/KV (`api/kv.ts`, `src/hooks/use-kv.ts`).
 - **Extensão Chrome PJe Sync**: Projeto separado em `chrome-extension-pje/` com Manifest v3, TypeScript, Webpack. Content Script extrai processos do PJe, Background Service Worker sincroniza com `/api/pje-sync`, Popup UI configura API Key. 31 testes, build em `dist/`. Documentação: `chrome-extension-pje/README.md` e `INSTALL.md`.
 - **Fluxo de agentes**: DJEN/DataJud/Chrome Extension alimenta `expedientes`, `use-autonomous-agents` cria tarefas para 16 agentes descritos em `src/lib/agents.ts`/`TODOS_OS_16_AGENTES.md`. `redacao-peticoes` usa Gemini 2.5 (`src/lib/gemini-service.ts`) e entrega minutas ao `MinutasManager` com campos `criadoPorAgente`, `confidence`, `templateId`, `status`.
+- **Hybrid Agents Integration**: Sistema OBRIGATÓRIO sempre ativo. Integra agentes LangGraph (`src/agents/*/`) com agentes tradicionais. Fornece fallback automático, métricas de performance e coordenação entre versões. **NUNCA desabilite** `HYBRID_AGENTS_DISABLED=false` - deve estar ativo em desenvolvimento, manutenção e produção. Arquivo: `src/lib/hybrid-agents-integration.ts`.
+- **Claude Skills System**: 10 skills especializadas em `.claude/skills/` (code formatter, code fix, code search, problem solver, test debugging, legal documents, webapp testing, skill creator, docx/pdf creation). Automaticamente carregadas quando `github.copilot.chat.useClaudeSkills: true` no VS Code settings. Use `@workspace` para acionar skills relevantes. Documentação: `.claude/skills/README.md`.
 - **Conectividade dos agentes**: Todos os agentes devem manter comunicação por streaming (tempo real) com os serviços centrais; qualquer novo agente precisa expor interface streaming compatível com `use-autonomous-agents`.
 - **Editor/Documentos**: `src/components/editor/ProfessionalEditor.tsx` (CKEditor 5) com streaming fluido de IA via `writer.insertText`, suporte a comandos `/ai`, variáveis `{{variavel}}` e HTML rico. Documentação completa em `docs/CKEDITOR5_AI_STREAMING.md` e exemplos em `docs/EXEMPLO_USO_EDITOR_IA.md`. `src/components/MinutasManager.tsx`, `src/lib/document-templates.ts` controlam templates. Alterou template? atualize `replaceTemplateVariables` + `docs/FLUXO_MINUTAS_AUTOMATICAS.md`.
  - **Integrações críticas**: Google OAuth/Calendar (`src/lib/google-calendar-service.ts`), DJEN/DataJud (`src/lib/djen-api.ts`, `src/lib/datajud-api.ts`), PJe via Chrome Extension (`chrome-extension-pje/`, endpoint `/api/pje-sync`), Qdrant (`src/lib/qdrant-service.ts` - optional, cloud), DSPy Bridge (`scripts/dspy_bridge.py` - optional, Railway), Email API (`api/emails.ts`), Todoist apenas via stub `src/lib/todoist-stub.ts` no client (pacote official restrito a `/api`).
@@ -136,6 +140,31 @@ npm run package          # Criar .zip para publicação
 - Endpoint: `POST /api/pje-sync` com header `X-API-Key`
 - Payload: `{ source: 'extension', processos: [...], expedientes: [...] }`
 - API Key armazenada em `chrome.storage.sync`
+
+### 🐳 Ambiente de Desenvolvimento (Dev Container)
+
+**Sistema Operacional**: Debian GNU/Linux 13 (trixie)
+
+**Ferramentas Pré-instaladas e Disponíveis no PATH:**
+
+#### Linguagens e Compiladores
+- **Git**: Versão atualizada, compilada de fonte quando necessário
+- **Node.js**: `node`, `npm` pré-instalados para desenvolvimento JavaScript/TypeScript
+- **TypeScript**: Compilador `tsc` disponível globalmente
+- **Go**: Compilador Go e utilitários comuns, com extensão Go instalada
+- **ESLint**: Linter JavaScript/TypeScript configurado
+
+#### Ferramentas de Sistema
+Disponíveis no PATH: `apt`, `dpkg`, `git`, `curl`, `wget`, `ssh`, `scp`, `rsync`, `gpg`, `ps`, `lsof`, `netstat`, `top`, `tree`, `find`, `grep`, `zip`, `unzip`, `tar`, `gzip`, `bzip2`, `xz`
+
+#### Navegador
+- Use `"$BROWSER" <url>` para abrir páginas web no navegador padrão do host
+
+**Configurações Automáticas:**
+- TypeScript checking habilitado para `.js` e `.ts`
+- Auto-save e format-on-save configurados
+- ESLint auto-fix em arquivos suportados
+- Tasks automáticas executam ao abrir o workspace
 
 ### 🌐 URLs de Produção
 
@@ -812,7 +841,7 @@ Ao trabalhar com o upgrade dos agentes, use:
 #### 📖 Referências Rápidas
 
 - **Pull Request Original**: Arquitetura Híbrida TOP 1% Mundial com CrewAI + LangGraph + DSPy + AutoGen
-- **Repositório**: thiagobodevan-a11y/assistente-juridico-p
+- **Repositório**: portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
 - **Branch**: main
 - **Data do Upgrade**: 09/12/2024
 - **Versão**: 2.0.0
@@ -1043,6 +1072,81 @@ Ao sugerir mudanças no código, o Copilot deve:
 
 ---
 
+## 🤖 Claude Skills System
+
+### 📚 Skills Disponíveis (10 Skills Ativas)
+
+O projeto possui um sistema completo de **Claude Skills** que são automaticamente carregadas pelo GitHub Copilot para fornecer assistência especializada.
+
+**Localização:** `.claude/skills/`
+
+**Configuração:** `.vscode/settings.json` → `"github.copilot.chat.useClaudeSkills": true`
+
+#### Skills Customizadas do Projeto (6)
+
+| Skill | Arquivo | Uso |
+|-------|---------|-----|
+| **Code Formatter** | `code-formatter.md` | Formata código TypeScript/React seguindo padrões do projeto |
+| **Code Fix** | `code-fix.md` | Corrige bugs, erros de tipo, runtime errors |
+| **Code Search** | `code-search.md` | Pesquisa implementações, arquitetura, funções |
+| **Problem Solver** | `problem-solver.md` | Resolve problemas de build, deploy, integração |
+| **Test Debugging** | `test-debugging.md` | Debug testes Vitest/Playwright/E2E |
+| **Legal Document** | `legal-document-assistant.md` | Cria/edita documentos jurídicos brasileiros |
+
+#### Skills Oficiais Anthropic (4)
+
+| Skill | Diretório | Uso |
+|-------|-----------|-----|
+| **Web App Testing** | `webapp-testing/` | Testes E2E com Playwright |
+| **Skill Creator** | `skill-creator/` | Meta-skill para criar novas skills |
+| **DOCX Creation** | `docx/` | Geração de documentos Word |
+| **PDF Creation** | `pdf/` | Geração de documentos PDF |
+
+### 🚀 Como Usar as Skills
+
+**As skills são carregadas automaticamente!** Basta usar `@workspace`:
+
+```bash
+# Formatar código
+@workspace Formata ProcessCard.tsx seguindo padrões
+
+# Corrigir bug
+@workspace Corrige erro "undefined" em use-processes.ts
+
+# Pesquisar implementação
+@workspace Onde está implementado cálculo de prazos?
+
+# Resolver problema
+@workspace Build falha no Vercel, como debugar?
+
+# Debug teste
+@workspace Teste timeout em use-autonomous-agents.test.ts
+
+# Documento jurídico
+@workspace Cria petição inicial trabalhista
+
+# Teste E2E
+@workspace Cria teste Playwright para login
+
+# Nova skill
+@workspace Cria skill para análise de jurisprudência
+```
+
+### 📖 Documentação das Skills
+
+- **Inventário completo:** `.claude/skills-inventory.json`
+- **README das skills:** `.claude/skills/README.md`
+- **Repositório oficial:** `.claude/anthropic-skills-reference/` (referência, não versionado)
+
+### 🔧 Adicionar Nova Skill
+
+1. Criar arquivo em `.claude/skills/nome-da-skill.md`
+2. Seguir formato padrão (Description, Usage, Instructions)
+3. Skill é carregada automaticamente (sem restart)
+4. Usar skill-creator para ajudar: `@workspace Cria nova skill para [propósito]`
+
+---
+
 ## 📚 Quick Reference - Arquivos Importantes
 
 ### 🔑 Arquivos de Configuração
@@ -1054,6 +1158,7 @@ Ao sugerir mudanças no código, o Copilot deve:
 - `playwright.config.ts` - Configuração testes E2E
 - `tailwind.config.js` - Configuração Tailwind CSS
 - `tsconfig.json` - TypeScript compiler options
+- `jsconfig.json` - JavaScript project configuration com type checking
 
 ### 📝 Documentação Principal
 - `README.md` - Visão geral e setup inicial
@@ -1062,15 +1167,25 @@ Ao sugerir mudanças no código, o Copilot deve:
 - `TODOS_OS_15_AGENTES.md` - Descrição completa dos agentes
 - `chrome-extension-pje/SPARK_PROMPT.md` - Especificação da extensão
 - `AUTO_MODE_README.md` - Sistema de automação
+- `.claude/skills/README.md` - Documentação das Claude Skills
 
 ### 🎯 Arquivos Core
 - `src/types.ts` - Tipos TypeScript centralizados
 - `src/lib/agents.ts` - Configuração dos 16 agentes
 - `src/lib/gemini-service.ts` - Integração Gemini AI
+- `src/lib/hybrid-agents-integration.ts` - Sistema híbrido (OBRIGATÓRIO)
 - `src/lib/config.ts` - Configurações globais
 - `api/kv.ts` - Upstash Redis/KV client
 - `api/agents.ts` - API de agentes
 - `api/pje-sync.ts` - Sync com Chrome Extension
+
+### 🤖 Claude Skills
+- `.claude/skills/code-formatter.md` - Formatação de código
+- `.claude/skills/code-fix.md` - Correção de bugs
+- `.claude/skills/code-search.md` - Pesquisa de código
+- `.claude/skills/problem-solver.md` - Resolução de problemas
+- `.claude/skills/test-debugging.md` - Debug de testes
+- `.claude/skills/legal-document-assistant.md` - Documentos jurídicos
 
 ### 🧪 Arquivos de Teste
 - `tests/` - Testes frontend
@@ -1187,6 +1302,238 @@ async function* processIntimacao(expediente: Expediente) {
 **Causa:** Muitas requests simultâneas
 **Solução:** Implementar retry com backoff, usar cache Redis
 
+### 7. JavaScript type checking não funciona
+**Causa:** jsconfig.json não configurado ou TypeScript Server não reiniciado
+**Solução:** Verificar `jsconfig.json` existe na raiz, reiniciar TS Server (`Ctrl+Shift+P` → "TypeScript: Restart TS Server")
+
+---
+
+## 🔧 Configuração TypeScript e JavaScript
+
+### TypeScript (tsconfig.json)
+
+**Configurações principais:**
+- `target`: ES2021
+- `module`: ESNext (Vite/bundler mode)
+- `strict`: true (type safety máximo)
+- `noEmit`: true (Vite compila, não o tsc)
+- `allowJs`: true (permite importar .js em .ts)
+- `checkJs`: false (validação .js via jsconfig.json)
+- Path mapping: `@/*` → `./src/*`
+
+**VS Code settings:**
+```jsonc
+{
+  "typescript.tsdk": "node_modules/typescript/lib",  // Usa versão do workspace (5.9.3)
+  "typescript.tsserver.maxTsServerMemory": 8192,     // 8 GB para 305 arquivos
+  "typescript.preferences.importModuleSpecifier": "non-relative",  // Usa @/ sempre
+  "typescript.preferences.includePackageJsonAutoImports": "auto",  // Instala @types/* automaticamente
+  "typescript.npm": "/usr/local/share/nvm/versions/node/v22.21.1/bin/npm"
+}
+```
+
+### JavaScript (jsconfig.json)
+
+**Arquivo:** `/jsconfig.json` (raiz do projeto)
+
+```jsonc
+{
+  "compilerOptions": {
+    "checkJs": true,          // ✅ Type checking em arquivos .js
+    "target": "ES2021",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "paths": {
+      "@/*": ["./src/*"]      // Suporte a aliases
+    }
+  },
+  "include": [
+    "scripts/**/*.js",        // Valida scripts utilitários
+    "*.js"                    // Valida arquivos .js na raiz
+  ],
+  "exclude": [
+    "node_modules",
+    "coverage",
+    "coverage-api",
+    "dist"
+  ],
+  "typeAcquisition": {
+    "enable": true,           // Auto-install @types/* para libs
+    "include": ["node", "vite", "react"]
+  }
+}
+```
+
+**Benefícios:**
+- ✅ Type checking em 20+ scripts JavaScript
+- ✅ IntelliSense completo com autocomplete
+- ✅ Detecção de erros antes da execução
+- ✅ JSDoc validado automaticamente
+- ✅ Sugestões inteligentes (Quick Fixes)
+- ✅ Importação .js ↔ .ts funcionando
+
+**JSDoc Examples:**
+```javascript
+// Type hint para variável
+/** @type {string} */
+let name = "João";
+
+// Type hint para função
+/**
+ * @param {number} a
+ * @param {number} b
+ * @returns {number}
+ */
+function sum(a, b) {
+  return a + b;
+}
+
+// Import types do TypeScript
+/** @type {import('./src/types').Process} */
+const process = { id: "123", numero: "001" };
+```
+
+**Desabilitar type checking em arquivo específico:**
+```javascript
+// @ts-nocheck
+// ^ Desabilita validação para este arquivo
+
+// Ou desabilitar linha específica:
+// @ts-ignore
+result.toUppercase(); // Erro ignorado
+```
+
+**Forçar type checking em arquivo fora do jsconfig:**
+```javascript
+// @ts-check
+// ^ Força validação mesmo se não estiver no jsconfig
+```
+
+**Teste de validação:**
+```bash
+# Validar arquivo específico
+npx tsc --noEmit --allowJs --checkJs scripts/check-env-vars.js
+
+# Validar todos os scripts
+npx tsc --noEmit --allowJs --checkJs scripts/*.js
+
+# Validar projeto inteiro via jsconfig.json
+npm run type-check
+```
+
+### 📁 Arquivos JavaScript com Type Checking Ativo
+
+**Status Atual do Projeto:**
+
+✅ **Scripts com `@ts-check` aplicado:**
+- `scripts/check-env-vars.js` - Verificador de variáveis de ambiente
+- `scripts/vitest-to-sarif.js` - Conversor de relatórios
+- `scripts/test-calendar-integration.js` - Testes de integração
+- `scripts/test-todoist-integration.js` - Testes Todoist
+- `scripts/collectConsole.js` - Coletor de logs
+- `scripts/example-with-types.js` - **Arquivo de referência com JSDoc completo**
+
+✅ **Arquivos da raiz com `@ts-check`:**
+- `verificar-config.js` - Validador de configuração
+- `eslint.config.js` - Configuração ESLint
+- `proxy.js` - Servidor proxy local
+- `tailwind.config.js` - Configuração Tailwind
+
+**Arquivo de Referência:** `scripts/example-with-types.js`
+```javascript
+// @ts-check
+/**
+ * @typedef {Object} ProcessInfo
+ * @property {string} id
+ * @property {string} numero
+ * @property {Date} dataAbertura
+ * @property {'ativo'|'arquivado'|'suspenso'} status
+ */
+
+/**
+ * @param {string} processId
+ * @returns {Promise<ProcessInfo | null>}
+ */
+async function getProcess(processId) {
+  return {
+    id: processId,
+    numero: "0001234-56.2024.8.02.0001",
+    dataAbertura: new Date(),
+    status: 'ativo'
+  };
+}
+```
+
+### 🔧 Práticas Recomendadas para Novos Arquivos .js
+
+**Ao criar um novo arquivo JavaScript:**
+
+1. **Adicione `@ts-check` no topo**
+```javascript
+// @ts-check
+// Resto do código...
+```
+
+2. **Use JSDoc para tipos complexos**
+```javascript
+/**
+ * @typedef {Object} Config
+ * @property {string} apiKey
+ * @property {number} timeout
+ * @property {boolean} debug
+ */
+```
+
+3. **Documente funções**
+```javascript
+/**
+ * @param {Config} config
+ * @returns {Promise<boolean>}
+ */
+async function initialize(config) {
+  // implementação
+}
+```
+
+4. **Valide antes de commitar**
+```bash
+npx tsc --noEmit --allowJs --checkJs seu-arquivo.js
+```
+
+### 🚨 Erros Comuns e Soluções
+
+**Erro:** `Module '"fs"' has no default export`
+```javascript
+// ❌ Errado
+import fs from 'fs';
+
+// ✅ Correto
+import { readFileSync, writeFileSync } from 'fs';
+// ou
+import * as fs from 'fs';
+```
+
+**Erro:** Tipos incompatíveis
+```javascript
+// @ts-check
+/** @type {string} */
+let name = "João";
+name = 123; // ❌ Type 'number' is not assignable to type 'string'
+
+// ✅ Correto: Manter tipo consistente
+name = "Maria";
+```
+
+**Desabilitar validação temporariamente:**
+```javascript
+// Para todo o arquivo
+// @ts-nocheck
+
+// Para uma linha específica
+// @ts-ignore
+result.metodoInexistente();
+```
+
 ---
 
 ## Comunicação e Idioma (Português)
@@ -1208,7 +1555,7 @@ async function* processIntimacao(expediente: Expediente) {
 
 | Repositório | URL | Propósito |
 |-------------|-----|-----------|
-| **assistente-juridico-p** | https://github.com/thiagobodevan-a11y/assistente-juridico-p | Repositório alvo - Sistema jurídico completo |
+| **assistente-juridico-p** | https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal | Repositório alvo - Sistema jurídico completo |
 
 ### 🤖 Frameworks de Agentes e Orquestração
 

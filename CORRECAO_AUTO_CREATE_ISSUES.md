@@ -140,9 +140,9 @@ gh label list --limit 100 | grep -E "(auto-created|needs-triage|priority|urgente
 
 ## 🔗 Links Úteis
 
-- **Repositório**: https://github.com/thiagobodevan-a11y/assistente-juridico-p
-- **Issues**: https://github.com/thiagobodevan-a11y/assistente-juridico-p/issues
-- **Labels**: https://github.com/thiagobodevan-a11y/assistente-juridico-p/labels
+- **Repositório**: https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
+- **Issues**: https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/issues
+- **Labels**: https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/labels
 
 ---
 

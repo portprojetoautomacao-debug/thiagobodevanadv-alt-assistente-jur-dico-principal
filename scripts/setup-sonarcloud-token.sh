@@ -49,7 +49,7 @@ if command -v jq &> /dev/null; then
   # Usar jq se disponível
   jq --arg token "$SONAR_TOKEN" \
     '.["sonarlint.connectedMode.connections.sonarcloud"] = [{
-      "organizationKey": "thiagobodevan-a11y-assistente-juridico-p",
+      "organizationKey": "portprojetoautomacao-debug",
       "token": $token
     }]' "$SETTINGS_FILE" > "$SETTINGS_FILE.tmp"
   mv "$SETTINGS_FILE.tmp" "$SETTINGS_FILE"
@@ -62,7 +62,7 @@ else
   echo ""
   echo '  "sonarlint.connectedMode.connections.sonarcloud": ['
   echo '    {'
-  echo '      "organizationKey": "thiagobodevan-a11y-assistente-juridico-p",'
+  echo '      "organizationKey": "portprojetoautomacao-debug",'
   echo "      \"token\": \"$SONAR_TOKEN\""
   echo '    }'
   echo '  ]'

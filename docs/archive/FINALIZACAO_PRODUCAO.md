@@ -352,7 +352,7 @@ VITE_BACKEND_URL=https://seu-backend.com
 - GOOGLE_CALENDAR_INTEGRATION.md - Integração Google
 
 ### Issues
-Reporte bugs em: https://github.com/thiagobodevan-a11y/assistente-juridico-p/issues
+Reporte bugs em: https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/issues
 
 ---
 

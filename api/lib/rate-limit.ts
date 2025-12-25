@@ -82,7 +82,7 @@ export class RateLimiter {
             const score = rawRange[1];
             if (score !== undefined && score !== null && !Number.isNaN(Number(score))) {
               const firstTs =
-                typeof score === "number" ? score : Number.parseInt(String(score), 10);
+                typeof score === "number" ? score : Number.Number.parseInt(String(score), 10);
               resetTime = firstTs + this.config.windowMs;
             }
           }

@@ -79,7 +79,7 @@ gh secret set GITHUB_TOKEN --user
 
 **Opção 1: Via Web UI (Mais fácil)**
 
-1. Acesse: https://github.com/thiagobodevan-a11y/assistente-juridico-p
+1. Acesse: https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
 2. Clique no botão verde **"Code"**
 3. Vá na aba **"Codespaces"**
 4. Clique em **"Create codespace on main"**
@@ -89,7 +89,7 @@ gh secret set GITHUB_TOKEN --user
 
 ```bash
 # Criar codespace
-gh codespace create --repo thiagobodevan-a11y/assistente-juridico-p
+gh codespace create --repo portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
 
 # Abrir no VS Code Desktop
 gh codespace code
@@ -100,7 +100,7 @@ gh codespace code --web
 
 **Opção 3: Botão README (Um clique!)**
 
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/thiagobodevan-a11y/assistente-juridico-p/codespaces/new)
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/codespaces/new)
 
 ### Verificar Configuração
 

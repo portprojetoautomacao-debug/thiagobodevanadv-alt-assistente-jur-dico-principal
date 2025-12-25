@@ -291,7 +291,7 @@ ${intimacao.texto.substring(0, 3000)}
     // Tokenização simples
     const tokens = texto
       .toLowerCase()
-      .replace(/[^\w\sáàâãéèêíïóôõöúçñ]/g, " ")
+      .replaceAll(/[^\w\sáàâãéèêíïóôõöúçñ]/g, " ")
       .split(/\s+/)
       .filter((token) => token.length > 3);
 

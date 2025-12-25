@@ -14,7 +14,7 @@ Se você adicionou a variável DEPOIS do último deploy, o build não tem ela ai
 
 ### Como fazer:
 
-1. Acesse: https://vercel.com/thiagobodevan-a11y/assistente-juridico-p/deployments
+1. Acesse: https://vercel.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/deployments
 
 2. Você verá uma lista de deployments. O primeiro deve ser:
    ```

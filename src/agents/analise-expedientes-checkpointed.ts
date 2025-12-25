@@ -12,8 +12,8 @@ import {
   executeWithCheckpointing,
   shouldExecuteStep,
 } from "@/lib/execute-with-checkpointing";
-import { streamGeminiResponse } from "@/lib/gemini-service";
 import type { Expediente } from "@/types";
+import { callGemini } from "@/lib/gemini-service";
 
 /**
  * Estado do workflow de análise de expedientes
@@ -314,23 +314,26 @@ ${extraido.texto.slice(0, 2000)}
 Responda APENAS com o JSON válido.`;
 
     try {
-      // Chamar Gemini (streaming)
-      let responseText = "";
-      const stream = streamGeminiResponse(prompt, {
-        model: "gemini-2.5-pro",
+      // Chamar Gemini
+
+      const response = await callGemini(prompt, {
+        model: "gemini-2.0-flash-exp",
+
         temperature: 0.3,
-        maxTokens: 1500,
-        agentId: "analise-documental",
+
+        maxOutputTokens: 1500,
       });
 
-      for await (const chunk of stream) {
-        responseText += chunk;
+      if (response.error) {
+        throw new Error(response.error);
       }
 
       // Parse do JSON
+
+      const responseText = response.text;
       const jsonText = responseText
-        .replace(/```json\n?/g, "")
-        .replace(/```\n?/g, "")
+        .replaceAll(/```json\n?/g, "")
+        .replaceAll(/```\n?/g, "")
         .trim();
 
       const analysis = JSON.parse(jsonText);
@@ -351,7 +354,9 @@ Responda APENAS com o JSON válido.`;
         id: item.id,
         summary: `${item.tipo} detectada - Aguardando análise manual`,
         priority: item.urgencia as "alta" | "media" | "baixa",
-        deadline: item.temPrazo ? { days: 15, type: "úteis", endDate: "Verificar" } : undefined,
+        deadline: (item as any).temPrazo
+          ? { days: 15, type: "úteis", endDate: "Verificar" }
+          : undefined,
         suggestedActions: ["Verificar manualmente"],
         nextSteps: ["Analisar documento"],
       });

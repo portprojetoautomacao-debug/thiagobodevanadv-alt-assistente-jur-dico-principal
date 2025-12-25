@@ -26,7 +26,7 @@ echo "✅ GitHub CLI autenticado"
 echo ""
 
 # Repositório
-REPO="thiagobodevanadv-alt/assistente-jur-dico-principal"
+REPO="portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal"
 
 echo "📦 Adicionando secrets ao repositório: $REPO"
 echo ""

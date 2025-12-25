@@ -138,7 +138,7 @@ export default function FinancialManagementAdvbox() {
     const entry: FinancialEntry = {
       id: crypto.randomUUID(),
       type: newEntry.type,
-      amount: Number.parseFloat(newEntry.amount),
+      amount: Number.Number.parseFloat(newEntry.amount),
       category: newEntry.category,
       description: newEntry.description,
       date: newEntry.date,

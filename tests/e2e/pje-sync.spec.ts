@@ -45,7 +45,7 @@ test.describe("PJe Sync E2E", () => {
     const expJson = await expedienteResp.json();
     expect(Array.isArray(expJson.expedientes)).toBe(true);
 
-    const found = expJson.expedientes.find((e: any) => e.id === "e2e-exp-1");
+    const found = expJson.expedientes.find((e: { id: string }) => e.id === "e2e-exp-1");
     expect(found).toBeTruthy();
   });
 
@@ -84,7 +84,7 @@ test.describe("PJe Sync E2E", () => {
     const expedJson = await expedResp.json();
     // Find by processNumber
     const found = expedJson.expedientes.find(
-      (e: any) =>
+      (e: { numeroProcesso?: string; processNumber?: string }) =>
         (e.numeroProcesso &&
           (e.numeroProcesso.includes(existingProcess.numero) ||
             e.numeroProcesso.includes(existingProcess.numeroFormatado))) ||

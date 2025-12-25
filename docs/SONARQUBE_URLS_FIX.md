@@ -11,14 +11,14 @@
 O workflow SonarCloud Analysis estava **reportando URLs de repositório incorretas**, apontando para o repositório antigo:
 
 ```
-sonar.links.homepage=https://github.com/thiagobodevan-a11y/assistente-juridico-p
-sonar.links.ci=https://github.com/thiagobodevan-a11y/assistente-juridico-p/actions
-sonar.links.scm=https://github.com/thiagobodevan-a11y/assistente-juridico-p
-sonar.links.issue=https://github.com/thiagobodevan-a11y/assistente-juridico-p/issues
+sonar.links.homepage=https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
+sonar.links.ci=https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/actions
+sonar.links.scm=https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
+sonar.links.issue=https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/issues
 ```
 
-**Repositório antigo**: `thiagobodevan-a11y/assistente-juridico-p`
-**Repositório atual**: `thiagobodevanadv-alt/assistente-jur-dico-principal`
+**Repositório antigo**: `portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal`
+**Repositório atual**: `portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal`
 
 ### Impacto
 
@@ -37,14 +37,14 @@ sonar.links.issue=https://github.com/thiagobodevan-a11y/assistente-juridico-p/is
 
 ```diff
 # SCM and links
--sonar.links.homepage=https://github.com/thiagobodevan-a11y/assistente-juridico-p
--sonar.links.ci=https://github.com/thiagobodevan-a11y/assistente-juridico-p/actions
--sonar.links.scm=https://github.com/thiagobodevan-a11y/assistente-juridico-p
--sonar.links.issue=https://github.com/thiagobodevan-a11y/assistente-juridico-p/issues
-+sonar.links.homepage=https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal
-+sonar.links.ci=https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal/actions
-+sonar.links.scm=https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal
-+sonar.links.issue=https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal/issues
+-sonar.links.homepage=https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
+-sonar.links.ci=https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/actions
+-sonar.links.scm=https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
+-sonar.links.issue=https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/issues
++sonar.links.homepage=https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
++sonar.links.ci=https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/actions
++sonar.links.scm=https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
++sonar.links.issue=https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/issues
 ```
 
 ### Total de Alterações
@@ -71,7 +71,7 @@ sonar.links.issue=https://github.com/thiagobodevan-a11y/assistente-juridico-p/is
 ✅ sonar-project.properties encontrado
 
 📋 Verificando ProjectKey e Organization...
-✅ ProjectKey correto: thiagobodevanadv-alt_assistente-jur-dico-principal
+✅ ProjectKey correto: portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal
 ✅ Organization correta: thiagobodevanadv-alt
 
 🔗 Verificando URLs do repositório...
@@ -128,7 +128,7 @@ Avisos: 0
 
 Após o push, acessar:
 
-1. **SonarCloud Dashboard**: https://sonarcloud.io/dashboard?id=thiagobodevanadv-alt_assistente-jur-dico-principal
+1. **SonarCloud Dashboard**: https://sonarcloud.io/dashboard?id=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal
 2. Verificar aba **"Information"** → Links devem apontar para repositório correto
 3. Verificar aba **"Activity"** → Commits devem aparecer
 4. Clicar em qualquer link do dashboard → Deve abrir repo correto no GitHub
@@ -140,7 +140,7 @@ Após o push, acessar:
 ### ProjectKey e Organization ✅
 
 ```properties
-sonar.projectKey=thiagobodevanadv-alt_assistente-jur-dico-principal
+sonar.projectKey=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal
 sonar.organization=thiagobodevanadv-alt
 ```
 
@@ -168,7 +168,7 @@ git add docs/SONARQUBE_URLS_FIX.md
 
 git commit -m "fix: corrige URLs do repositório em sonar-project.properties
 
-- Atualiza 4 URLs de thiagobodevan-a11y/assistente-juridico-p → thiagobodevanadv-alt/assistente-jur-dico-principal
+- Atualiza 4 URLs de portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal → portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
 - Corrige links: homepage, CI, SCM, issues
 - Adiciona script de validação: scripts/validate-sonarqube-config.sh
 - Valida: ProjectKey, Organization, Coverage paths, Quality Gate

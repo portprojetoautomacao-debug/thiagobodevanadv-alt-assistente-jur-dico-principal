@@ -30,7 +30,7 @@
 gh secret set RESEND_API_KEY --body "re_7ThT6k8r_FVT9baVy8BKD2KSWxCWfhTZ2"
 
 # Opção B: Via Web Interface
-# Visite: https://github.com/thiagobodevan-a11y/assistente-juridico-p/settings/secrets/actions
+# Visite: https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/settings/secrets/actions
 # Name: RESEND_API_KEY
 # Value: re_7ThT6k8r_FVT9baVy8BKD2KSWxCWfhTZ2
 ```
@@ -145,7 +145,7 @@ RESEND_API_KEY=re_7ThT6k8r_FVT9baVy8BKD2KSWxCWfhTZ2
 
 **No Vercel:**
 - Usar GitHub Secrets (Vercel sincroniza automaticamente)
-- OU adicionar manualmente em: https://vercel.com/dashboard/thiagobodevan-a11y/assistente-juridico-p/settings/environment-variables
+- OU adicionar manualmente em: https://vercel.com/dashboard/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/settings/environment-variables
 
 ## 🐛 Troubleshooting
 
@@ -192,7 +192,7 @@ vercel logs assistente-juridico-p --prod
 
 **GitHub Actions:**
 - Deploy logs automáticos ao fazer push
-- https://github.com/thiagobodevan-a11y/assistente-juridico-p/actions
+- https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/actions
 
 ## 📞 Suporte
 

@@ -100,15 +100,57 @@
 
   "typescript.tsdk": "node_modules/typescript/lib",
   "typescript.enablePromptUseWorkspaceTsdk": true,
-  "typescript.tsserver.maxTsServerMemory": 4096,
+  "typescript.tsserver.maxTsServerMemory": 8192,
   "typescript.tsserver.watchOptions": {
     "watchFile": "useFsEvents",
     "watchDirectory": "useFsEvents",
     "fallbackPolling": "dynamicPriorityPolling"
   },
   "typescript.tsserver.experimental.enableProjectDiagnostics": false,
-  "typescript.preferences.includePackageJsonAutoImports": "off",
+  "typescript.preferences.includePackageJsonAutoImports": "auto",
+  "typescript.npm": "/usr/local/share/nvm/versions/node/v22.21.1/bin/npm",
   "typescript.preferences.importModuleSpecifier": "non-relative",
+
+  // Excluir node_modules da validação TypeScript
+  "typescript.tsserver.useSeparateSyntaxServer": true,
+  "typescript.disableAutomaticTypeAcquisition": false,
+  "typescript.tsserver.nodePath": "/usr/local/share/nvm/versions/node/v22.21.1/bin/node",
+
+  "js/ts.implicitProjectConfig.target": "ES2021",
+  "typescript.preferences.autoImportFileExcludePatterns": [
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/tests/**",
+    "**/test/**",
+    "**/__tests__/**",
+    "**/*.config.ts",
+    "**/*.config.js",
+    "**/vitest.*.ts",
+    "**/playwright.*.ts",
+    "**/*mock*.ts",
+    "**/*fixture*.ts",
+    "**/dist/**",
+    "**/.vite/**",
+    "**/coverage/**"
+  ],
+  "typescript.preferences.autoImportSpecifierExcludeRegexes": [
+    "^node:",
+    "^@testing-library/",
+    "^vitest$",
+    "^@vitest/",
+    "^@playwright/test$",
+    "^msw$",
+    "^msw/",
+    "/test-utils$",
+    "/testing$",
+    "/fixtures$",
+    "/mocks$",
+    "/__mocks__/",
+    "^happy-dom$",
+    "^jsdom$"
+  ],
   "typescript.updateImportsOnFileMove.enabled": "always",
   "javascript.updateImportsOnFileMove.enabled": "always",
 
@@ -162,21 +204,34 @@
 
   "files.exclude": {
     "**/.git": true,
-    "**/.svn": true,
-    "**/.hg": true,
-    "**/CVS": true,
     "**/.DS_Store": true,
-    "**/Thumbs.db": true,
-    "**/node_modules": true,
+    "**/node_modules": false,
+    "**/.next": true,
+    "**/.vercel": true,
     "**/dist": true,
-    "**/.vite": true
+    "**/.vite": true,
+    "**/coverage": true,
+    "**/coverage-api": true,
+    "**/.nyc_output": true
+  },
+
+  // Excluir node_modules de checagens TypeScript
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/**": true,
+    "**/.vite/**": true,
+    "**/dist/**": true,
+    "**/coverage/**": true
   },
 
   "search.exclude": {
     "**/node_modules": true,
     "**/dist": true,
     "**/.vite": true,
-    "**/coverage": true
+    "**/coverage": true,
+    "**/coverage-api": true,
+    "**/.git": true
   },
 
   // ========================================
@@ -185,7 +240,6 @@
 
   "sonarlint.pathToNodeExecutable": "/usr/local/share/nvm/versions/node/v22.21.1/bin/node",
   "sonarlint.pathToNpmExecutable": "/usr/local/share/nvm/versions/node/v22.21.1/bin/npm",
-  "sonarlint.pathToNpxExecutable": "/usr/local/share/nvm/versions/node/v22.21.1/bin/npx",
   "sonarlint.ls.javaHome": "/usr/local/sdkman/candidates/java/current",
   "sonarlint.output.showAnalyzerLogs": true,
   "sonarlint.output.showVerboseLogs": true,
@@ -197,21 +251,11 @@
   "sonarlint.connectedMode.connections.sonarcloud": [
     {
       "connectionId": "sonarcloud-assistente-juridico",
-      "organizationKey": "thiagobodevanadv-alt",
-      "token": "sqco_CnrgczDksDQ98hsZ04usL02I5mJS0QS5ryqcpxEr4c1kiuIOASAdGoLZZa2",
-      "region": "EU"
-    },
-    {
-      "connectionId": "thiagobodevanadv-alt",
-      "organizationKey": "thiagobodevanadv-alt",
+      "organizationKey": "portprojetoautomacao-debug",
       "token": "sqco_CnrgczDksDQ98hsZ04usL02I5mJS0QS5ryqcpxEr4c1kiuIOASAdGoLZZa2",
       "region": "EU"
     }
   ],
-  "sonarlint.connectedMode.project": {
-    "connectionId": "sonarcloud-assistente-juridico",
-    "projectKey": "portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal"
-  },
 
   "sonarlint.rules": {
     "typescript:S1128": {
@@ -231,6 +275,10 @@
   // Terminal
   "terminal.integrated.defaultProfile.linux": "bash",
   "terminal.integrated.fontSize": 13,
+  "terminal.integrated.tabs.description": "${task}${separator}${local}${separator}${cwdFolder}",
+  "terminal.integrated.tabs.title": "${process}",
+  "terminal.integrated.tabs.separator": " - ",
+  "terminal.integrated.tabs.location": "left",
 
   // Editor
   "editor.tabSize": 2,
@@ -254,41 +302,7 @@
   "windowsaistudio.enableRemoteFine-tuningAndInference": true,
 
   // ========================================
-  // 🔍 SONARLINT - ANÁLISE AVANÇADA
-  // ========================================
-
-  // Configurações adicionais para integração com Copilot
-  "sonarlint.rules": {
-    "typescript:S1854": {
-      "level": "on",
-      "parameters": {}
-    },
-    "typescript:S3776": {
-      "level": "on",
-      "parameters": {
-        "threshold": "15"
-      }
-    },
-    "typescript:S6957": {
-      "level": "on"
-    }
-  },
-
-  // Análise em tempo real
-  "sonarlint.analyzeOpenFilesOnly": false,
-  "sonarlint.analyzeFreshOnly": false,
-
-  // Integração com Copilot Fix
-  "sonarlint.enableCodeActionsOnSave": true,
-  "sonarlint.pathToCompileCommands": "",
-
-  // Exclusões
-  "sonarlint.pathToNodeExecutable": "/usr/local/share/nvm/versions/node/v22.21.1/bin/node",
-  "sonarlint.disableTelemetry": false,
-  "sonarlint.trace.server": "messages",
-
-  // ========================================
-  // 🔧 GO LANGUAGE CONFIGURATION
+  //  GO LANGUAGE CONFIGURATION
   // ========================================
   "go.goroot": "/usr/local/go",
   "go.gopath": "/home/node/go",
@@ -323,6 +337,21 @@
     "Accept": "application/json"
   },
 
+  "rest-client.mimeAndFileExtensionMapping": {
+    "application/json": "json",
+    "application/xml": "xml",
+    "text/html": "html",
+    "text/plain": "txt",
+    "application/pdf": "pdf",
+    "image/png": "png",
+    "image/jpeg": "jpg",
+    "application/zip": "zip",
+    "application/octet-stream": "bin",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
+    "text/csv": "csv"
+  },
+
   // Configurações de visualização
   "rest-client.previewOption": "exchange",
   "rest-client.previewResponsePanelTakeFocus": true,
@@ -340,6 +369,10 @@
   // Logs e debugging
   "rest-client.logLevel": "info",
   "rest-client.enableTelemetry": false,
+
+  // 🤖 CLAUDE SKILLS
+  // ========================================
+  "github.copilot.chat.useClaudeSkills": true,
 
   "chat.mcp.serverSampling": {
     "thiagobodevanadv-alt-assistente-jur-dico-principal/.vscode/mcp.json: azure-ai-foundry/mcp-foundry": {

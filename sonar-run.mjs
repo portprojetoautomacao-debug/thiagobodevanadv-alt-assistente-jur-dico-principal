@@ -21,7 +21,7 @@ function runSonarScan() {
       serverUrl: "https://sonarcloud.io",
       token: process.env.SONAR_TOKEN,
       options: {
-        "sonar.projectKey": "thiagobodevan-a11y_assistente-juridico-p",
+        "sonar.projectKey": "portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal",
         "sonar.organization": "thiagobodevan-a11y",
         // Include 'api' as a source so TypeScript files under /api are analyzed
         "sonar.sources": "src,api",

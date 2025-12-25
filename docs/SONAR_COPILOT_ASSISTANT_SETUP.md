@@ -159,7 +159,7 @@ git push origin fix/sonar-S1117-remove-unused-vars
 
 ```bash
 # No GitHub:
-1. Vá para: https://github.com/thiagobodevan-a11y/assistente-juridico-p/pulls
+1. Vá para: https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/pulls
 2. Clique em "New Pull Request"
 3. Selecione a branch fix/sonar-*
 4. Título e descrição são preenchidos automaticamente
@@ -341,14 +341,14 @@ Testes rodam automaticamente:
 1. Token está em User Settings (não workspace)
 2. Token tem scopes corretos
 3. Organization key correto: thiagobodevan-a11y-assistente-juridico-p
-4. Project key correto: thiagobodevan-a11y_assistente-juridico-p
+4. Project key correto: portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal
 ```
 
 ### ❌ "No Issues Found"
 
 ```bash
 # Execute análise manual:
-1. No SonarCloud: https://sonarcloud.io/project/overview?id=thiagobodevan-a11y_assistente-juridico-p
+1. No SonarCloud: https://sonarcloud.io/project/overview?id=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal
 2. Clique em "Re-analyze"
 3. Aguarde análise completa
 4. Volte ao VS Code e clique em "Refresh"
@@ -371,7 +371,7 @@ Testes rodam automaticamente:
 # Verifique PAT:
 1. Token tem scope 'repo'?
 2. Token não expirou?
-3. Repository correto: thiagobodevan-a11y/assistente-juridico-p
+3. Repository correto: portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
 ```
 
 ---
@@ -380,10 +380,10 @@ Testes rodam automaticamente:
 
 ### Links Úteis
 
-- 📖 [SonarCloud Dashboard](https://sonarcloud.io/project/overview?id=thiagobodevan-a11y_assistente-juridico-p)
+- 📖 [SonarCloud Dashboard](https://sonarcloud.io/project/overview?id=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal)
 - 🔑 [SonarCloud Security Tokens](https://sonarcloud.io/account/security)
 - 🐙 [GitHub Personal Access Tokens](https://github.com/settings/tokens)
-- 📋 [GitHub Repository](https://github.com/thiagobodevan-a11y/assistente-juridico-p)
+- 📋 [GitHub Repository](https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal)
 - 🤖 [Copilot Instructions](/.github/copilot-instructions.md)
 
 ### Comandos VS Code

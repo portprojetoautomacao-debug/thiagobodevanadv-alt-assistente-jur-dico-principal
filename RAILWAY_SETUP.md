@@ -13,7 +13,7 @@
 
 1. Acesse: https://railway.app/new
 2. Clique em **"Deploy from GitHub repo"**
-3. Selecione: `thiagobodevan-a11y/assistente-juridico-p`
+3. Selecione: `portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal`
 4. Branch: `main`
 
 ### Passo 2: Configurar Variáveis de Ambiente

@@ -12,8 +12,8 @@ import {
   executeWithCheckpointing,
   shouldExecuteStep,
 } from "@/lib/execute-with-checkpointing";
-import { streamGeminiResponse } from "@/lib/gemini-service";
 import type { Expediente } from "@/types";
+import { callGemini } from "@/lib/gemini-service";
 
 /**
  * Estado do workflow de redação de petição
@@ -79,7 +79,9 @@ export async function redigiPeticaoComCheckpointing(context: PeticaoContext) {
       },
     },
     // Generator function que implementa o workflow
-    workflowRedigiPeticao(context)
+    async function* (resumeState?: any) {
+      return yield* workflowRedigiPeticao(context, resumeState);
+    }
   );
 }
 
@@ -87,8 +89,8 @@ export async function redigiPeticaoComCheckpointing(context: PeticaoContext) {
  * Generator function que implementa o workflow de redação
  * Cada yield com checkpoint salva o estado automaticamente
  */
-async function* workflowRedigiPeticao(context: PeticaoContext) {
-  const state: PeticaoWorkflowState = { step: 0 };
+async function* workflowRedigiPeticao(context: PeticaoContext, resumeState?: any) {
+  const state: PeticaoWorkflowState = resumeState || { step: 0 };
 
   // ============================================================================
   // PASSO 1: Análise de Documentos (2-3 minutos)
@@ -154,20 +156,21 @@ async function* workflowRedigiPeticao(context: PeticaoContext) {
       context
     );
 
-    // Streaming do Gemini
-    let peticaoCompleta = "";
-    const stream = streamGeminiResponse(prompt, {
-      model: "gemini-2.5-pro",
+    // Chamar Gemini
+
+    const response = await callGemini(prompt, {
+      model: "gemini-2.0-flash-exp",
+
       temperature: 0.7,
-      maxTokens: 8000,
-      agentId: "redacao-peticoes",
+
+      maxOutputTokens: 8000,
     });
 
-    for await (const chunk of stream) {
-      peticaoCompleta += chunk;
-      // Yield sem checkpoint para streaming em tempo real
-      yield { status: "streaming", chunk };
+    if (response.error) {
+      throw new Error(response.error);
     }
+
+    const peticaoCompleta = response.text;
 
     state.peticaoRascunho = peticaoCompleta;
     state.step = 4;

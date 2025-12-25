@@ -18,7 +18,7 @@
 ### Ativar GitLab Duo
 
 1. Acesse seu repositório no GitLab:
-   - https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p
+   - https://gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
 
 2. Vá em **Settings → General → Duo Features**
 
@@ -235,7 +235,7 @@ glab issue create --title "Bug report"
 
 ```bash
 # Já está pronto! Acesse:
-# https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p
+# https://gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
 # Settings → General → Duo Features → Enable
 ```
 

@@ -460,10 +460,10 @@ async function consultarComunicacoes(
     // Captura headers de rate limit conforme documentação DJEN
     const rateLimitInfo = {
       limit: response.headers.get("x-ratelimit-limit")
-        ? Number.parseInt(response.headers.get("x-ratelimit-limit")!, 10)
+        ? Number.Number.parseInt(response.headers.get("x-ratelimit-limit")!, 10)
         : undefined,
       remaining: response.headers.get("x-ratelimit-remaining")
-        ? Number.parseInt(response.headers.get("x-ratelimit-remaining")!, 10)
+        ? Number.Number.parseInt(response.headers.get("x-ratelimit-remaining")!, 10)
         : undefined,
     };
 
