@@ -263,7 +263,7 @@ async function sendTeamsWebhook(
                 .map(([k, v]) => ({
                   name:
                     k.charAt(0).toUpperCase() +
-                    k.slice(1).replace(/([A-Z])/g, " $1"),
+                    k.slice(1).replaceAll(/([A-Z])/g, " $1"),
                   value: String(v),
                 }))
             : [],
