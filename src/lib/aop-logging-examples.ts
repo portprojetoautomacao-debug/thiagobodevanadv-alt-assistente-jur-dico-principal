@@ -15,7 +15,8 @@ import {
   aopMiddleware,
   wrapAgentFunction,
 } from "./aop-logging";
-import type { Expediente, AgentTask } from "@/types";
+import type { Expediente } from "@/types";
+import type { AgentTask } from "./agents";
 
 // ============================================================================
 // EXEMPLO 1: Decorator em Agente IA
@@ -52,7 +53,8 @@ class JustineAgent {
       priority: analysis.urgencia === "alta" ? "high" : "normal",
       createdAt: new Date().toISOString(),
       agentId: "justine",
-    } as AgentTask;
+      data: {}, // Required property
+    };
 
     return task;
   }
@@ -158,7 +160,7 @@ async function workflowCompletoAOP() {
     // 1. Analisar intimação
     const analysis = await agent.analyzeIntimacao({
       id: "123",
-      tipo: "INTIMACAO",
+      tipo: "intimacao",
       conteudo: "Intimação para manifestação em 15 dias",
     } as Expediente);
 
