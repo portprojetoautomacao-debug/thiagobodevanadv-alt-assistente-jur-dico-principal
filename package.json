@@ -7,6 +7,7 @@
     "node": "22.x"
   },
   "scripts": {
+    "postinstall": "bash scripts/postinstall-patches.sh || true",
     "dev": "vite",
     "dev:with-api": "node ./scripts/start-dev-with-api.cjs",
     "dev:local": "node ./scripts/start-dev.cjs",
