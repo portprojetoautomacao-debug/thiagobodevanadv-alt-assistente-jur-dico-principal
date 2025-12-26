@@ -39,14 +39,14 @@ async function fetchUser(id) {
 4. Duo analisa e comenta automaticamente
 ```
 
-**Link:** https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/merge_requests
+**Link:** https://gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/-/merge_requests
 
 ---
 
 ### 3️⃣ **Web IDE do GitLab**
 
 ```
-1. Abra: https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p
+1. Abra: https://gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
 2. Pressione . (ponto) ou clique Edit → Web IDE
 3. Selecione código
 4. Clique 💬 Copilot na sidebar

@@ -27,6 +27,7 @@ export function useTimelineSync(options: TimelineSyncOptions = {}) {
   const [newEventsCount, setNewEventsCount] = useState(0);
 
   // Filtra e transforma expedientes em eventos de timeline
+  // NÃO incluir states nas dependências para evitar loops infinitos
   const refreshTimeline = useCallback(() => {
     if (!expedientes || expedientes.length === 0) {
       setEvents([]);
@@ -48,31 +49,34 @@ export function useTimelineSync(options: TimelineSyncOptions = {}) {
     // Converte para ProcessEvent[]
     const timeline = createProcessTimeline(filtered, []);
 
-    // Detecta novos eventos
-    const previousCount = events.length;
-    const newCount = timeline.length;
-    if (newCount > previousCount) {
-      setNewEventsCount(newCount - previousCount);
-    }
+    // Detecta novos eventos usando functional update para evitar dependência
+    setEvents((prevEvents) => {
+      const newCount = timeline.length;
+      const prevCount = prevEvents.length;
 
-    setEvents(timeline);
-    setLastUpdate(new Date());
-  }, [expedientes, processId, events.length]);
+      if (newCount > prevCount) {
+        setNewEventsCount(newCount - prevCount);
+      }
 
-  // Auto-refresh periódico
+      setLastUpdate(new Date());
+
+      return timeline;
+    });
+  }, [expedientes, processId]);
+
+  // Refresh inicial - executa apenas quando expedientes ou processId mudam
+  useEffect(() => {
+    refreshTimeline();
+  }, [expedientes, processId]);
+
+  // Auto-refresh periódico - separado do refresh inicial
   useEffect(() => {
     if (!autoRefresh) return;
 
-    refreshTimeline();
     const interval = setInterval(refreshTimeline, refreshInterval);
 
     return () => clearInterval(interval);
   }, [autoRefresh, refreshInterval, refreshTimeline]);
-
-  // Refresh inicial
-  useEffect(() => {
-    refreshTimeline();
-  }, [refreshTimeline]);
 
   // Marca notificação de novos eventos como lida
   const markAsRead = useCallback(() => {

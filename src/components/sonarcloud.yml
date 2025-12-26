@@ -128,7 +128,7 @@ jobs:
           script: |
             const status = '${{ job.status }}';
             const conclusion = status === 'success' ? '✅ Passou' : '⚠️ Precisa atenção';
-            const message = `## SonarCloud Analysis ${conclusion}\n\nVerifique os detalhes em: https://sonarcloud.io/dashboard?id=thiagobodevan-a11y_assistente-juridico-p`;
+            const message = `## SonarCloud Analysis ${conclusion}\n\nVerifique os detalhes em: https://sonarcloud.io/dashboard?id=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal`;
 
             github.rest.issues.createComment({
               issue_number: context.issue.number,

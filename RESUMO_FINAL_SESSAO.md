@@ -395,8 +395,8 @@ O **Assistente Jurídico PJe** é agora:
 - [`lib/ai/agents-registry.ts`](./lib/ai/agents-registry.ts) - Registry V2
 
 ### Repositórios
-- **GitLab:** https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p
-- **GitHub:** https://github.com/thiagobodevan-a11y/assistente-juridico-p
+- **GitLab:** https://gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
+- **GitHub:** https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
 
 ---
 

@@ -4,7 +4,7 @@
 
 ### 1️⃣ Verificar Status na Interface GitLab
 
-Acesse: https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/pipelines
+Acesse: https://gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/-/pipelines
 
 Procure pelo pipeline mais recente e clique nele para ver detalhes.
 
@@ -102,7 +102,7 @@ npm run lint     # Testar linting localmente
 
 ### 6️⃣ Ver Histórico de Pipelines
 
-Acesse: https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/pipelines
+Acesse: https://gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/-/pipelines
 
 Clique em um pipeline anterior para ver como foi executado.
 
@@ -156,7 +156,7 @@ kubectl describe deployment assistente-juridico -n staging
 
 ## 🎯 Próximos Passos
 
-1. **Acompanhar Pipeline**: Acesse https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/pipelines
+1. **Acompanhar Pipeline**: Acesse https://gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/-/pipelines
 2. **Build Manual Localmente**: `npm run build`
 3. **Docker Build Manual**: `docker build -t assistente-juridico:latest .`
 4. **Deploy Manual**: `kubectl apply -f k8s/staging-deployment.yaml`

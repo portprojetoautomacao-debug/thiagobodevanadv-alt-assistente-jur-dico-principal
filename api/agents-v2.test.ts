@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { beforeAll, expect, test, vi } from "vitest";
-import handler from "./agents-v2";
+import handler from "./agents-v2.js";
 
 function makeReq(body: Record<string, unknown>, apiKey = "test-autogen-key") {
   return {
@@ -14,21 +14,34 @@ function makeReq(body: Record<string, unknown>, apiKey = "test-autogen-key") {
 }
 
 function makeRes() {
-  const result: Partial<VercelResponse> & Record<string, unknown> = {};
-  result.headers = {};
-  result.setHeader = (k: string, v: string) => {
-    result.headers[k] = v;
-  };
-  result.status = (code: number) => {
-    result.statusCode = code;
-    return result;
-  };
-  result.json = (payload: Record<string, unknown>) => {
-    result.payload = payload;
-    return result;
-  };
-  result.end = () => result;
-  return result;
+  const headers: Record<string, string> = {};
+  let statusCode = 200;
+  let payload: Record<string, unknown> | undefined;
+
+  return {
+    headers,
+    get statusCode() {
+      return statusCode;
+    },
+    get payload() {
+      return payload;
+    },
+    setHeader(k: string, v: string) {
+      headers[k] = v;
+      return this;
+    },
+    status(code: number) {
+      statusCode = code;
+      return this;
+    },
+    json(data: Record<string, unknown>) {
+      payload = data;
+      return this;
+    },
+    end() {
+      return this;
+    },
+  } as unknown as VercelResponse;
 }
 
 // Mock hybrid-agents-integration para evitar erro "LangGraph agents em construção"
@@ -48,9 +61,9 @@ beforeAll(() => {
 test("POST /api/agents-v2 returns success for a valid agent", async () => {
   const req = makeReq({ agentId: "harvey", message: "Analisar caso com prazo curto" });
   const res = makeRes();
-  await handler(req as VercelRequest, res as VercelResponse);
-  expect(res.statusCode).toBe(200);
-  expect(res.payload).toBeDefined();
-  expect(res.payload.success).toBe(true);
-  expect(res.payload.agentId).toBe("harvey");
+  await handler(req as VercelRequest, res);
+  expect((res as { statusCode: number }).statusCode).toBe(200);
+  expect((res as { payload?: Record<string, unknown> }).payload).toBeDefined();
+  expect((res as { payload?: { success?: boolean } }).payload?.success).toBe(true);
+  expect((res as { payload?: { agentId?: string } }).payload?.agentId).toBe("harvey");
 });

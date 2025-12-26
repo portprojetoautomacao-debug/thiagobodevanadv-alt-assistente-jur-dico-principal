@@ -205,7 +205,7 @@ export async function apiCall(
 ### No GitLab
 
 1. Acesse seu repositório:
-   https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p
+   https://gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
 
 2. Vá para: **Monitor → Error Tracking**
 

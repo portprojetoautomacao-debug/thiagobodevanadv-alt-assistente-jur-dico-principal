@@ -9,7 +9,7 @@
 
 ## ✅ Status: RESOLVIDO
 
-**Problema**: SonarCloud Analysis falhava porque `sonar-project.properties` apontava para repositório antigo (`thiagobodevan-a11y/assistente-juridico-p` ao invés de `thiagobodevanadv-alt/assistente-jur-dico-principal`)
+**Problema**: SonarCloud Analysis falhava porque `sonar-project.properties` apontava para repositório antigo (`portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal` ao invés de `portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal`)
 
 **Solução**: Atualização de 4 URLs no arquivo de configuração + script de validação + documentação
 
@@ -28,8 +28,8 @@
 ### 2. **URLs Corrigidas** (4)
 
 ```diff
-- thiagobodevan-a11y/assistente-juridico-p
-+ thiagobodevanadv-alt/assistente-jur-dico-principal
+- portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
++ portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
 ```
 
 - ✅ `sonar.links.homepage` → Repo correto
@@ -96,7 +96,7 @@
    **Mas isso é esperado e não crítico** (continue-on-error: true)
 
 3. **Verificar no SonarCloud**:
-   - Dashboard: https://sonarcloud.io/dashboard?id=thiagobodevanadv-alt_assistente-jur-dico-principal
+   - Dashboard: https://sonarcloud.io/dashboard?id=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal
    - Aba "Information" → Links devem estar corretos
    - Aba "Activity" → Commits devem aparecer
 

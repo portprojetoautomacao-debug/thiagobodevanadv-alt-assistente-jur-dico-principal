@@ -146,7 +146,7 @@ brew install jq          # macOS
 
 ## 🔗 Links Úteis
 
-- [Dashboard SonarCloud](https://sonarcloud.io/project/overview?id=thiagobodevan-a11y_assistente-juridico-p)
+- [Dashboard SonarCloud](https://sonarcloud.io/project/overview?id=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal)
 - [Gerar Token](https://sonarcloud.io/account/security)
 - [Documentação SonarCloud API](https://sonarcloud.io/web_api)
 - [SonarLint Extension](https://marketplace.visualstudio.com/items?itemName=SonarSource.sonarlint-vscode)

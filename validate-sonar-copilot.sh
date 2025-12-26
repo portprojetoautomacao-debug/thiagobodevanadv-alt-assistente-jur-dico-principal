@@ -115,19 +115,21 @@ echo "☁️  Verificando configurações do SonarCloud..."
 
 CONFIG_FILE=".vscode/sonar-copilot-assistant.json"
 
-if grep -q "thiagobodevan-a11y-assistente-juridico-p" "$CONFIG_FILE"; then
-  echo -e "${GREEN}✅ Organization key configurado${NC}"
+# Organization: portprojetoautomacao-debug (GitHub Owner)
+if grep -q "portprojetoautomacao-debug" "$CONFIG_FILE"; then
+  echo -e "${GREEN}✅ Organization key configurado (portprojetoautomacao-debug)${NC}"
   ((SUCCESS++))
 else
-  echo -e "${RED}❌ Organization key NÃO configurado${NC}"
+  echo -e "${RED}❌ Organization key NÃO configurado (esperado: portprojetoautomacao-debug)${NC}"
   ((ERRORS++))
 fi
 
-if grep -q "thiagobodevan-a11y_assistente-juridico-p" "$CONFIG_FILE"; then
-  echo -e "${GREEN}✅ Project key configurado${NC}"
+# Project Key: portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal (SonarCloud)
+if grep -q "portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal" "$CONFIG_FILE"; then
+  echo -e "${GREEN}✅ Project key configurado (portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal)${NC}"
   ((SUCCESS++))
 else
-  echo -e "${RED}❌ Project key NÃO configurado${NC}"
+  echo -e "${RED}❌ Project key NÃO configurado (esperado: portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal)${NC}"
   ((ERRORS++))
 fi
 
@@ -138,11 +140,12 @@ echo ""
 # ============================================
 echo "🐙 Verificando integração GitHub..."
 
-if grep -q "thiagobodevan-a11y/assistente-juridico-p" "$CONFIG_FILE"; then
-  echo -e "${GREEN}✅ Repository GitHub configurado${NC}"
+# GitHub Repository: portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
+if grep -q "portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal" "$CONFIG_FILE"; then
+  echo -e "${GREEN}✅ Repository GitHub configurado (portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal)${NC}"
   ((SUCCESS++))
 else
-  echo -e "${RED}❌ Repository GitHub NÃO configurado${NC}"
+  echo -e "${RED}❌ Repository GitHub NÃO configurado (esperado: portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal)${NC}"
   ((ERRORS++))
 fi
 

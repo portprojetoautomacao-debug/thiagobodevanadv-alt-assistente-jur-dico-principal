@@ -37,7 +37,7 @@
 - ✅ Instruções para criação manual fornecidas
 
 **Próximo passo:**
-- Abrir GitHub UI: https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal/compare/main...feat/optimize-workflows-enterprise-grade
+- Abrir GitHub UI: https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/compare/main...feat/optimize-workflows-enterprise-grade
 - Copiar título e descrição de `PR_DESCRIPTION.md`
 - Criar PR manualmente (API 404 falhou)
 
@@ -236,7 +236,7 @@
 ### 🔴 Urgente (Hoje)
 
 - [ ] **Criar PR:** feat/optimize-workflows-enterprise-grade
-  - URL: https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal/compare/main...feat/optimize-workflows-enterprise-grade
+  - URL: https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/compare/main...feat/optimize-workflows-enterprise-grade
   - Copiar de: `PR_DESCRIPTION.md`
 
 ### 🟠 Importante (Hoje/Amanhã)

@@ -3,7 +3,7 @@
 **Data:** 05/12/2025  
 **Projeto:** assistente-juridico-p  
 **Organização:** thiagobodevan-a11y  
-**URL:** https://sonarcloud.io/project/overview?id=thiagobodevan-a11y_assistente-juridico-p
+**URL:** https://sonarcloud.io/project/overview?id=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal
 
 ---
 
@@ -368,11 +368,11 @@ cat SONARCLOUD_ANALYSIS_REPORT.md
 
 ## 📚 Referências
 
-- **SonarCloud Dashboard:** https://sonarcloud.io/project/overview?id=thiagobodevan-a11y_assistente-juridico-p
-- **Quality Gate:** https://sonarcloud.io/project/quality_gate?id=thiagobodevan-a11y_assistente-juridico-p
-- **Security Hotspots:** https://sonarcloud.io/project/security_hotspots?id=thiagobodevan-a11y_assistente-juridico-p
-- **Duplications:** https://sonarcloud.io/component_measures?id=thiagobodevan-a11y_assistente-juridico-p&metric=duplicated_lines_density
-- **Issues:** https://sonarcloud.io/project/issues?id=thiagobodevan-a11y_assistente-juridico-p
+- **SonarCloud Dashboard:** https://sonarcloud.io/project/overview?id=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal
+- **Quality Gate:** https://sonarcloud.io/project/quality_gate?id=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal
+- **Security Hotspots:** https://sonarcloud.io/project/security_hotspots?id=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal
+- **Duplications:** https://sonarcloud.io/component_measures?id=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal&metric=duplicated_lines_density
+- **Issues:** https://sonarcloud.io/project/issues?id=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal
 
 ---
 

@@ -66,10 +66,10 @@ Scan Issues → Selecionar → Fix → Revisar → Aceitar → Commit
 
 | Recurso | URL |
 |---------|-----|
-| **SonarCloud Dashboard** | https://sonarcloud.io/project/overview?id=thiagobodevan-a11y_assistente-juridico-p |
+| **SonarCloud Dashboard** | https://sonarcloud.io/project/overview?id=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal |
 | **SonarCloud Tokens** | https://sonarcloud.io/account/security |
 | **GitHub PAT** | https://github.com/settings/tokens |
-| **Repository** | https://github.com/thiagobodevan-a11y/assistente-juridico-p |
+| **Repository** | https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal |
 
 ---
 

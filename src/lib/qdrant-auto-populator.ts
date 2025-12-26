@@ -379,7 +379,7 @@ export class QdrantAutoPopulator {
     }
 
     // 2. Validar valores NaN/Infinity
-    const hasInvalidValues = embedding.some((v) => !isFinite(v));
+    const hasInvalidValues = embedding.some((v) => !Number.isFinite(v));
     if (hasInvalidValues) {
       issues.push("Cont�m valores NaN ou Infinity");
     }

@@ -87,7 +87,7 @@ Hostname: assistente-juridico-github.vercel.app
 
 **Solução**:
 
-1. Vá em: https://vercel.com/thiagobodevan-a11y/assistente-juridico-p/deployments
+1. Vá em: https://vercel.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/deployments
 2. Clique no último deployment
 3. Clique no botão **"Redeploy"** (canto superior direito)
 4. Aguarde 2 minutos

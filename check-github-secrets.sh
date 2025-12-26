@@ -16,7 +16,7 @@ check_secret() {
     local secret_name=$1
     echo -e "${YELLOW}ℹ️${NC}  Verificando secret: $secret_name"
     echo -e "${YELLOW}📝${NC} Para verificar se '$secret_name' foi configurado:"
-    echo "   1. Vá para: https://github.com/thiagobodevan-a11y/assistente-juridico-p/settings/secrets/actions"
+    echo "   1. Vá para: https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/settings/secrets/actions"
     echo "   2. Procure por '$secret_name' na lista"
     echo "   3. Se existir, está ✅ configurado"
     echo ""

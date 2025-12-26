@@ -1,11 +1,16 @@
 name: SonarQube Analysis
+
+# ⚠️ DESABILITADO TEMPORARIAMENTE - Requer configuração de SONAR_HOST_URL e SONAR_TOKEN
+# Para reativar, configure os secrets e descomente a seção 'on:' abaixo
+
 on:
-  push:
-    branches:
-      - main
-      - feat/**
-  pull_request:
-    types: [opened, synchronize, reopened]
+  workflow_dispatch: # Apenas execução manual
+  # push:
+  #   branches:
+  #     - main
+  #     - feat/**
+  # pull_request:
+  #   types: [opened, synchronize, reopened]
 
 jobs:
   sonarqube:
@@ -89,6 +94,6 @@ jobs:
         if: always()
         run: |
           echo "📊 SonarQube analysis completed"
-          echo "🔗 View report: https://sonarcloud.io/dashboard?id=thiagobodevanadv-alt_assistente-jur-dico-principal"
+          echo "🔗 View report: https://sonarcloud.io/dashboard?id=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal"
           echo "⚠️ Quality Gate failures are informational during development"
           echo "✅ Pipeline continues regardless of Quality Gate status"

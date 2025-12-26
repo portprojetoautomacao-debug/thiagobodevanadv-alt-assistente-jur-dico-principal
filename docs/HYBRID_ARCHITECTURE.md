@@ -39,7 +39,7 @@ Implementar a arquitetura de agentes de última geração, combinando CrewAI, La
 
 ## 🔗 Referências e repositórios usados como inspiração
 
-- thiagobodevan-a11y/assistente-juridico-p — https://github.com/thiagobodevan-a11y/assistente-juridico-p (repositório alvo)
+- portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal — https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal (repositório alvo)
 - microsoft/autogen — https://github.com/microsoft/autogen (orquestração multi-agent, execução de código por agentes)
 - langchain-ai/langchain — https://github.com/langchain-ai/langchain (workflows, LangGraph, tool-calling e memória)
 - microsoft/semantic-kernel — https://github.com/microsoft/semantic-kernel (planners, plugins enterprise)
@@ -93,7 +93,7 @@ git push origin feat/hybrid-architecture-links
 
 # 4. Criar PR com GitHub CLI (se tiver gh instalado e autenticado)
 gh pr create \
-  --repo thiagobodevan-a11y/assistente-juridico-p \
+  --repo portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal \
   --title "feat: Arquitetura Híbrida TOP 1% — CrewAI + LangGraph + DSPy + AutoGen" \
   --body-file docs/HYBRID_ARCHITECTURE.md \
   --base main \

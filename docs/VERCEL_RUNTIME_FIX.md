@@ -212,7 +212,7 @@ npx tsc --noEmit
 
 3. ✅ **Validar Deploy em Produção**
    - Acessar: https://assistente-juridico-github.vercel.app/api/health
-   - Verificar: Build status em https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal/actions
+   - Verificar: Build status em https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/actions
 
 ### Monitoramento Contínuo
 

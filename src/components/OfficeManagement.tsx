@@ -496,7 +496,7 @@ export default function OfficeManagement() {
                               const colorIndex =
                                 entry.categoria
                                   .split("")
-                                  .reduce((acc, char) => acc + char.charCodeAt(0), 0) % 6;
+                                  .reduce((acc, char) => acc + (char.codePointAt(0) ?? 0), 0) % 6;
                               const colors = [
                                 "#ef4444",
                                 "#f97316",

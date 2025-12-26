@@ -346,7 +346,7 @@ export class CrawlerManager {
    * Formata número do processo para URL
    */
   private formatProcessNumber(numero: string): string {
-    const clean = numero.replace(/\D/g, "");
+    const clean = numero.replaceAll(/\D/g, "");
     if (clean.length !== 20) return numero;
 
     const match = clean.match(/^(\d{7})(\d{2})(\d{4})(\d{1})(\d{2})(\d{4})$/);

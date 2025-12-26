@@ -14,7 +14,7 @@ NC='\033[0m'
 
 # Variáveis
 RESEND_KEY="re_7ThT6k8r_FVT9baVy8BKD2KSWxCWfhTZ2"
-REPO="thiagobodevan-a11y/assistente-juridico-p"
+REPO="portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal"
 VERCEL_URL="assistente-juridico-github.vercel.app"
 
 # Função para imprimir header

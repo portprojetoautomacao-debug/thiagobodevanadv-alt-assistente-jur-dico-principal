@@ -3,7 +3,7 @@
 
 ci_access:
   projects:
-    - id: thiagobodevan-a11y/assistente-juridico-p
+    - id: portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
       default_namespace: default
   groups:
     - id: thiagobodevan-a11y
@@ -13,14 +13,14 @@ user_access:
     agent: {} # for free
     user: {} # for premium+
   projects:
-    - id: thiagobodevan-a11y/assistente-juridico-p
+    - id: portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
       default_namespace: default
   groups:
     - id: thiagobodevan-a11y
 
 gitops:
   manifest_projects:
-    - id: thiagobodevan-a11y/assistente-juridico-p
+    - id: portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
       default_namespace: default
       paths:
         - glob: 'k8s/**/*.yaml'

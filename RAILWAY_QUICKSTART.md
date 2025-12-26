@@ -76,7 +76,7 @@ railway domain
 ### 6. Configurar Vercel
 
 **Via Dashboard:**
-https://vercel.com/thiagobodevan-a11y/assistente-juridico-p/settings/environment-variables
+https://vercel.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/settings/environment-variables
 
 Adicione:
 ```

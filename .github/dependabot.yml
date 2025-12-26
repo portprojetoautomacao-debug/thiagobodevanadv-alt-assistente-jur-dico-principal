@@ -10,12 +10,12 @@ updates:
       timezone: "America/Sao_Paulo"
     open-pull-requests-limit: 5
     assignees:
-      - "thiagobodevan-a11y"
+      - "portprojetoautomacao-debug"
     labels:
       - "dependencies"
       - "npm"
       - "automated"
-      - "automerge" # Para indicar que pode ser merged automaticamente
+      - "automerge"
     commit-message:
       prefix: "chore(deps)"
       prefix-development: "chore(deps-dev)"
@@ -87,12 +87,32 @@ updates:
       timezone: "America/Sao_Paulo"
     open-pull-requests-limit: 3
     labels:
-      - "docker"
       - "dependencies"
+      - "docker"
       - "automated"
     commit-message:
-      prefix: "chore"
+      prefix: "chore(docker)"
       include: "scope"
+
+  # GitHub Actions - Atualiza actions dos workflows
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/Sao_Paulo"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "github-actions"
+      - "automated"
+      - "automerge"
+    commit-message:
+      prefix: "fix(workflows)"
+      include: "scope"
+    assignees:
+      - "portprojetoautomacao-debug"
 
   - package-ecosystem: "devcontainers"
     directory: "/"
@@ -103,8 +123,8 @@ updates:
       timezone: "America/Sao_Paulo"
     open-pull-requests-limit: 2
     labels:
-      - "devcontainer"
       - "dependencies"
+      - "devcontainer"
       - "automated"
     commit-message:
       prefix: "chore"
@@ -119,6 +139,7 @@ updates:
       timezone: "America/Sao_Paulo"
     open-pull-requests-limit: 3
     labels:
+      - "dependencies"
       - "github-actions"
       - "ci/cd"
       - "automated"
@@ -135,9 +156,9 @@ updates:
       timezone: "America/Sao_Paulo"
     open-pull-requests-limit: 2
     labels:
+      - "dependencies"
       - "python"
       - "backend"
-      - "dependencies"
       - "automated"
     commit-message:
       prefix: "chore"

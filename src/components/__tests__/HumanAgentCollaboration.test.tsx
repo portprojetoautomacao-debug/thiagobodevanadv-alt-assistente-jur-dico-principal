@@ -386,7 +386,7 @@ describe.skip("HumanAgentCollaboration", () => {
 
       // Progresso inicial
       const initialProgress = screen.getByRole("progressbar");
-      const initialValue = parseInt(initialProgress.getAttribute("aria-valuenow") || "0");
+      const initialValue = Number.parseInt(initialProgress.getAttribute("aria-valuenow") || "0");
 
       // Avançar tempo
       act(() => {
@@ -395,7 +395,7 @@ describe.skip("HumanAgentCollaboration", () => {
 
       // Verificar incremento
       const updatedProgress = screen.getByRole("progressbar");
-      const updatedValue = parseInt(updatedProgress.getAttribute("aria-valuenow") || "0");
+      const updatedValue = Number.parseInt(updatedProgress.getAttribute("aria-valuenow") || "0");
 
       expect(updatedValue).toBeGreaterThan(initialValue);
     });
@@ -411,7 +411,9 @@ describe.skip("HumanAgentCollaboration", () => {
 
       // Capturar progresso durante edição
       const progressDuringEdit = screen.getByRole("progressbar");
-      const valueDuringEdit = parseInt(progressDuringEdit.getAttribute("aria-valuenow") || "0");
+      const valueDuringEdit = Number.parseInt(
+        progressDuringEdit.getAttribute("aria-valuenow") || "0"
+      );
 
       // Avançar tempo
       act(() => {
@@ -420,7 +422,7 @@ describe.skip("HumanAgentCollaboration", () => {
 
       // Verificar que progresso não mudou
       const progressAfter = screen.getByRole("progressbar");
-      const valueAfter = parseInt(progressAfter.getAttribute("aria-valuenow") || "0");
+      const valueAfter = Number.parseInt(progressAfter.getAttribute("aria-valuenow") || "0");
 
       expect(valueAfter).toBe(valueDuringEdit);
     });

@@ -79,8 +79,8 @@ https://console.upstash.com/redis
 
 # 4. Adicionar ao GitHub
 export GH_TOKEN="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"
-echo "sua-url-aqui" | gh secret set UPSTASH_REDIS_REST_URL --repo thiagobodevanadv-alt/assistente-jur-dico-principal
-echo "seu-token-aqui" | gh secret set UPSTASH_REDIS_REST_TOKEN --repo thiagobodevanadv-alt/assistente-jur-dico-principal
+echo "sua-url-aqui" | gh secret set UPSTASH_REDIS_REST_URL --repo portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
+echo "seu-token-aqui" | gh secret set UPSTASH_REDIS_REST_TOKEN --repo portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
 
 # 5. Adicionar ao Vercel
 vercel env add UPSTASH_REDIS_REST_URL production
@@ -97,8 +97,8 @@ https://aistudio.google.com/app/apikey
 
 # 3. Adicionar ao GitHub
 export GH_TOKEN="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"
-echo "sua-api-key" | gh secret set VITE_GEMINI_API_KEY --repo thiagobodevanadv-alt/assistente-jur-dico-principal
-echo "sua-api-key" | gh secret set GEMINI_API_KEY --repo thiagobodevanadv-alt/assistente-jur-dico-principal
+echo "sua-api-key" | gh secret set VITE_GEMINI_API_KEY --repo portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
+echo "sua-api-key" | gh secret set GEMINI_API_KEY --repo portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
 
 # 4. Adicionar ao Vercel
 vercel env add VITE_GEMINI_API_KEY production
@@ -115,10 +115,10 @@ vercel env add GEMINI_API_KEY production
 
 # 3. Adicionar ao GitHub
 export GH_TOKEN="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"
-echo "https://gentle-vision.up.railway.app" | gh secret set DSPY_BRIDGE_URL --repo thiagobodevanadv-alt/assistente-jur-dico-principal
-echo "token-railway" | gh secret set DSPY_API_TOKEN --repo thiagobodevanadv-alt/assistente-jur-dico-principal
-echo "https://gentle-vision.up.railway.app" | gh secret set VITE_DSPY_URL --repo thiagobodevanadv-alt/assistente-jur-dico-principal
-echo "token-railway" | gh secret set VITE_DSPY_API_TOKEN --repo thiagobodevanadv-alt/assistente-jur-dico-principal
+echo "https://gentle-vision.up.railway.app" | gh secret set DSPY_BRIDGE_URL --repo portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
+echo "token-railway" | gh secret set DSPY_API_TOKEN --repo portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
+echo "https://gentle-vision.up.railway.app" | gh secret set VITE_DSPY_URL --repo portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
+echo "token-railway" | gh secret set VITE_DSPY_API_TOKEN --repo portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
 
 # 4. Adicionar ao Vercel
 vercel env add DSPY_BRIDGE_URL production
@@ -147,19 +147,19 @@ Script automatizado para sincronizar variáveis Vercel → GitHub Secrets.
 ### Listar todos os secrets do GitHub
 ```bash
 export GH_TOKEN="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"
-gh secret list --repo thiagobodevanadv-alt/assistente-jur-dico-principal
+gh secret list --repo portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
 ```
 
 ### Adicionar secret individual
 ```bash
 export GH_TOKEN="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"
-echo "valor-do-secret" | gh secret set NOME_SECRET --repo thiagobodevanadv-alt/assistente-jur-dico-principal
+echo "valor-do-secret" | gh secret set NOME_SECRET --repo portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
 ```
 
 ### Remover secret
 ```bash
 export GH_TOKEN="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"
-gh secret delete NOME_SECRET --repo thiagobodevanadv-alt/assistente-jur-dico-principal
+gh secret delete NOME_SECRET --repo portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
 ```
 
 ### Listar variáveis do Vercel

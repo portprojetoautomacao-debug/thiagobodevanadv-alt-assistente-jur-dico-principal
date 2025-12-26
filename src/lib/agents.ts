@@ -492,8 +492,8 @@ export function sanitizeString(value: unknown): string {
   // ✅ Remove tags HTML, caracteres de controle e scripts
   return value
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
-    .replace(/<[^>]+>/g, "") // Remove tags HTML
-    .replace(/[<>'"]/g, (char) => {
+    .replaceAll(/<[^>]+>/g, "") // Remove tags HTML
+    .replaceAll(/[<>'"]/g, (char) => {
       const entities: Record<string, string> = {
         "<": "&lt;",
         ">": "&gt;",

@@ -5,7 +5,7 @@
 
 set -e
 
-REPO="thiagobodevan-a11y/assistente-juridico-p"
+REPO="portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal"
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
@@ -75,19 +75,19 @@ case $OPTION in
         echo -e "${BLUE}Modo: Adicionar TODOS os secrets${NC}"
         echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
         echo ""
-        
+
         for SECRET_NAME in "${!SECRETS_CONFIG[@]}"; do
             DESCRIPTION="${SECRETS_CONFIG[$SECRET_NAME]}"
             echo -e "${YELLOW}$SECRET_NAME${NC}"
             echo "  📝 $DESCRIPTION"
             read -p "  Valor: " SECRET_VALUE
-            
+
             if [ -z "$SECRET_VALUE" ]; then
                 echo -e "${RED}  ❌ Campo vazio, pulando...${NC}"
                 echo ""
                 continue
             fi
-            
+
             # Adicionar secret
             if echo "$SECRET_VALUE" | gh secret set "$SECRET_NAME" -R "$REPO" 2>/dev/null; then
                 echo -e "${GREEN}  ✅ Adicionado com sucesso!${NC}"
@@ -96,10 +96,10 @@ case $OPTION in
             fi
             echo ""
         done
-        
+
         echo -e "${GREEN}✅ Configuração de secrets concluída!${NC}"
         ;;
-        
+
     2)
         echo ""
         echo -e "${BLUE}Qual secret você deseja adicionar?${NC}"
@@ -111,7 +111,7 @@ case $OPTION in
         done
         echo ""
         read -p "Digite o número (1-${#SECRETS_CONFIG[@]}): " SECRET_NUM
-        
+
         # Converter número para nome do secret
         i=1
         for SECRET_NAME in "${!SECRETS_CONFIG[@]}"; do
@@ -121,12 +121,12 @@ case $OPTION in
                 echo -e "${YELLOW}$SECRET_NAME${NC}"
                 echo "  📝 $DESCRIPTION"
                 read -p "  Valor: " SECRET_VALUE
-                
+
                 if [ -z "$SECRET_VALUE" ]; then
                     echo -e "${RED}❌ Campo vazio, cancelando...${NC}"
                     exit 1
                 fi
-                
+
                 if echo "$SECRET_VALUE" | gh secret set "$SECRET_NAME" -R "$REPO" 2>/dev/null; then
                     echo -e "${GREEN}✅ Secret '$SECRET_NAME' adicionado com sucesso!${NC}"
                 else
@@ -138,13 +138,13 @@ case $OPTION in
             ((i++))
         done
         ;;
-        
+
     3)
         echo ""
         echo -e "${BLUE}Instruções para adicionar secrets manualmente:${NC}"
         echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
         echo ""
-        echo "1. Acesse: https://github.com/thiagobodevan-a11y/assistente-juridico-p/settings/secrets/actions"
+        echo "1. Acesse: https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/settings/secrets/actions"
         echo ""
         echo "2. Clique em 'New repository secret'"
         echo ""
@@ -161,12 +161,12 @@ case $OPTION in
         echo ""
         echo "Após adicionar, os agentes em nuvem terão acesso automaticamente!"
         ;;
-        
+
     4)
         echo -e "${YELLOW}Cancelado.${NC}"
         exit 0
         ;;
-        
+
     *)
         echo -e "${RED}Opção inválida!${NC}"
         exit 1
@@ -184,7 +184,7 @@ echo "2. Os secrets sincronizam automaticamente com Vercel"
 echo "3. Os agentes em nuvem podem acessar via GITHUB_ACTIONS ou vercel env"
 echo ""
 echo "🔍 Para verificar os secrets:"
-echo "   gh secret list -R thiagobodevan-a11y/assistente-juridico-p"
+echo "   gh secret list -R portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal"
 echo ""
 echo "🚀 Para testar os agentes:"
 echo "   bash scripts/sync-cloud-permissions.sh"

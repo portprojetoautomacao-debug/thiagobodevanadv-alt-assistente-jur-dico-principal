@@ -1,0 +1,84 @@
+# SonarLint Analysis Exclusions
+
+# Build outputs
+
+dist/
+build/
+out/
+coverage/
+coverage-api/
+.next/
+.vercel/
+
+# Dependencies
+
+node_modules/
+.pnpm-store/
+
+# Cache and temporary files
+
+.cache/
+.temp/
+.tmp/
+_.log
+_.tsbuildinfo
+.eslintcache
+
+# Test results
+
+.vitest/
+playwright-report/
+test-results/
+
+# Documentation and configs that don't need analysis
+
+_.md
+_.json
+_.yaml
+_.yml
+.env\*
+_.config.js
+_.config.ts
+_.config.cjs
+_.config.mjs
+
+# Chrome Extension build
+
+chrome-extension-pje/dist/
+chrome-extension-pje/build/
+
+# Generated files
+
+**/_.generated._
+**/_.gen._
+**/generated/**
+
+# Large data files
+
+**/\*.sarif
+**/_.xml
+\*\*/_.csv
+
+# Git and version control
+
+.git/
+.github/workflows/
+.husky/
+
+# IDE specific
+
+.vscode/
+.idea/
+_.swp
+_.swo
+
+# OS specific
+
+.DS_Store
+Thumbs.db
+
+# Specific paths with known issues
+
+scripts/sonar-_.sh
+scripts/_-sarif._
+auto-_.sh

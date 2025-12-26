@@ -68,7 +68,7 @@ if [ "$HTTP_CODE" = "200" ]; then
     fi
 else
     fail "API Health: FALHOU (HTTP $HTTP_CODE)"
-    echo "   Verifique: https://vercel.com/thiagobodevan-a11y/assistente-juridico-p/logs"
+    echo "   Verifique: https://vercel.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/logs"
 fi
 
 echo ""
@@ -152,7 +152,7 @@ echo "  7??  MÉTRICAS VERCEL (2 min)"
 echo "????????????????????????????????????????????????????????????"
 echo ""
 
-info "Acessar: https://vercel.com/thiagobodevan-a11y/assistente-juridico-p/analytics"
+info "Acessar: https://vercel.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/analytics"
 warn "META: LCP < 2.5s, Error Rate < 1% (verificação manual)"
 
 echo ""

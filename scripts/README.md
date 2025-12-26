@@ -197,7 +197,7 @@ chmod +x scripts/*.sh
 3. Token sem permissões adequadas
 
 **Solução**: Configure manualmente via UI:
-https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal/settings/branches
+https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/settings/branches
 
 ---
 
@@ -252,7 +252,7 @@ deploy-latest
 
 ## 📞 Suporte
 
-- **Issues**: https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal/issues
+- **Issues**: https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/issues
 - **Documentação**: `../docs/WORKFLOWS_SEGUROS_E_BRANCH_PROTECTION.md`
 - **GitHub CLI Docs**: https://cli.github.com/manual/
 

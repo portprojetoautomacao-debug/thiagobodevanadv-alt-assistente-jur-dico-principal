@@ -45,7 +45,7 @@ if (PRODUCTION_URLS.includes(hostname)) {
 
 ### Passo 1: Adicionar Variáveis de Ambiente
 
-1. Acesse: https://vercel.com/thiagobodevan-a11y/assistente-juridico-p/settings/environment-variables
+1. Acesse: https://vercel.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/settings/environment-variables
 
 2. Adicione as seguintes variáveis:
 
@@ -176,10 +176,10 @@ Após configuração:
 
 Se o problema persistir após seguir este guia:
 
-1. Verifique logs do Vercel: https://vercel.com/thiagobodevan-a11y/assistente-juridico-p/logs
+1. Verifique logs do Vercel: https://vercel.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/logs
 2. Verifique console do browser (F12 → Console)
 3. Rode diagnóstico: `./check-oauth-config.sh`
-4. Verifique se commit foi deployado em: https://vercel.com/thiagobodevan-a11y/assistente-juridico-p/deployments
+4. Verifique se commit foi deployado em: https://vercel.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/deployments
 
 ---
 

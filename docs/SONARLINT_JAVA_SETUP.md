@@ -16,7 +16,7 @@ This file captures the local VS Code SonarLint configuration we use for this pro
   ],
   "sonarlint.connectedMode.project": {
     "connectionId": "thiagobodevan-a11y",
-    "projectKey": "thiagobodevan-a11y_assistente-juridico-p"
+    "projectKey": "portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal"
   }
 }
 ```

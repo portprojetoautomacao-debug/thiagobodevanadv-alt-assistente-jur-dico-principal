@@ -25,7 +25,7 @@ if ! gh auth status &> /dev/null; then
     exit 1
 fi
 
-REPO="thiagobodevan-a11y/assistente-juridico-p"
+REPO="portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal"
 SECRETS=(
     "UPSTASH_REDIS_REST_URL"
     "UPSTASH_REDIS_REST_TOKEN"

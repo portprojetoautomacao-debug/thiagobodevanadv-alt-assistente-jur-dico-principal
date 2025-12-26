@@ -15,6 +15,20 @@
       }
     },
     {
+      "label": "Start SonarQube MCP Server",
+      "type": "shell",
+      "command": "./scripts/start-sonar-mcp.sh",
+      "problemMatcher": [],
+      "group": "none",
+      "isBackground": true,
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "dedicated"
+      }
+    },
+    {
       "label": "auto-init",
       "type": "shell",
       "command": "${workspaceFolder}/auto-init.sh",
@@ -113,7 +127,24 @@
       "args": ["run", "dev"],
       "group": { "kind": "build", "isDefault": true },
       "isBackground": true,
-      "options": { "cwd": "${workspaceFolder}" }
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": {
+        "owner": "vite",
+        "pattern": {
+          "regexp": "."
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "VITE.*preparing",
+          "endsPattern": "Local:.*http://localhost:5173"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "focus": false,
+        "close": false
+      }
     },
     {
       "label": "build",

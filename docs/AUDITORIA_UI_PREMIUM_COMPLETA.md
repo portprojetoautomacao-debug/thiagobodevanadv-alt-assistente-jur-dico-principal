@@ -1,7 +1,7 @@
 # ?? RELATÓRIO DE AUDITORIA COMPLETO - UI PREMIUM E EDITOR PROFISSIONAL
 
 **Data da Auditoria:** 08/12/2024  
-**Repositório:** thiagobodevanadv-alt/assistente-jur-dico-principal  
+**Repositório:** portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal  
 **Branch:** main  
 **Auditor:** GitHub Copilot (análise automatizada)
 

@@ -62,19 +62,19 @@
 
 ### Opção 1: Criar Codespace (Web UI)
 
-1. Acesse: https://github.com/thiagobodevan-a11y/assistente-juridico-p
+1. Acesse: https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
 2. Botão verde **"Code"** → Aba **"Codespaces"**
 3. **"Create codespace on main"**
 4. ☕ Aguarde 2-3 minutos
 
 ### Opção 2: Badge README (1 clique)
 
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/thiagobodevan-a11y/assistente-juridico-p/codespaces/new)
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/codespaces/new)
 
 ### Opção 3: GitHub CLI
 
 ```bash
-gh codespace create --repo thiagobodevan-a11y/assistente-juridico-p
+gh codespace create --repo portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
 gh codespace code  # Abrir no VS Code
 ```
 

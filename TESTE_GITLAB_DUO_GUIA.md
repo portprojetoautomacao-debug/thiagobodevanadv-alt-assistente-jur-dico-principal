@@ -14,7 +14,7 @@
 
 1. **Acesse o GitHub:**
    ```
-   https://github.com/thiagobodevan-a11y/assistente-juridico-p
+   https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
    ```
 
 2. **Clique em "Pull requests"** (menu superior)
@@ -22,7 +22,7 @@
 3. **Clique em "New pull request"**
 
 4. **Configure a PR:**
-   - **Base repository:** thiagobodevan-a11y/assistente-juridico-p
+   - **Base repository:** portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
    - **Base:** main
    - **Compare:** test-gitlab-duo-inputs
 
@@ -60,7 +60,7 @@
 #### **Opção A: No GitLab (Recomendado)**
 1. **Acesse o GitLab:**
    ```
-   https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p
+   https://gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
    ```
 
 2. **Abra a Merge Request** correspondente

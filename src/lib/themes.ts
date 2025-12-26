@@ -95,27 +95,28 @@ export function getEventColor(tipo?: string): string {
  * Utilitário para obter classe de badge baseada no tipo
  */
 export function getEventBadgeClass(tipo?: string): string {
-  const baseClass = "inline-flex items-center px-2 py-1 text-xs font-medium rounded-md border";
+  const baseClass =
+    "inline-flex items-center px-2 py-1 text-xs font-medium rounded-md border cursor-default transition-colors";
 
   switch (tipo) {
     case "certidao":
-      return `${baseClass} bg-sky-500/10 text-sky-600 border-sky-500/30`;
+      return `${baseClass} bg-sky-500/10 text-sky-700 border-sky-500/30 hover:bg-sky-500/20 focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:ring-offset-2`;
     case "mandado":
-      return `${baseClass} bg-amber-500/10 text-amber-600 border-amber-500/30`;
+      return `${baseClass} bg-amber-500/10 text-amber-700 border-amber-500/30 hover:bg-amber-500/20 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:ring-offset-2`;
     case "despacho":
-      return `${baseClass} bg-indigo-500/10 text-indigo-600 border-indigo-500/30`;
+      return `${baseClass} bg-indigo-500/10 text-indigo-700 border-indigo-500/30 hover:bg-indigo-500/20 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:ring-offset-2`;
     case "sentenca":
-      return `${baseClass} bg-red-500/10 text-red-600 border-red-500/30`;
+      return `${baseClass} bg-red-500/10 text-red-700 border-red-500/30 hover:bg-red-500/20 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:ring-offset-2`;
     case "peticao":
-      return `${baseClass} bg-emerald-500/10 text-emerald-600 border-emerald-500/30`;
+      return `${baseClass} bg-emerald-500/10 text-emerald-700 border-emerald-500/30 hover:bg-emerald-500/20 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:ring-offset-2`;
     case "intimacao":
-      return `${baseClass} bg-purple-500/10 text-purple-600 border-purple-500/30`;
+      return `${baseClass} bg-purple-500/10 text-purple-700 border-purple-500/30 hover:bg-purple-500/20 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:ring-offset-2`;
     case "juntada":
-      return `${baseClass} bg-blue-500/10 text-blue-600 border-blue-500/30`;
+      return `${baseClass} bg-blue-500/10 text-blue-700 border-blue-500/30 hover:bg-blue-500/20 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2`;
     case "conclusos":
-      return `${baseClass} bg-teal-500/10 text-teal-600 border-teal-500/30`;
+      return `${baseClass} bg-teal-500/10 text-teal-700 border-teal-500/30 hover:bg-teal-500/20 focus:outline-none focus:ring-2 focus:ring-teal-500/50 focus:ring-offset-2`;
     default:
-      return `${baseClass} bg-gray-500/10 text-gray-600 border-gray-500/30`;
+      return `${baseClass} bg-muted/50 text-muted-foreground border-muted hover:bg-muted/70 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2`;
   }
 }
 
@@ -123,19 +124,20 @@ export function getEventBadgeClass(tipo?: string): string {
  * Utilitário para obter classe de status de processo
  */
 export function getStatusBadgeClass(status: string): string {
-  const baseClass = "inline-flex items-center px-2 py-1 text-xs font-medium rounded-md border";
+  const baseClass =
+    "inline-flex items-center px-2 py-1 text-xs font-medium rounded-md border cursor-default transition-colors";
 
   switch (status) {
     case "ativo":
-      return `${baseClass} bg-green-500/10 text-green-600 border-green-500/30`;
+      return `${baseClass} bg-green-500/10 text-green-700 border-green-500/30 hover:bg-green-500/20 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:ring-offset-2`;
     case "suspenso":
-      return `${baseClass} bg-yellow-500/10 text-yellow-600 border-yellow-500/30`;
+      return `${baseClass} bg-yellow-500/10 text-yellow-700 border-yellow-500/30 hover:bg-yellow-500/20 focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:ring-offset-2`;
     case "arquivado":
-      return `${baseClass} bg-gray-500/10 text-gray-600 border-gray-500/30`;
+      return `${baseClass} bg-muted/50 text-muted-foreground border-muted hover:bg-muted/70 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2`;
     case "concluido":
-      return `${baseClass} bg-blue-500/10 text-blue-600 border-blue-500/30`;
+      return `${baseClass} bg-blue-500/10 text-blue-700 border-blue-500/30 hover:bg-blue-500/20 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2`;
     default:
-      return `${baseClass} bg-gray-500/10 text-gray-600 border-gray-500/30`;
+      return `${baseClass} bg-muted/50 text-muted-foreground border-muted hover:bg-muted/70 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2`;
   }
 }
 

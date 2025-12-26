@@ -273,50 +273,50 @@ export function validateAgentTask(data: unknown) {
 
 // Validar se CPF tem d�gitos verificadores corretos (algoritmo oficial)
 export function isValidCPF(cpf: string): boolean {
-  const cleanCPF = cpf.replace(/\D/g, "");
+  const cleanCPF = cpf.replaceAll(/\D/g, "");
   if (cleanCPF.length !== 11 || /^(\d)\1+$/.test(cleanCPF)) return false;
 
   let sum = 0;
   for (let i = 0; i < 9; i++) {
-    sum += parseInt(cleanCPF.charAt(i)) * (10 - i);
+    sum += Number.parseInt(cleanCPF.charAt(i)) * (10 - i);
   }
   let digit = 11 - (sum % 11);
   if (digit >= 10) digit = 0;
-  if (digit !== parseInt(cleanCPF.charAt(9))) return false;
+  if (digit !== Number.parseInt(cleanCPF.charAt(9))) return false;
 
   sum = 0;
   for (let i = 0; i < 10; i++) {
-    sum += parseInt(cleanCPF.charAt(i)) * (11 - i);
+    sum += Number.parseInt(cleanCPF.charAt(i)) * (11 - i);
   }
   digit = 11 - (sum % 11);
   if (digit >= 10) digit = 0;
-  if (digit !== parseInt(cleanCPF.charAt(10))) return false;
+  if (digit !== Number.parseInt(cleanCPF.charAt(10))) return false;
 
   return true;
 }
 
 // Validar se CNPJ tem d�gitos verificadores corretos (algoritmo oficial)
 export function isValidCNPJ(cnpj: string): boolean {
-  const cleanCNPJ = cnpj.replace(/\D/g, "");
+  const cleanCNPJ = cnpj.replaceAll(/\D/g, "");
   if (cleanCNPJ.length !== 14 || /^(\d)\1+$/.test(cleanCNPJ)) return false;
 
   let sum = 0;
   let weight = 5;
   for (let i = 0; i < 12; i++) {
-    sum += parseInt(cleanCNPJ.charAt(i)) * weight;
+    sum += Number.parseInt(cleanCNPJ.charAt(i)) * weight;
     weight = weight === 2 ? 9 : weight - 1;
   }
   let digit = sum % 11 < 2 ? 0 : 11 - (sum % 11);
-  if (digit !== parseInt(cleanCNPJ.charAt(12))) return false;
+  if (digit !== Number.parseInt(cleanCNPJ.charAt(12))) return false;
 
   sum = 0;
   weight = 6;
   for (let i = 0; i < 13; i++) {
-    sum += parseInt(cleanCNPJ.charAt(i)) * weight;
+    sum += Number.parseInt(cleanCNPJ.charAt(i)) * weight;
     weight = weight === 2 ? 9 : weight - 1;
   }
   digit = sum % 11 < 2 ? 0 : 11 - (sum % 11);
-  if (digit !== parseInt(cleanCNPJ.charAt(13))) return false;
+  if (digit !== Number.parseInt(cleanCNPJ.charAt(13))) return false;
 
   return true;
 }

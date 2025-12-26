@@ -321,7 +321,7 @@ Traces → Timeline → Insights → Otimização
 - **Documentação Completa:** `docs/V2_INTEGRATION_GUIDE.md`
 - **Teste Rápido:** `./testar-integracao-v2.sh`
 - **Verificar Auto DevOps:** `./verificar-gitlab-autodevops.sh`
-- **GitLab Issues:** https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/issues
+- **GitLab Issues:** https://gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/-/issues
 
 ---
 

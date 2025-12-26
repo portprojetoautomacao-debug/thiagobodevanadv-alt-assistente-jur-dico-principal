@@ -178,7 +178,7 @@ git push origin main
 # Após push para main, aguardar 2-3 minutos
 
 # 1. Verificar se deploy iniciou
-# GitHub Actions: https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal/actions
+# GitHub Actions: https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/actions
 
 # 2. Verificar Vercel Dashboard
 # https://vercel.com/dashboard
@@ -214,8 +214,8 @@ curl https://assistente-juridico-github.vercel.app/api/health
 ## 📞 Links Úteis
 
 - **Produção:** https://assistente-juridico-github.vercel.app
-- **GitHub Repo:** https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal
-- **GitHub Actions:** https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal/actions
+- **GitHub Repo:** https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
+- **GitHub Actions:** https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/actions
 - **Vercel Dashboard:** https://vercel.com/dashboard
 
 ---

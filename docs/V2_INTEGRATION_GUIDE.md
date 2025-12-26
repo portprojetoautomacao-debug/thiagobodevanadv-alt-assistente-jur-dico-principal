@@ -318,7 +318,7 @@ Os 15 agentes do HTML foram conectados à V2:
 
 ### Passo 2: Configurar KUBE_INGRESS_BASE_DOMAIN
 
-1. Acesse: https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/settings/ci_cd
+1. Acesse: https://gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/-/settings/ci_cd
 2. Expanda **"Variables"**
 3. Clique **"Add variable"**
 4. Configure:
@@ -341,7 +341,7 @@ git commit --allow-empty -m "🚀 Trigger Auto DevOps pipeline"
 git push origin main
 ```
 
-Acompanhe em: https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/pipelines
+Acompanhe em: https://gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/-/pipelines
 
 ---
 
