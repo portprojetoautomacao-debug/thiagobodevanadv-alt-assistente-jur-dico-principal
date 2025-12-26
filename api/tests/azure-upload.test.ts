@@ -64,7 +64,7 @@ describe( 'Azure Upload API', () =>
 
       expect( response.ok ).toBe( true );
 
-      const data = await response.json();
+      const data = await response.json() as { success: boolean; blobName: string; url: string };
       expect( data.success ).toBe( true );
       expect( data.blobName ).toContain( 'test-0001234-56.2024.8.02.0001' );
       expect( data.url ).toBeDefined();
@@ -85,7 +85,7 @@ describe( 'Azure Upload API', () =>
 
       expect( response.status ).toBe( 400 );
 
-      const data = await response.json();
+      const data = await response.json() as { success: boolean; error: string };
       expect( data.success ).toBe( false );
       expect( data.error ).toContain( 'processo' );
     } );
@@ -103,7 +103,7 @@ describe( 'Azure Upload API', () =>
 
       expect( response.status ).toBe( 400 );
 
-      const data = await response.json();
+      const data = await response.json() as { success: boolean; error: string };
       expect( data.success ).toBe( false );
       expect( data.error ).toContain( 'arquivo' );
     } );
@@ -144,7 +144,7 @@ describe( 'Azure Upload API', () =>
 
       expect( response.ok ).toBe( true );
 
-      const data = await response.json();
+      const data = await response.json() as { success: boolean; taskId: string };
       expect( data.success ).toBe( true );
       expect( data.taskId ).toBeDefined(); // Tarefa de análise criada
     } );
