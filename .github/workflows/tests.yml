@@ -17,6 +17,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
+    services:
+      azurite:
+        image: mcr.microsoft.com/azure-storage/azurite:latest
+        ports:
+          - 10000:10000
+          - 10001:10001
+          - 10002:10002
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -41,6 +49,12 @@ jobs:
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
 
+      - name: Wait for Azurite
+        run: |
+          echo "⏳ Waiting for Azurite..."
+          timeout 30 bash -c 'until curl -f http://localhost:10000/devstoreaccount1?comp=list &>/dev/null; do sleep 1; done'
+          echo "✅ Azurite ready!"
+
       - name: Run unit tests with OOM monitoring
         run: |
           echo "🔍 Monitoring Worker OOM during test execution..."
@@ -60,6 +74,12 @@ jobs:
           fi
 
           echo "✅ Tests completed successfully"
+        env:
+          AZURE_STORAGE_CONNECTION_STRING: AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEhRtFSBP;BlobEndpoint=http://localhost:10000/devstoreaccount1;
+          VITE_AZURE_STORAGE_CONNECTION_STRING: AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEhRtFSBP;BlobEndpoint=http://localhost:10000/devstoreaccount1;
+          AZURE_STORAGE_CONTAINER_NAME: process-documents
+          VITE_USE_AZURITE: true
+
       - name: Generate Vitest SARIF (JSON -> SARIF)
         run: npm run test:sarif || true
         continue-on-error: true

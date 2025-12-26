@@ -94,6 +94,6 @@ jobs:
         if: always()
         run: |
           echo "📊 SonarQube analysis completed"
-          echo "🔗 View report: https://sonarcloud.io/dashboard?id=thiagobodevanadv-alt_assistente-jur-dico-principal"
+          echo "🔗 View report: https://sonarcloud.io/dashboard?id=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal"
           echo "⚠️ Quality Gate failures are informational during development"
           echo "✅ Pipeline continues regardless of Quality Gate status"

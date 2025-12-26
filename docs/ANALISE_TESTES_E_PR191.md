@@ -1,7 +1,7 @@
 # 📊 Análise Completa: Testes Locais e PR #191
 
 **Data:** 8 de dezembro de 2025
-**Repositório:** thiagobodevan-a11y/assistente-juridico-p
+**Repositório:** portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
 **Branch:** main
 
 ---
@@ -359,7 +359,7 @@ Error: Worker exited unexpectedly
 ## 🔗 Referências
 
 ### PR #191
-- **URL:** https://github.com/thiagobodevan-a11y/assistente-juridico-p/pull/191
+- **URL:** https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/pull/191
 - **Commit:** 3f916ad
 - **Documentação:** `/docs/HYBRID_ARCHITECTURE.md`
 

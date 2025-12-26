@@ -4,11 +4,11 @@
 
 PASSO 1: Acesse o repositório
 ─────────────────────────────────────────────────────────────────────────────
-URL: https://github.com/thiagobodevan-a11y/assistente-juridico-p
+URL: https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
 
 PASSO 2: Vá para Settings → Secrets and variables → Actions
 ─────────────────────────────────────────────────────────────────────────────
-URL Direto: https://github.com/thiagobodevan-a11y/assistente-juridico-p/settings/secrets/actions
+URL Direto: https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/settings/secrets/actions
 
 PASSO 3: Adicione cada secret clicando "New repository secret"
 ─────────────────────────────────────────────────────────────────────────────
@@ -76,7 +76,7 @@ SECRETS A ADICIONAR:
 INSTRUÇÕES PASSO A PASSO:
 
 1. Abra o navegador e acesse:
-   https://github.com/thiagobodevan-a11y/assistente-juridico-p/settings/secrets/actions
+   https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/settings/secrets/actions
 
 2. Clique no botão verde "New repository secret"
 
@@ -102,10 +102,10 @@ VERIFICAR SE FORAM ADICIONADOS:
 
 Após adicionar todos os secrets, você pode verificar digitando:
 
-   gh secret list -R thiagobodevan-a11y/assistente-juridico-p
+   gh secret list -R portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
 
 Ou vendo diretamente em:
-   https://github.com/thiagobodevan-a11y/assistente-juridico-p/settings/secrets/actions
+   https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/settings/secrets/actions
 
 ═══════════════════════════════════════════════════════════════════════════════
 
@@ -116,6 +116,6 @@ Após adicionar todos os 7 secrets:
 1. Aguarde 5 minutos para os secrets sincronizarem
 2. Os agentes em nuvem terão acesso automático
 3. Teste com: bash scripts/sync-cloud-permissions.sh
-4. Verifique os logs em: https://github.com/thiagobodevan-a11y/assistente-juridico-p/actions
+4. Verifique os logs em: https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/actions
 
 ═══════════════════════════════════════════════════════════════════════════════

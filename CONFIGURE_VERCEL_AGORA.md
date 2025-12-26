@@ -11,7 +11,7 @@ O código foi corrigido e está deployando agora. **MAS você precisa adicionar 
 ### 1️⃣ Acesse as Configurações do Vercel
 
 Clique neste link:
-👉 **https://vercel.com/thiagobodevan-a11y/assistente-juridico-p/settings/environment-variables**
+👉 **https://vercel.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/settings/environment-variables**
 
 ### 2️⃣ Adicione a Variável VITE_GOOGLE_CLIENT_ID
 
@@ -35,7 +35,7 @@ Clique neste link:
 
 - O Vercel vai redeploy automaticamente após salvar as variáveis
 - Aguarde ~2 minutos
-- Acompanhe em: https://vercel.com/thiagobodevan-a11y/assistente-juridico-p/deployments
+- Acompanhe em: https://vercel.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/deployments
 
 ---
 

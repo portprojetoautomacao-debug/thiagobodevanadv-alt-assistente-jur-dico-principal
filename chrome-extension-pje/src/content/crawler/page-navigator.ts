@@ -413,7 +413,7 @@ export class PageNavigator {
   private parseDataMovimento(dataStr: string): number {
     const match = dataStr.match(/(\d{2})\/(\d{2})\/(\d{4})/);
     if (match) {
-      return new Date(parseInt(match[3]), parseInt(match[2]) - 1, parseInt(match[1])).getTime();
+      return new Date(Number.parseInt(match[3]), Number.parseInt(match[2]) - 1, Number.parseInt(match[1])).getTime();
     }
     return Date.now();
   }

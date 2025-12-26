@@ -36,14 +36,14 @@
 {
   "url": "https://sonarcloud.io",
   "organization": "thiagobodevan-a11y-assistente-juridico-p",
-  "projectKey": "thiagobodevan-a11y_assistente-juridico-p"
+  "projectKey": "portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal"
 }
 ```
 
 ### GitHub
 ```json
 {
-  "repository": "thiagobodevan-a11y/assistente-juridico-p",
+  "repository": "portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal",
   "apiUrl": "https://api.github.com"
 }
 ```
@@ -159,7 +159,7 @@ Adicionar:
 - 📚 [Guia Completo](docs/SONAR_COPILOT_ASSISTANT_SETUP.md)
 - 🔑 [SonarCloud Tokens](https://sonarcloud.io/account/security)
 - 🐙 [GitHub PAT](https://github.com/settings/tokens)
-- 📊 [SonarCloud Dashboard](https://sonarcloud.io/project/overview?id=thiagobodevan-a11y_assistente-juridico-p)
+- 📊 [SonarCloud Dashboard](https://sonarcloud.io/project/overview?id=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal)
 
 ---
 

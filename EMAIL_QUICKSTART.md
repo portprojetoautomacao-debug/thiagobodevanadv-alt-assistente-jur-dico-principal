@@ -9,7 +9,7 @@
 gh secret set RESEND_API_KEY --body "re_7ThT6k8r_FVT9baVy8BKD2KSWxCWfhTZ2"
 
 # Opção B: Web UI
-# Visite: https://github.com/thiagobodevan-a11y/assistente-juridico-p/settings/secrets/actions
+# Visite: https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/settings/secrets/actions
 # Clique "New repository secret"
 # Name: RESEND_API_KEY
 # Value: re_7ThT6k8r_FVT9baVy8BKD2KSWxCWfhTZ2
@@ -118,7 +118,7 @@ npm run dev
 
 ```bash
 # Ver o que falhou
-# Visite: https://github.com/thiagobodevan-a11y/assistente-juridico-p/actions
+# Visite: https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/actions
 ```
 
 ---

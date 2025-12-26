@@ -219,7 +219,7 @@ assistente-juridico-p/
 
 ### Opção 1: Criar Codespace Via Web UI
 
-1. Acesse: https://github.com/thiagobodevan-a11y/assistente-juridico-p
+1. Acesse: https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
 2. Clique no botão verde **"Code"**
 3. Vá na aba **"Codespaces"**
 4. Clique em **"Create codespace on main"**
@@ -230,7 +230,7 @@ assistente-juridico-p/
 
 ```bash
 # Criar codespace
-gh codespace create --repo thiagobodevan-a11y/assistente-juridico-p
+gh codespace create --repo portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
 
 # Listar codespaces
 gh codespace list

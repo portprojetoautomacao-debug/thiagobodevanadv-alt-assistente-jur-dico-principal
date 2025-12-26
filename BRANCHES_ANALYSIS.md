@@ -23,7 +23,7 @@
 - **Descrição:** Otimização completa de todos os 31 workflows do GitHub Actions
 - **Prioridade:** 🔴 CRÍTICA
 - **Ação:** ✅ **PR JÁ CRIADO** - Aguardando testes passarem e fazer merge
-- **Link PR:** https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal/pull/new/feat/optimize-workflows-enterprise-grade
+- **Link PR:** https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/pull/new/feat/optimize-workflows-enterprise-grade
 
 **Detalhes:**
 - Cache otimizado em 28/31 workflows (90%)
@@ -146,7 +146,7 @@ Total de **57 branches** com prefixo `copilot/` que não foram mescladas.
 ### Prioridade CRÍTICA (Fazer AGORA)
 
 1. **✅ Aguardar merge do PR `feat/optimize-workflows-enterprise-grade`**
-   - Link: https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal/pull/new/feat/optimize-workflows-enterprise-grade
+   - Link: https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/pull/new/feat/optimize-workflows-enterprise-grade
    - Verificar se CI passou
    - Fazer merge assim que aprovado
 

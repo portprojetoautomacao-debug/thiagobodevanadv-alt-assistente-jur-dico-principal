@@ -33,7 +33,7 @@ Push to main → Build → Test → Docker → Staging → Production → Tag
    ```
 
 2. **Monitorar Pipeline**:
-   - Acesse: https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/pipelines
+   - Acesse: https://gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/-/pipelines
    - Deve executar todos os estágios automaticamente
 
 3. **Verificar Deployments**:

@@ -28,7 +28,7 @@ git config --global credential.helper store
 # Adicionar o remote do GitLab se não existir
 if ! git remote | grep -q "^gitlab$"; then
     echo "📡 Adicionando remote do GitLab..."
-    git remote add gitlab https://oauth2:${GITLAB_TOKEN}@gitlab.com/thiagobodevan-a11y/assistente-juridico-p.git
+    git remote add gitlab https://oauth2:${GITLAB_TOKEN}@gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal.git
     echo "✅ Remote 'gitlab' adicionado"
 else
     echo "ℹ️  Remote 'gitlab' já existe"
@@ -36,7 +36,7 @@ fi
 
 # Configurar o remote origin para usar o token
 echo "🔄 Atualizando remote origin..."
-git remote set-url origin https://oauth2:${GITLAB_TOKEN}@gitlab.com/thiagobodevan-a11y/assistente-juridico-p.git
+git remote set-url origin https://oauth2:${GITLAB_TOKEN}@gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal.git
 
 echo ""
 echo "✅ Configuração concluída!"

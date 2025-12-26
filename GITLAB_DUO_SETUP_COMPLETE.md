@@ -28,7 +28,7 @@
 
 Visite o link GitLab para criar MR:
 ```
-https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/merge_requests/new?merge_request%5Bsource_branch%5D=feature%2Fenable-duo-code-review
+https://gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/-/merge_requests/new?merge_request%5Bsource_branch%5D=feature%2Fenable-duo-code-review
 ```
 
 Ou execute via CLI:
@@ -153,7 +153,7 @@ Seu repositório agora tem:
 
 **Começar a usar agora:**
 
-1. Visite sua MR: https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/merge_requests
+1. Visite sua MR: https://gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/-/merge_requests
 2. No chat: `/review this merge request`
 3. Veja o Duo trabalhar! 🚀
 

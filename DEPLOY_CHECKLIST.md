@@ -203,7 +203,7 @@ Ou acesse: https://vercel.com/assistente-juridico-p/logs
 | **Guia de Setup** | `/docs/HYBRID_PRODUCTION_SETUP.md` |
 | **Arquitetura** | `/docs/HYBRID_ARCHITECTURE.md` |
 | **Stubs README** | `/docs/HYBRID_STUBS_README.md` |
-| **GitHub Issues** | https://github.com/thiagobodevan-a11y/assistente-juridico-p/issues |
+| **GitHub Issues** | https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/issues |
 
 ---
 

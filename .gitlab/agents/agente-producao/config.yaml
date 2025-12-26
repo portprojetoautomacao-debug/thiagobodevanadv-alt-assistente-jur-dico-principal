@@ -8,7 +8,7 @@ remote_development:
 # Acesso CI/CD restrito para produção
 ci_access:
   projects:
-    - id: thiagobodevan-a11y/assistente-juridico-p
+    - id: portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
       default_namespace: production
       access_as:
         ci_job: {}  # Personificar trabalho CI/CD
@@ -28,7 +28,7 @@ user_access:
     agent: {} # for free
     user: {} # for premium+
   projects:
-    - id: thiagobodevan-a11y/assistente-juridico-p
+    - id: portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
       default_namespace: production
   groups:
     - id: thiagobodevan-a11y
@@ -36,7 +36,7 @@ user_access:
 # GitOps para manifestos de produção
 gitops:
   manifest_projects:
-    - id: thiagobodevan-a11y/assistente-juridico-p
+    - id: portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
       default_namespace: production
       paths:
         - glob: 'k8s/production/**/*.yaml'

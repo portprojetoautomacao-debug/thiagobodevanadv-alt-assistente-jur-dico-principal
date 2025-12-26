@@ -8,7 +8,7 @@ import { CNJ_CLEAN_REGEX } from './constants';
  * Remove formatação do número CNJ
  */
 export function cleanProcessNumber(numero: string): string {
-  return numero.replace(/\D/g, '');
+  return numero.replaceAll(/\D/g, '');
 }
 
 /**
@@ -42,11 +42,11 @@ export function parseDate(dateStr: string): Date {
   if (match) {
     const [, day, month, year, hour = '0', minute = '0'] = match;
     return new Date(
-      parseInt(year),
-      parseInt(month) - 1,
-      parseInt(day),
-      parseInt(hour),
-      parseInt(minute)
+      Number.parseInt(year),
+      Number.parseInt(month) - 1,
+      Number.parseInt(day),
+      Number.parseInt(hour),
+      Number.parseInt(minute)
     );
   }
   return new Date();

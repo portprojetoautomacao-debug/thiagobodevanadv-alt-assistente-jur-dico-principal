@@ -20,6 +20,19 @@ jobs:
     env:
       NODE_OPTIONS: --max-old-space-size=8192
 
+    services:
+      azurite:
+        image: mcr.microsoft.com/azure-storage/azurite:latest
+        ports:
+          - 10000:10000
+          - 10001:10001
+          - 10002:10002
+        options: >-
+          --health-cmd "curl -f http://localhost:10000/devstoreaccount1?comp=list"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     strategy:
       matrix:
         node-version: ["22.x"]
@@ -75,10 +88,10 @@ jobs:
       - name: Run linter
         run: |
           echo "Running ESLint..."
-          # Run lint with a higher warning threshold for CI
-          # Current codebase has ~308 warnings - allowing 350 to prevent CI failures
-          # TODO: Gradually reduce warnings over time
-          if ! npx eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 350; then
+          # Run lint with aligned threshold between CI and local
+          # Current codebase has ~74 warnings - allowing 150 for safety margin
+          # This matches the local package.json configuration
+          if ! npx eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 150; then
             echo "❌ Linting failed (too many warnings or errors)"
             echo "Please fix the linting issues before proceeding"
             exit 1
@@ -114,15 +127,11 @@ jobs:
         if: success()
 
       - name: Run tests
-        continue-on-error: true
+        continue-on-error: false
         run: |
           echo "Running all tests..."
-          echo "⚠️ MODO MANUTENÇÃO: Testes continuam mesmo com falhas"
           # Run tests with timeout to prevent hanging
           timeout 10m npm run test:run || {
-            echo "⚠️ Tests failed - continuing (modo manutenção)"
-            exit 0
-          }
             echo "❌ Tests failed or timed out"
             exit 1
           }
@@ -134,11 +143,13 @@ jobs:
         run: |
           echo "Running API tests..."
           timeout 5m npm run test:api || {
-            echo "⚠️ API tests failed or timed out - continuing anyway"
+            echo "❌ API tests failed or timed out"
+            exit 1
           }
+          echo "✅ API tests passed"
         if: success()
         timeout-minutes: 6
-        continue-on-error: true
+        continue-on-error: false
 
       - name: Upload build log
         if: always() && hashFiles('build.log') != ''

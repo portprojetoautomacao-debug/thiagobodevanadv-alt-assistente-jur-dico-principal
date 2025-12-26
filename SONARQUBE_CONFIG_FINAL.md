@@ -31,7 +31,7 @@ A configuração do SonarLint foi **100% concluída** de acordo com a documenta�
 ```json
 {
   "sonarlint.connectedMode.project": {
-    "projectKey": "thiagobodevan-a11y_assistente-juridico-p",
+    "projectKey": "portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal",
     "connectionId": "sonarcloud-assistente-juridico"
   }
 }
@@ -134,7 +134,7 @@ Na Activity Bar → SonarQube:
 CONNECTED MODE
   └─ sonarcloud-assistente-juridico (connected ✅)
       └─ assistente-juridico-p
-          ├─ Project Key: thiagobodevan-a11y_assistente-juridico-p
+          ├─ Project Key: portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal
           └─ Binding: Active ✅
 ```
 
@@ -181,7 +181,7 @@ A configuração em `.vscode/settings.json` já está pronta para compartilhar:
     }
   ],
   "sonarlint.connectedMode.project": {
-    "projectKey": "thiagobodevan-a11y_assistente-juridico-p",
+    "projectKey": "portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal",
     "connectionId": "sonarcloud-assistente-juridico"
   }
 }
@@ -216,7 +216,7 @@ A configuração em `.vscode/settings.json` já está pronta para compartilhar:
 ### Binding não funciona
 
 1. Verifique se o projeto existe:
-   - https://sonarcloud.io/project/overview?id=thiagobodevan-a11y_assistente-juridico-p
+   - https://sonarcloud.io/project/overview?id=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal
 
 2. Verifique permissões no SonarCloud
 

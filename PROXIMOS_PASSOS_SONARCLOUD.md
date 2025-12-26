@@ -123,7 +123,7 @@ Após configurar, você terá via Copilot:
 
 ## 🔗 Links Úteis
 
-- **Dashboard**: https://sonarcloud.io/project/overview?id=thiagobodevan-a11y_assistente-juridico-p
+- **Dashboard**: https://sonarcloud.io/project/overview?id=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal
 - **API Docs**: https://sonarcloud.io/web_api
 - **Gerar Token**: https://sonarcloud.io/account/security
 - **Documentação completa**: `SONARCLOUD_MCP_FIXED.md`

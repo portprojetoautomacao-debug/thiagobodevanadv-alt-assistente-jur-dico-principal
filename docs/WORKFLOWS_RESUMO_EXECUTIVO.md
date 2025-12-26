@@ -111,7 +111,7 @@ graph TD
 
 ### Imediatas (Hoje)
 - [ ] Executar `./scripts/configure-branch-protection.sh`
-- [ ] Verificar configuração: https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal/settings/branches
+- [ ] Verificar configuração: https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/settings/branches
 - [ ] Testar com um PR dummy
 
 ### Curto Prazo (Esta Semana)
@@ -184,8 +184,8 @@ Múltiplas camadas de validação (CI → Aprovação → Deploy).
 ## 📞 Suporte
 
 - **Documentação**: `docs/WORKFLOWS_SEGUROS_E_BRANCH_PROTECTION.md`
-- **Issues**: https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal/issues
-- **Logs de CI**: https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal/actions
+- **Issues**: https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/issues
+- **Logs de CI**: https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/actions
 
 ---
 

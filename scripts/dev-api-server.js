@@ -1,3 +1,4 @@
+// @ts-check
 #!/usr/bin/env node
 // Simple local API server for E2E testing
 // Serves minimal endpoints required by tests: /api/pje-sync, /api/expedientes, /api/kv

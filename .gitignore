@@ -150,3 +150,9 @@ src/lib/tolkitagentetest/
 *.debug.ts
 console-*.txt
 console-*.log
+
+# Claude Skills reference (não versionar)
+.claude/anthropic-skills-reference/
+.claude/skills-inventory.json
+.claude/skills/test-validation.js
+!.vscode/launch.example.json

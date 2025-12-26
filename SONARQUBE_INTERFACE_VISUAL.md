@@ -116,7 +116,7 @@ CONNECTED MODE
 1. **Clique em**: `Bind Project to this Connection`
 
 2. **Selecione o projeto** da lista:
-   - Procure por: `thiagobodevan-a11y_assistente-juridico-p`
+   - Procure por: `portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal`
    - **Clique** no projeto
 
 3. **Confirme o binding**
@@ -128,7 +128,7 @@ CONNECTED MODE
   └─ SonarCloud Assistente Jurídico (connected)
       └─ Projects
           └─ assistente-juridico-p
-              ├─ Project Key: thiagobodevan-a11y_assistente-juridico-p
+              ├─ Project Key: portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal
               └─ Binding: Active ✅
 ```
 
@@ -201,7 +201,7 @@ Se preferir, você pode configurar via `settings.json`:
     }
   ],
   "sonarlint.connectedMode.project": {
-    "projectKey": "thiagobodevan-a11y_assistente-juridico-p"
+    "projectKey": "portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal"
   }
 }
 ```
@@ -220,7 +220,7 @@ A extensão cria automaticamente um arquivo `.sonarlint/binding.json` no projeto
 ```json
 {
   "connectionId": "thiagobodevan-a11y-assistente-juridico-p",
-  "projectKey": "thiagobodevan-a11y_assistente-juridico-p"
+  "projectKey": "portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal"
 }
 ```
 
@@ -243,7 +243,7 @@ No arquivo `.vscode/settings.json` (já configurado):
     }
   ],
   "sonarlint.connectedMode.project": {
-    "projectKey": "thiagobodevan-a11y_assistente-juridico-p"
+    "projectKey": "portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal"
   }
 }
 ```
@@ -286,7 +286,7 @@ Resposta esperada: `{"valid":true}`
 ### Binding não funciona
 
 1. Verifique se o projeto existe no SonarCloud:
-   - https://sonarcloud.io/project/overview?id=thiagobodevan-a11y_assistente-juridico-p
+   - https://sonarcloud.io/project/overview?id=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal
 
 2. Verifique se você tem permissão no projeto
 

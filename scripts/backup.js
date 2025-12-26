@@ -12,7 +12,7 @@ function main() {
   const args = process.argv.slice(2);
   const type =
     args.find((arg) => arg.startsWith("--type="))?.split("=")[1] || "daily";
-  const retention = parseInt(
+  const retention = Number.parseInt(
     args.find((arg) => arg.startsWith("--retention="))?.split("=")[1] || "7"
   );
 

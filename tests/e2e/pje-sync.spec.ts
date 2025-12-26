@@ -7,11 +7,10 @@ test.describe("PJe Sync E2E", () => {
 
   test("should return 401 with invalid api key and 200 with valid key (expedientes)", async ({
     request,
-    page,
   }) => {
     // invalid key -> 401
     const invalidResp = await request.post(`${apiBase}/pje-sync`, {
-      headers: { "Content-Type": "application/json", "X-API-Key": "invalid-key" },
+      headers: { "Content-Type": "application/json", "X-API-Key": "invalid-key-xxx" },
       data: { type: "SYNC_EXPEDIENTES", data: [] },
     });
     expect(invalidResp.status()).toBe(401);
@@ -46,7 +45,7 @@ test.describe("PJe Sync E2E", () => {
     const expJson = await expedienteResp.json();
     expect(Array.isArray(expJson.expedientes)).toBe(true);
 
-    const found = expJson.expedientes.find((e: any) => e.id === "e2e-exp-1");
+    const found = expJson.expedientes.find((e: { id: string }) => e.id === "e2e-exp-1");
     expect(found).toBeTruthy();
   });
 
@@ -85,7 +84,7 @@ test.describe("PJe Sync E2E", () => {
     const expedJson = await expedResp.json();
     // Find by processNumber
     const found = expedJson.expedientes.find(
-      (e: any) =>
+      (e: { numeroProcesso?: string; processNumber?: string }) =>
         (e.numeroProcesso &&
           (e.numeroProcesso.includes(existingProcess.numero) ||
             e.numeroProcesso.includes(existingProcess.numeroFormatado))) ||

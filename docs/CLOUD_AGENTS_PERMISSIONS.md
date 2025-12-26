@@ -112,7 +112,7 @@ VERCEL_PROJECT_ID=xxxxx...
 
 ### Como Adicionar Secrets no GitHub
 
-1. Acesse: `https://github.com/thiagobodevan-a11y/assistente-juridico-p/settings/secrets/actions`
+1. Acesse: `https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/settings/secrets/actions`
 2. Clique em "New repository secret"
 3. Adicione cada secret com seu valor
 4. Clique "Add secret"
@@ -177,7 +177,7 @@ git push origin main
 ```
 
 ### Teste GitHub Actions:
-1. Acesse: https://github.com/thiagobodevan-a11y/assistente-juridico-p/actions
+1. Acesse: https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/actions
 2. Selecione qualquer workflow
 3. Clique "Run workflow"
 4. Verifique se executa sem erros de permissão
@@ -212,13 +212,13 @@ git push origin main
 
 **GitHub Actions Logs**:
 ```bash
-gh run list -R thiagobodevan-a11y/assistente-juridico-p
-gh run view <run_id> -R thiagobodevan-a11y/assistente-juridico-p
+gh run list -R portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
+gh run view <run_id> -R portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
 ```
 
 **Vercel Logs**:
 - Dashboard: https://vercel.com/dashboard
-- Deployments: https://vercel.com/dashboard/thiagobodevan-a11y/assistente-juridico-p
+- Deployments: https://vercel.com/dashboard/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
 
 **Sentry Monitoring**:
 - https://sentry.io/organizations/seu-org/issues/

@@ -10,7 +10,7 @@ import { spawn } from "child_process";
 const SONAR_CONFIG = {
   url: "https://sonarcloud.io",
   token: "405bd014cbac226c756dcff6e201e0fdfde36e23",
-  projectKey: "thiagobodevan-a11y_assistente-juridico-p",
+  projectKey: "portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal",
   organization: "thiagobodevan-a11y",
 };
 

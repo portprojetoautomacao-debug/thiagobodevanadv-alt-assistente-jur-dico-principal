@@ -257,7 +257,7 @@ MIT License - veja [LICENSE](../LICENSE) para detalhes
 ## 🆘 Suporte
 
 - **Documentação**: https://docs.assistente-juridico.com
-- **Issues**: https://github.com/thiagobodevan-a11y/assistente-juridico-p/issues
+- **Issues**: https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/issues
 - **Email**: thiago@assistente-juridico.com
 
 ## 🤝 Contribuindo

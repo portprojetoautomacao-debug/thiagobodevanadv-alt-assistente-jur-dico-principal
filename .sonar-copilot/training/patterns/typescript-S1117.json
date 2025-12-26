@@ -1,0 +1,54 @@
+[
+  {
+    "id": "typescript-S1117-1766619289716",
+    "ruleId": "typescript-S1117",
+    "filePath": "src/components/Test.tsx",
+    "timestamp": "2025-12-24T23:34:49.716Z",
+    "before": "let duplicate = 1; let duplicate = 2;",
+    "after": "let duplicate = 1; let duplicate2 = 2;",
+    "context": {
+      "severity": 2,
+      "line": 20
+    },
+    "effectiveness": "pending"
+  },
+  {
+    "id": "typescript-S1117-1766619339080",
+    "ruleId": "typescript-S1117",
+    "filePath": "src/components/Test.tsx",
+    "timestamp": "2025-12-24T23:35:39.081Z",
+    "before": "let duplicate = 1; let duplicate = 2;",
+    "after": "let duplicate = 1; let duplicate2 = 2;",
+    "context": {
+      "severity": 2,
+      "line": 20
+    },
+    "effectiveness": "pending"
+  },
+  {
+    "id": "typescript-S1117-1766619518731",
+    "ruleId": "typescript-S1117",
+    "filePath": "src/components/Test.tsx",
+    "timestamp": "2025-12-24T23:38:38.731Z",
+    "before": "let duplicate = 1; let duplicate = 2;",
+    "after": "let duplicate = 1; let duplicate2 = 2;",
+    "context": {
+      "severity": 2,
+      "line": 20
+    },
+    "effectiveness": "pending"
+  },
+  {
+    "id": "typescript-S1117-1766619663588",
+    "ruleId": "typescript-S1117",
+    "filePath": "src/components/Test.tsx",
+    "timestamp": "2025-12-24T23:41:03.588Z",
+    "before": "let duplicate = 1; let duplicate = 2;",
+    "after": "let duplicate = 1; let duplicate2 = 2;",
+    "context": {
+      "severity": 2,
+      "line": 20
+    },
+    "effectiveness": "pending"
+  }
+]

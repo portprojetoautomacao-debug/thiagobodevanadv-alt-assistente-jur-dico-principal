@@ -17,7 +17,7 @@ O sistema está configurado com 4 tipos de emails:
 
 ### 1️⃣ Adicione as Secrets no GitHub
 
-Visite: https://github.com/thiagobodevan-a11y/assistente-juridico-p/settings/secrets/actions
+Visite: https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/settings/secrets/actions
 
 **Adicione 1 secret:**
 - **Name**: `RESEND_API_KEY`
@@ -215,7 +215,7 @@ Acompanhe emails enviados no Resend:
 ### Erro: "Not authorized"
 
 A secret precisa estar no GitHub primeiro:
-- https://github.com/thiagobodevan-a11y/assistente-juridico-p/settings/secrets/actions
+- https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/settings/secrets/actions
 
 ### Email llegando à pasta de spam
 

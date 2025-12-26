@@ -136,7 +136,7 @@ remove_agent_graphql() {
 
     # Query GraphQL para obter ID do agente
     query="query {
-      project(fullPath: \"thiagobodevan-a11y/assistente-juridico-p\") {
+      project(fullPath: \"portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal\") {
         clusterAgent(name: \"$agent_name\") {
           id
           tokens {

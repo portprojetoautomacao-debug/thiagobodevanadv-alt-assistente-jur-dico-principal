@@ -326,7 +326,7 @@ npm run test
 npm run build
 
 # Verificar status de CI
-curl -s "https://api.github.com/repos/thiagobodevanadv-alt/assistente-jur-dico-principal/pulls/44/checks" | jq '.check_runs[] | select(.conclusion == "failure") | .name'
+curl -s "https://api.github.com/repos/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/pulls/44/checks" | jq '.check_runs[] | select(.conclusion == "failure") | .name'
 ```
 
 ---

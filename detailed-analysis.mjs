@@ -6,7 +6,7 @@
 const SONAR_CONFIG = {
   url: "https://sonarcloud.io",
   token: process.env.SONAR_TOKEN,
-  projectKey: "thiagobodevan-a11y_assistente-juridico-p",
+  projectKey: "portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal",
 };
 
 

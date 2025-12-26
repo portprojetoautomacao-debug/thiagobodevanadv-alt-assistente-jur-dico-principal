@@ -10,7 +10,7 @@ echo "================================================"
 echo ""
 
 # URL do GitLab
-GITLAB_URL="https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/clusters"
+GITLAB_URL="https://gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/-/clusters"
 
 echo "🌐 Abrindo navegador na página do GitLab..."
 echo "   URL: $GITLAB_URL"

@@ -28,7 +28,7 @@ Arquivo `.vscode/mcp.json` configurado com:
         "SONARQUBE_URL": "https://sonarcloud.io",
         "SONARQUBE_TOKEN": "${env:SONARQUBE_TOKEN}",
         "SONARQUBE_ORGANIZATION": "thiagobodevan-a11y-assistente-juridico-p",
-        "SONARQUBE_PROJECT_KEY": "thiagobodevan-a11y_assistente-juridico-p"
+        "SONARQUBE_PROJECT_KEY": "portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal"
       }
     }
   }
@@ -113,7 +113,7 @@ Para testar se está funcionando:
 
 ## 🔗 Links Úteis
 
-- **Dashboard**: https://sonarcloud.io/project/overview?id=thiagobodevan-a11y_assistente-juridico-p
+- **Dashboard**: https://sonarcloud.io/project/overview?id=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal
 - **API Docs**: https://sonarcloud.io/web_api
 - **Tokens**: https://sonarcloud.io/account/security
 

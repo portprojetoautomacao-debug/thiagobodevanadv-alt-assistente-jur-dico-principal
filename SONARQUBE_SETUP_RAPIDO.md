@@ -71,7 +71,7 @@ echo "SONARQUBE_TOKEN=seu_token_aqui" >> .env
 5. **Clique em** "Save Connection"
 6. **Bind o projeto**:
    - Na mesma interface, clique em "Bind Project"
-   - **Project Key**: `thiagobodevan-a11y_assistente-juridico-p`
+   - **Project Key**: `portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal`
    - Confirme
 
 ### 4️⃣ Verificar Conexão
@@ -150,8 +150,8 @@ Execute este comando para verificar tudo:
 |------|-------|
 | **URL SonarCloud** | https://sonarcloud.io |
 | **Organização** | `thiagobodevan-a11y-assistente-juridico-p` |
-| **Projeto** | `thiagobodevan-a11y_assistente-juridico-p` |
-| **URL do Projeto** | https://sonarcloud.io/project/overview?id=thiagobodevan-a11y_assistente-juridico-p |
+| **Projeto** | `portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal` |
+| **URL do Projeto** | https://sonarcloud.io/project/overview?id=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal |
 
 ---
 

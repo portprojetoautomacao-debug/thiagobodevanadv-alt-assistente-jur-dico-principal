@@ -7,7 +7,7 @@
 const SONAR_CONFIG = {
   url: "https://sonarcloud.io",
   token: "405bd014cbac226c756dcff6e201e0fdfde36e23",
-  projectKey: "thiagobodevan-a11y_assistente-juridico-p",
+  projectKey: "portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal",
   organization: "thiagobodevan-a11y",
 };
 
@@ -174,7 +174,7 @@ async function analyzeTechnicalDebt() {
 
   debt.component.measures.forEach((m) => {
     if (m.metric === "sqale_index") {
-      const minutes = parseInt(m.value);
+      const minutes = Number.parseInt(m.value);
       const hours = Math.floor(minutes / 60);
       const days = Math.floor(hours / 8);
       console.log(`⏱️  Dívida Técnica Total: ${minutes}min (${hours}h ou ${days} dias úteis)`);

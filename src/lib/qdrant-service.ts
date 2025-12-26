@@ -211,7 +211,7 @@ export class QdrantService {
       throw new Error("Vector length must be between 1 and 10000");
     }
 
-    if (vector.some((v) => typeof v !== "number" || !isFinite(v))) {
+    if (vector.some((v) => typeof v !== "number" || !Number.isFinite(v))) {
       throw new Error("Vector must contain only finite numbers");
     }
     // If collection vector size is known, enforce it

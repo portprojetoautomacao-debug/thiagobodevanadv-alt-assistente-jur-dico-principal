@@ -91,8 +91,28 @@ updates:
       - "docker"
       - "automated"
     commit-message:
-      prefix: "chore"
+      prefix: "chore(docker)"
       include: "scope"
+
+  # GitHub Actions - Atualiza actions dos workflows
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/Sao_Paulo"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "github-actions"
+      - "automated"
+      - "automerge"
+    commit-message:
+      prefix: "fix(workflows)"
+      include: "scope"
+    assignees:
+      - "portprojetoautomacao-debug"
 
   - package-ecosystem: "devcontainers"
     directory: "/"
