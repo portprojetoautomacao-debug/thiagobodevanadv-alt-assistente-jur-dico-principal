@@ -2,11 +2,16 @@
 
 ## ✅ Status: TODOS IMPLEMENTADOS E INTEGRADOS (Última atualização: 26/12/2025)
 
+**Versão**: 2.1.0 (com Heavy Processor + AOP Logging)
+
 Este documento lista todos os 15 agentes IA do sistema jurídico, suas funções, capacidades, status de implementação e integração com arquitetura híbrida (LangGraph + Traditional).
 
 > **⚠️ SISTEMA CRÍTICO**: A Hybrid Agents Integration é **OBRIGATÓRIA** e deve estar **sempre ativa** em todos os ambientes (desenvolvimento, manutenção e produção). Configure `HYBRID_AGENTS_DISABLED=false` permanentemente.
 
-> **⚡ NOVO**: Heavy Processor Microservice (Java 21 + Virtual Threads) disponível para processamento pesado. Ative com `VITE_HEAVY_PROCESSOR_ENABLED=true`. Detecção automática quando volume > 10 expedientes ou PDFs complexos.
+> **⚡ NOVO (26/12/2025)**:
+> - **Heavy Processor Microservice** (Java 21 + Virtual Threads) - 50x mais rápido, detecção automática quando volume > 10 expedientes
+> - **AOP Logging System** - Logging inspirado em Spring Boot com decorators TypeScript (@LogAgent, @LogMethod)
+> - Configurações: `VITE_HEAVY_PROCESSOR_ENABLED=true` + `experimentalDecorators: true`
 
 ---
 
@@ -46,13 +51,24 @@ Este documento lista todos os 15 agentes IA do sistema jurídico, suas funções
 
 **Heavy Processor Microservice (Java 21):**
 - **Sistema OPCIONAL** - Microserviço externo para processamento pesado
-- **Performance**: 50x mais rápido que processamento local Node.js
+- **Performance**: 50x mais rápido que processamento local Node.js (281 req/s vs 5 req/s)
 - **Uso**: Automaticamente ativado quando volume > 10 expedientes ou PDFs complexos
-- **Virtual Threads**: Milhões de threads concorrentes com ~2 KB memória cada
+- **Virtual Threads**: Milhões de threads concorrentes com ~2 KB memória cada (vs 2 MB threads nativas)
 - **Integração**: `src/services/heavy-processor-client.ts` + `src/lib/heavy-processor-helper.ts`
 - **Configuração**: `VITE_HEAVY_PROCESSOR_ENABLED=true` em `.env.local`
-- **Documentação**: `microservices/heavy-processor/README.md`
+- **Documentação**: `microservices/heavy-processor/README.md` + `VIRTUAL_THREADS_VALIDATION.md`
 - **Casos de uso**: Extração de PDFs, sincronização em lote, análise massiva
+- **Deploy**: Railway, Google Cloud Run, AWS ECS, ou local
+
+**AOP Logging System (TypeScript):**
+- **Sistema INTEGRADO** - Logging automático inspirado em Spring Boot AOP
+- **Decorators**: `@LogAgent(id)`, `@LogMethod()`, `@LogController()`, `@LogService()`
+- **Request Context**: AsyncLocalStorage com CorrelationId único por request
+- **Features**: Performance monitoring, exception handling, PII sanitization (LGPD)
+- **Implementação**: `src/lib/aop-logging.ts` (394 LOC) + 14 testes (100% passando)
+- **Documentação**: `docs/AOP_LOGGING_SYSTEM.md` (10 seções)
+- **Uso**: Decorar métodos de agentes para observabilidade automática
+- **Exemplos**: `src/lib/aop-logging-examples.ts` (6 exemplos completos)
 
 ---
 
@@ -780,16 +796,28 @@ const { streamingContent, isStreaming } = useAIStreaming({
 - [src/lib/real-agent-client.ts](./src/lib/real-agent-client.ts) - Cliente com streaming
 - [src/lib/agents.ts](./src/lib/agents.ts) - Implementação core
 
-### Heavy Processor Microservice
+### Heavy Processor Microservice (Java 21)
 - [microservices/heavy-processor/README.md](./microservices/heavy-processor/README.md) - Guia completo
 - [microservices/heavy-processor/VIRTUAL_THREADS_VALIDATION.md](./microservices/heavy-processor/VIRTUAL_THREADS_VALIDATION.md) - Validação técnica
 - [HEAVY_PROCESSOR_SUMMARY.md](./HEAVY_PROCESSOR_SUMMARY.md) - Resumo da implementação
 - [docs/HEAVY_PROCESSOR_INDEX.md](./docs/HEAVY_PROCESSOR_INDEX.md) - Índice consolidado
 - [src/services/heavy-processor-client.ts](./src/services/heavy-processor-client.ts) - Cliente TypeScript
 - [src/lib/heavy-processor-helper.ts](./src/lib/heavy-processor-helper.ts) - Helper de integração
+- [microservices/heavy-processor/test-load.js](./microservices/heavy-processor/test-load.js) - Teste k6
+
+### AOP Logging System (TypeScript)
+- [docs/AOP_LOGGING_SYSTEM.md](./docs/AOP_LOGGING_SYSTEM.md) - Documentação completa (10 seções)
+- [src/lib/aop-logging.ts](./src/lib/aop-logging.ts) - Core implementation (394 LOC)
+- [src/lib/aop-logging-examples.ts](./src/lib/aop-logging-examples.ts) - 6 exemplos completos
+- [src/lib/aop-logging.test.ts](./src/lib/aop-logging.test.ts) - 14 testes unitários
+- [src/lib/document-sanitizer.ts](./src/lib/document-sanitizer.ts) - PII filtering (LGPD)
 
 ---
 
-**Última atualização:** 26/12/2025
-**Versão:** 2.1.0 (com Heavy Processor)
+**Última atualização:** 26/12/2025 (17:30 BRT)
+**Versão:** 2.1.0 (Heavy Processor + AOP Logging)
 **Status:** ✅ Produção
+**Deploy:** Vercel (automático via main branch)
+**Commits recentes:**
+- `07b05759` - AOP Logging System implementado
+- Heavy Processor Microservice (Java 21 + Virtual Threads)
