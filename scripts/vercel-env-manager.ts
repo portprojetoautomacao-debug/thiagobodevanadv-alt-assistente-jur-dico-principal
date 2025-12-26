@@ -147,36 +147,44 @@ async function addEnvVar (
 }
 
 /**
- * Remove uma variável de ambiente
+ * Remove uma variável de ambiente (todas as instâncias)
  */
 async function removeEnvVar ( key: string )
 {
   try
   {
-    console.log( `🗑️ Removendo variável: ${ key }\n` );
+    console.log( `🗑️ Removendo variável: ${ key } (todas as instâncias)\n` );
 
-    // Primeiro, buscar o ID da variável
+    // Primeiro, buscar todas as instâncias da variável
     const envs = await vercel.projects.filterProjectEnvs( {
       idOrName: PROJECT_ID,
     } );
 
     if ( 'envs' in envs && Array.isArray( envs.envs ) )
     {
-      const envVar = envs.envs.find( ( env ) => env.key === key );
+      const envVars = envs.envs.filter( ( env ) => env.key === key );
 
-      if ( !envVar )
+      if ( envVars.length === 0 )
       {
         console.log( '⚠️ Variável não encontrada' );
         return;
       }
 
-      // Remover a variável
-      await vercel.projects.removeProjectEnv( {
-        idOrName: PROJECT_ID,
-        id: envVar.id,
-      } );
+      console.log( `   Encontradas ${ envVars.length } instâncias` );
 
-      console.log( '✅ Variável removida com sucesso!' );
+      // Remover todas as instâncias
+      let removed = 0;
+      for ( const envVar of envVars )
+      {
+        await vercel.projects.removeProjectEnv( {
+          idOrName: PROJECT_ID,
+          id: envVar.id,
+        } );
+        removed++;
+        console.log( `   ✓ Removida instância ${ removed }/${ envVars.length } (ID: ${ envVar.id })` );
+      }
+
+      console.log( `\n✅ ${ removed } instâncias removidas com sucesso!` );
     }
   } catch ( error )
   {
