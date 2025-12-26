@@ -21,6 +21,5 @@
       },
     },
     "sonarlint.output.showVerboseLogs": true,
-    "java.compile.nullAnalysis.mode": "automatic",
   },
 }
