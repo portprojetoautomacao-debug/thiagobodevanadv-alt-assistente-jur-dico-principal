@@ -167,7 +167,7 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[jsonc]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "vscode.json-language-features"
   },
   "[markdown]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
@@ -591,5 +591,6 @@
         "copilot/oswe-vscode-prime"
       ]
     }
-  }
+  },
+  "java.compile.nullAnalysis.mode": "automatic"
 }
