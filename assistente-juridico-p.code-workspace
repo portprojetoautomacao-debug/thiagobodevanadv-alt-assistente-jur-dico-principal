@@ -2,23 +2,24 @@
   "folders": [
     {
       "path": ".",
-      "name": "Assistente Jurídico"
+      "name": "Assistente Jurídico",
     },
     {
       "path": "chrome-extension-pje",
-      "name": "Chrome Extension PJe"
-    }
+      "name": "Chrome Extension PJe",
+    },
   ],
   "settings": {
-    "sonarlint.disableTelemetry": true,
+    "sonarlint.disableTelemetry": false,
     "sonarlint.automaticAnalysis": true,
     "vitest.workspaceConfig": {
       "Assistente Jurídico": {
-        "configPath": "vitest.config.node.ts"
+        "configPath": "vitest.config.node.ts",
       },
       "Chrome Extension PJe": {
-        "configPath": "vitest.config.ts"
-      }
-    }
-  }
+        "configPath": "vitest.config.ts",
+      },
+    },
+    "sonarlint.output.showVerboseLogs": true,
+  },
 }

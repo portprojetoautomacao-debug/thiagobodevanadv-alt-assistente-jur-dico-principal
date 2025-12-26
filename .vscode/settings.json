@@ -49,6 +49,85 @@
   ],
 
   // ========================================
+  // 🔍 SONARLINT - ANÁLISE DE QUALIDADE
+  // ========================================
+
+  // Telemetria DESABILITADA para privacidade
+  "sonarlint.disableTelemetry": true,
+
+  // Análise automática HABILITADA (análise em tempo real)
+  "sonarlint.automaticAnalysis.enabled": true,
+  "sonarlint.automaticAnalysis.onSave": true,
+  "sonarlint.automaticAnalysis.onType": true,
+
+  // Connected Mode com SonarCloud
+  "sonarlint.connectedMode.project": {
+    "connectionId": "sonarcloud",
+    "projectKey": "portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal"
+  },
+
+  // Notificações de servidor habilitadas
+  "sonarlint.notifications.enabled": true,
+  "sonarlint.notifications.showOnceMessages": true,
+
+  // Focus em New Code (Clean as You Code)
+  "sonarlint.focusOnNewCode": true,
+
+  // Mostrar todas as localizações de issues
+  "sonarlint.showAllLocations": true,
+
+  // Quick fixes automáticos
+  "sonarlint.quickfixes.enabled": true,
+
+  // Security hotspots
+  "sonarlint.hotspots.enabled": true,
+
+  // Taint vulnerabilities (vulnerabilidades de fluxo de dados)
+  "sonarlint.taintVulnerabilities.enabled": true,
+
+  // IDE Labs features (experimental)
+  "sonarlint.ideLabs.enabled": true,
+
+  // Regras customizadas para TypeScript/JavaScript
+  "sonarlint.rules": {
+    // Segurança - HABILITADAS
+    "typescript:S2245": { "level": "on" }, // Geração de números aleatórios inseguros
+    "typescript:S4426": { "level": "on" }, // Algoritmos criptográficos fracos
+    "typescript:S5852": { "level": "on" }, // RegEx vulneráveis (ReDoS)
+    "typescript:S6268": { "level": "on" }, // Angular template XSS
+    "typescript:S6303": { "level": "on" }, // React XSS via dangerouslySetInnerHTML
+
+    // Code Smells - HABILITADAS
+    "typescript:S1481": { "level": "on" }, // Variáveis não utilizadas
+    "typescript:S1854": { "level": "on" }, // Valores atribuídos não utilizados
+    "typescript:S1172": { "level": "on" }, // Parâmetros não utilizados
+    "typescript:S3776": { "level": "on" }, // Complexidade cognitiva
+    "typescript:S138": { "level": "on" }, // Funções com muitas linhas
+    "typescript:S1067": { "level": "on" }, // Expressões complexas
+
+    // Bugs - HABILITADAS
+    "typescript:S1656": { "level": "on" }, // Atribuição em condições
+    "typescript:S1862": { "level": "on" }, // Branches idênticos
+    "typescript:S2737": { "level": "on" }, // catch vazio
+    "typescript:S3358": { "level": "on" }, // Operador ternário sem efeito
+    "typescript:S2201": { "level": "on" }, // Return de função ignorado
+
+    // React específico
+    "typescript:S6477": { "level": "on" }, // Hook dependencies incorretos
+    "typescript:S6440": { "level": "on" }, // State mutations diretas
+
+    // Desabilitadas (muito rigorosas para este projeto)
+    "typescript:S117": { "level": "off" }, // Naming conventions (muito restritivo)
+    "typescript:S125": { "level": "off" }, // Commented out code (útil durante dev)
+    "typescript:S1128": { "level": "off" } // Imports não utilizados (false positives)
+  },
+
+  // Arquivos ignorados pelo SonarLint
+  "sonarlint.pathToNodeExecutable": "/usr/local/share/nvm/versions/node/v22.21.1/bin/node",
+  "sonarlint.output.showVerboseLogs": false,
+  "sonarlint.output.showAnalyzerLogs": false,
+
+  // ========================================
   // 📝 EDITOR - AUTOMAÇÃO E FORMATAÇÃO
   // ========================================
 
