@@ -7,16 +7,14 @@
 
 import { BlobServiceClient, BlockBlobClient, ContainerClient } from "@azure/storage-blob";
 
-export interface AzureStorageConfig
-{
+export interface AzureStorageConfig {
   connectionString?: string;
   accountName?: string;
   accountKey?: string;
   containerName: string;
 }
 
-export interface UploadResult
-{
+export interface UploadResult {
   success: boolean;
   blobName: string;
   url: string;
@@ -26,8 +24,7 @@ export interface UploadResult
   error?: string;
 }
 
-export interface ProcessDocument
-{
+export interface ProcessDocument {
   id: string;
   processNumber: string;
   fileName: string;
@@ -45,14 +42,12 @@ export interface ProcessDocument
 /**
  * Serviço de integração com Azure Blob Storage
  */
-export class AzureBlobStorageService
-{
+export class AzureBlobStorageService {
   private blobServiceClient: BlobServiceClient | null = null;
   private containerClient: ContainerClient | null = null;
   private config: AzureStorageConfig;
 
-  constructor ( config?: Partial<AzureStorageConfig> )
-  {
+  constructor(config?: Partial<AzureStorageConfig>) {
     this.config = {
       connectionString: import.meta.env.VITE_AZURE_STORAGE_CONNECTION_STRING,
       accountName: import.meta.env.VITE_AZURE_STORAGE_ACCOUNT_NAME,
@@ -65,49 +60,35 @@ export class AzureBlobStorageService
   /**
    * Inicializa conexão com Azure Blob Storage
    */
-  async initialize (): Promise<boolean>
-  {
-    try
-    {
+  async initialize(): Promise<boolean> {
+    try {
       // Prioridade: Connection String > Account Name + Key
-      if ( this.config.connectionString )
-      {
+      if (this.config.connectionString) {
         this.blobServiceClient = BlobServiceClient.fromConnectionString(
           this.config.connectionString
         );
-      } else if ( this.config.accountName && this.config.accountKey )
-      {
-        const accountUrl = `https://${ this.config.accountName }.blob.core.windows.net`;
+      } else if (this.config.accountName && this.config.accountKey) {
+        const accountUrl = `https://${this.config.accountName}.blob.core.windows.net`;
         this.blobServiceClient = BlobServiceClient.fromConnectionString(
-          `DefaultEndpointsProtocol=https;AccountName=${ this.config.accountName };AccountKey=${ this.config.accountKey };EndpointSuffix=core.windows.net`
+          `DefaultEndpointsProtocol=https;AccountName=${this.config.accountName};AccountKey=${this.config.accountKey};EndpointSuffix=core.windows.net`
         );
-      } else
-      {
-        console.error( "[Azure Storage] Credenciais não configuradas" );
+      } else {
+        console.error("[Azure Storage] Credenciais não configuradas");
         return false;
       }
 
       // Obter container client
-      this.containerClient = this.blobServiceClient.getContainerClient(
-        this.config.containerName
-      );
+      this.containerClient = this.blobServiceClient.getContainerClient(this.config.containerName);
 
       // Criar container se não existir
-      await this.containerClient.createIfNotExists( {
+      await this.containerClient.createIfNotExists({
         access: "private",
-      } );
+      });
 
-      const isAzurite = this.config.connectionString?.includes( '127.0.0.1' ) ||
-        this.config.connectionString?.includes( 'localhost' );
-
-      console.log(
-        `[Azure Storage] ✅ Conectado ao container: ${ this.config.containerName }`,
-        isAzurite ? '(Azurite - Emulador Local)' : '(Azure Cloud)'
-      );
+      console.log(`[Azure Storage] ✅ Conectado ao container: ${this.config.containerName}`);
       return true;
-    } catch ( error )
-    {
-      console.error( "[Azure Storage] Erro ao inicializar:", error );
+    } catch (error) {
+      console.error("[Azure Storage] Erro ao inicializar:", error);
       return false;
     }
   }
@@ -115,34 +96,29 @@ export class AzureBlobStorageService
   /**
    * Upload de arquivo para Azure Blob Storage
    */
-  async uploadFile (
+  async uploadFile(
     file: File,
     processNumber: string,
     metadata?: Record<string, string>
-  ): Promise<UploadResult>
-  {
-    try
-    {
-      if ( !this.containerClient )
-      {
+  ): Promise<UploadResult> {
+    try {
+      if (!this.containerClient) {
         await this.initialize();
       }
 
-      if ( !this.containerClient )
-      {
-        throw new Error( "Container client não inicializado" );
+      if (!this.containerClient) {
+        throw new Error("Container client não inicializado");
       }
 
       // Gerar nome único para o blob
       const timestamp = Date.now();
-      const sanitizedFileName = file.name.replace( /[^a-zA-Z0-9.-]/g, "_" );
-      const blobName = `${ processNumber }/${ timestamp }_${ sanitizedFileName }`;
+      const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
+      const blobName = `${processNumber}/${timestamp}_${sanitizedFileName}`;
 
       // Upload do arquivo
-      const blockBlobClient: BlockBlobClient =
-        this.containerClient.getBlockBlobClient( blobName );
+      const blockBlobClient: BlockBlobClient = this.containerClient.getBlockBlobClient(blobName);
 
-      const uploadBlobResponse = await blockBlobClient.uploadData( file, {
+      const uploadBlobResponse = await blockBlobClient.uploadData(file, {
         blobHTTPHeaders: {
           blobContentType: file.type || "application/pdf",
         },
@@ -152,12 +128,9 @@ export class AzureBlobStorageService
           uploadedAt: new Date().toISOString(),
           ...metadata,
         },
-      } );
+      });
 
-      console.log(
-        `[Azure Storage] ✅ Upload concluído: ${ blobName }`,
-        uploadBlobResponse.requestId
-      );
+      console.log(`[Azure Storage] ✅ Upload concluído: ${blobName}`, uploadBlobResponse.requestId);
 
       return {
         success: true,
@@ -167,9 +140,8 @@ export class AzureBlobStorageService
         contentType: file.type,
         uploadedAt: new Date(),
       };
-    } catch ( error )
-    {
-      console.error( "[Azure Storage] Erro no upload:", error );
+    } catch (error) {
+      console.error("[Azure Storage] Erro no upload:", error);
       return {
         success: false,
         blobName: "",
@@ -185,46 +157,40 @@ export class AzureBlobStorageService
   /**
    * Lista arquivos de um processo
    */
-  async listProcessFiles ( processNumber: string ): Promise<ProcessDocument[]>
-  {
-    try
-    {
-      if ( !this.containerClient )
-      {
+  async listProcessFiles(processNumber: string): Promise<ProcessDocument[]> {
+    try {
+      if (!this.containerClient) {
         await this.initialize();
       }
 
-      if ( !this.containerClient )
-      {
-        throw new Error( "Container client não inicializado" );
+      if (!this.containerClient) {
+        throw new Error("Container client não inicializado");
       }
 
       const documents: ProcessDocument[] = [];
-      const prefix = `${ processNumber }/`;
+      const prefix = `${processNumber}/`;
 
-      for await ( const blob of this.containerClient.listBlobsFlat( { prefix } ) )
-      {
-        const blockBlobClient = this.containerClient.getBlockBlobClient( blob.name );
+      for await (const blob of this.containerClient.listBlobsFlat({ prefix })) {
+        const blockBlobClient = this.containerClient.getBlockBlobClient(blob.name);
         const properties = await blockBlobClient.getProperties();
 
-        documents.push( {
+        documents.push({
           id: blob.name,
           processNumber,
-          fileName: blob.name.split( "/" ).pop() || blob.name,
+          fileName: blob.name.split("/").pop() || blob.name,
           blobName: blob.name,
           url: blockBlobClient.url,
           size: blob.properties.contentLength || 0,
           contentType: blob.properties.contentType || "application/pdf",
           uploadedAt: blob.properties.createdOn || new Date(),
-          status: properties.metadata?.status as any || "pending",
+          status: (properties.metadata?.status as any) || "pending",
           metadata: properties.metadata,
-        } );
+        });
       }
 
       return documents;
-    } catch ( error )
-    {
-      console.error( "[Azure Storage] Erro ao listar arquivos:", error );
+    } catch (error) {
+      console.error("[Azure Storage] Erro ao listar arquivos:", error);
       return [];
     }
   }
@@ -232,47 +198,40 @@ export class AzureBlobStorageService
   /**
    * Download de arquivo do blob storage
    */
-  async downloadFile ( blobName: string ): Promise<Blob | null>
-  {
-    try
-    {
-      if ( !this.containerClient )
-      {
+  async downloadFile(blobName: string): Promise<Blob | null> {
+    try {
+      if (!this.containerClient) {
         await this.initialize();
       }
 
-      if ( !this.containerClient )
-      {
-        throw new Error( "Container client não inicializado" );
+      if (!this.containerClient) {
+        throw new Error("Container client não inicializado");
       }
 
-      const blockBlobClient = this.containerClient.getBlockBlobClient( blobName );
+      const blockBlobClient = this.containerClient.getBlockBlobClient(blobName);
       const downloadResponse = await blockBlobClient.download();
 
-      if ( !downloadResponse.readableStreamBody )
-      {
-        throw new Error( "Stream de download vazio" );
+      if (!downloadResponse.readableStreamBody) {
+        throw new Error("Stream de download vazio");
       }
 
       // Converter stream para blob
       const chunks: Uint8Array[] = [];
       const reader = downloadResponse.readableStreamBody.getReader();
 
-      while ( true )
-      {
+      while (true) {
         const { done, value } = await reader.read();
-        if ( done ) break;
-        chunks.push( value );
+        if (done) break;
+        chunks.push(value);
       }
 
-      const blob = new Blob( chunks, {
+      const blob = new Blob(chunks, {
         type: downloadResponse.contentType || "application/pdf",
-      } );
+      });
 
       return blob;
-    } catch ( error )
-    {
-      console.error( "[Azure Storage] Erro no download:", error );
+    } catch (error) {
+      console.error("[Azure Storage] Erro no download:", error);
       return null;
     }
   }
@@ -280,28 +239,23 @@ export class AzureBlobStorageService
   /**
    * Deleta arquivo do blob storage
    */
-  async deleteFile ( blobName: string ): Promise<boolean>
-  {
-    try
-    {
-      if ( !this.containerClient )
-      {
+  async deleteFile(blobName: string): Promise<boolean> {
+    try {
+      if (!this.containerClient) {
         await this.initialize();
       }
 
-      if ( !this.containerClient )
-      {
-        throw new Error( "Container client não inicializado" );
+      if (!this.containerClient) {
+        throw new Error("Container client não inicializado");
       }
 
-      const blockBlobClient = this.containerClient.getBlockBlobClient( blobName );
+      const blockBlobClient = this.containerClient.getBlockBlobClient(blobName);
       await blockBlobClient.delete();
 
-      console.log( `[Azure Storage] ✅ Arquivo deletado: ${ blobName }` );
+      console.log(`[Azure Storage] ✅ Arquivo deletado: ${blobName}`);
       return true;
-    } catch ( error )
-    {
-      console.error( "[Azure Storage] Erro ao deletar:", error );
+    } catch (error) {
+      console.error("[Azure Storage] Erro ao deletar:", error);
       return false;
     }
   }
@@ -309,30 +263,22 @@ export class AzureBlobStorageService
   /**
    * Atualiza metadata de um blob
    */
-  async updateMetadata (
-    blobName: string,
-    metadata: Record<string, string>
-  ): Promise<boolean>
-  {
-    try
-    {
-      if ( !this.containerClient )
-      {
+  async updateMetadata(blobName: string, metadata: Record<string, string>): Promise<boolean> {
+    try {
+      if (!this.containerClient) {
         await this.initialize();
       }
 
-      if ( !this.containerClient )
-      {
-        throw new Error( "Container client não inicializado" );
+      if (!this.containerClient) {
+        throw new Error("Container client não inicializado");
       }
 
-      const blockBlobClient = this.containerClient.getBlockBlobClient( blobName );
-      await blockBlobClient.setMetadata( metadata );
+      const blockBlobClient = this.containerClient.getBlockBlobClient(blobName);
+      await blockBlobClient.setMetadata(metadata);
 
       return true;
-    } catch ( error )
-    {
-      console.error( "[Azure Storage] Erro ao atualizar metadata:", error );
+    } catch (error) {
+      console.error("[Azure Storage] Erro ao atualizar metadata:", error);
       return false;
     }
   }
@@ -340,25 +286,20 @@ export class AzureBlobStorageService
   /**
    * Verifica se container está configurado e acessível
    */
-  async healthCheck (): Promise<boolean>
-  {
-    try
-    {
-      if ( !this.containerClient )
-      {
+  async healthCheck(): Promise<boolean> {
+    try {
+      if (!this.containerClient) {
         await this.initialize();
       }
 
-      if ( !this.containerClient )
-      {
+      if (!this.containerClient) {
         return false;
       }
 
       await this.containerClient.exists();
       return true;
-    } catch ( error )
-    {
-      console.error( "[Azure Storage] Health check falhou:", error );
+    } catch (error) {
+      console.error("[Azure Storage] Health check falhou:", error);
       return false;
     }
   }
