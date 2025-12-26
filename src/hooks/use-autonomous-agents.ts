@@ -40,7 +40,7 @@ interface UseAutonomousAgentsReturn {
   isStreamingEnabled: boolean;
   serverLogs: AgentActionLog[];
   legalMemory: MemoryItem[];
-  addTask: (task: Omit<AgentTask, "id" | "createdAt" | "status">) => Promise<void>;
+  addTask: (task: AgentTask | Omit<AgentTask, "id" | "createdAt" | "status">) => Promise<void>;
   toggleAgent: (agentId: string) => Promise<void>;
   toggleStreaming: (enabled: boolean) => void;
   refreshServerData: () => Promise<void>;
@@ -56,6 +56,9 @@ const ACTIVITY_LOG_KEY = "activity-log";
 /**
  * Hook para gerenciar agentes autônomos 24/7
  * Fornece estado e controle para o sistema de agentes IA
+ * 
+ * @note streamingContent changed from string to Record<string, string> to support multiple agents.
+ * If migrating from previous version, clear browser storage/cache.
  */
 export function useAutonomousAgents(): UseAutonomousAgentsReturn {
   const [agentsData, updateAgents] = useKV<Agent[]>(AGENTS_KEY, []);
@@ -138,15 +141,13 @@ export function useAutonomousAgents(): UseAutonomousAgentsReturn {
     }
   }, [agents.length, updateAgents]);
 
-  // Adicionar nova tarefa
+  // Adicionar nova tarefa - aceita tarefa parcial ou completa
   const addTask = useCallback(
     async (
       taskData: AgentTask | Omit<AgentTask, "id" | "createdAt" | "status">
     ) => {
       try {
-        const generatedId = `task-${Date.now()}-${Math.random()
-          .toString(36)
-          .substring(2, 9)}`;
+        const generatedId = crypto.randomUUID();
         const now = new Date().toISOString();
 
         const newTask: AgentTask = {
@@ -163,18 +164,18 @@ export function useAutonomousAgents(): UseAutonomousAgentsReturn {
         };
 
         const updatedTasks = [...allTasks, newTask];
-        await updateTasks(updatedTasks);
+        updateTasks(updatedTasks);
 
         // Adicionar log de atividade
         const newLog: ActivityLog = {
-          id: `log-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-          agentId: taskData.agentId,
-          timestamp: new Date().toISOString(),
-          action: `Nova tarefa: ${taskData.type}`,
+          id: crypto.randomUUID(),
+          agentId: newTask.agentId,
+          timestamp: now,
+          action: `Nova tarefa: ${newTask.type}`,
           result: "success",
         };
 
-        await updateActivity([newLog, ...activityLog].slice(0, 100)); // Manter últimas 100 atividades
+        updateActivity([newLog, ...activityLog].slice(0, 100)); // Manter últimas 100 atividades
 
         setError(null);
       } catch (err) {
@@ -237,23 +238,39 @@ export function useAutonomousAgents(): UseAutonomousAgentsReturn {
   const refreshServerData = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Fetch server logs
-      const logsResponse = await fetch("/api/agents/logs");
-      if (logsResponse.ok) {
-        const logs = await logsResponse.json();
-        setServerLogs(logs.slice(0, 50)); // Keep last 50 logs
+      // Fetch server logs - use existing log endpoint
+      try {
+        const logsResponse = await fetch("/api/agents/log");
+        if (logsResponse.ok) {
+          const logsData = await logsResponse.json();
+          // Convert to AgentActionLog format if data exists
+          if (Array.isArray(logsData)) {
+            setServerLogs(logsData.slice(0, 50));
+          }
+        }
+      } catch (logErr) {
+        console.warn("Failed to fetch server logs:", logErr);
+        // Don't throw - continue with other fetches
       }
 
-      // Fetch legal memory
-      const memoryResponse = await fetch("/api/agents/memory");
-      if (memoryResponse.ok) {
-        const memory = await memoryResponse.json();
-        setLegalMemory(memory.slice(0, 100)); // Keep last 100 items
+      // Fetch legal memory - endpoint may not exist yet
+      try {
+        const memoryResponse = await fetch("/api/agents/memory");
+        if (memoryResponse.ok) {
+          const memory = await memoryResponse.json();
+          if (Array.isArray(memory)) {
+            setLegalMemory(memory.slice(0, 100));
+          }
+        }
+      } catch (memErr) {
+        console.warn("Failed to fetch legal memory:", memErr);
+        // Don't throw - memory endpoint is optional
       }
 
       setError(null);
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : "Erro desconhecido";
+      console.error("Error refreshing server data:", errorMsg);
       setError(errorMsg);
     } finally {
       setIsLoading(false);
