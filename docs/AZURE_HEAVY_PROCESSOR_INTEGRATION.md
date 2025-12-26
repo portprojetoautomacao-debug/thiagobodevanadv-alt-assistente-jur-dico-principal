@@ -213,7 +213,7 @@ if (expediente.source === 'azure-storage' && expediente.blobName) {
   const result = await azureClient.extractPdfFromAzure({
     blobName: expediente.blobName
   });
-  
+
   // Processar texto com agentes
   await processExpedienteText(result.text);
 }
