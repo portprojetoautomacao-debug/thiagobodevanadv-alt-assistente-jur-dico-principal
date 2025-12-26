@@ -461,12 +461,15 @@ jobs:
     runs-on: ubuntu-latest
     needs: [static-analysis, complexity-analysis, test-coverage, security-analysis]
     if: always()
+    outputs:
+      status: ${{ steps.quality-status.outputs.STATUS }}
 
     steps:
       - name: 📥 Checkout código
         uses: actions/checkout@v4
 
       - name: 📊 Gerar Relatório Consolidado de Qualidade
+        id: quality-status
         run: |
           echo "📊 Gerando relatório consolidado de qualidade..."
 
@@ -495,9 +498,11 @@ jobs:
                 "${{ needs.test-coverage.result }}" == "success" && \
                 "${{ needs.security-analysis.result }}" == "success" ]]; then
             echo "## ✅ STATUS GERAL: TODAS AS ANÁLISES PASSARAM" >> quality-report.md
+            echo "STATUS=success" >> $GITHUB_OUTPUT
             echo "STATUS=success" >> $GITHUB_ENV
           else
             echo "## ❌ STATUS GERAL: PROBLEMAS DETECTADOS" >> quality-report.md
+            echo "STATUS=failure" >> $GITHUB_OUTPUT
             echo "STATUS=failure" >> $GITHUB_ENV
           fi
 
@@ -538,7 +543,7 @@ jobs:
           path: quality-report.md
 
       - name: 💬 Comentar no PR
-        if: github.event_name == 'pull_request' && env.STATUS == 'failure'
+        if: github.event_name == 'pull_request' && steps.quality-status.outputs.STATUS == 'failure'
         run: |
           echo "💬 Comentando qualidade no PR..."
 
@@ -562,7 +567,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
 
       - name: 🚫 Bloquear Merge se Qualidade Baixa
-        if: github.event_name == 'pull_request' && env.STATUS == 'failure'
+        if: github.event_name == 'pull_request' && steps.quality-status.outputs.STATUS == 'failure'
         run: |
           echo "🚫 Qualidade insuficiente - merge bloqueado"
 
@@ -585,7 +590,7 @@ jobs:
           echo "📢 Preparando notificações de qualidade..."
 
           # Criar notificação baseada no status
-          if [[ "${{ env.STATUS }}" == "success" ]]; then
+          if [[ "${{ needs.quality-dashboard.outputs.status }}" == "success" ]]; then
             TITLE="✅ Qualidade de Código Aprovada"
             MESSAGE="Todas as verificações de qualidade passaram com sucesso."
             PRIORITY="normal"
