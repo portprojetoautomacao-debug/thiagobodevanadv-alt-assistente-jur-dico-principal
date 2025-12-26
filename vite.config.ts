@@ -211,6 +211,11 @@ export default defineConfig({
       },
     },
     rollupOptions: {
+      // ✅ FIX: Externalizar módulos CKEditor opcionais que não estão instalados
+      external: [
+        "@ckeditor/ckeditor5-ckfinder",
+        "@ckeditor/ckeditor5-ckfinder/dist/index.js"
+      ],
       // ✅ FIX: Desabilita hoisting de imports transitivos para evitar dependências circulares
       // O erro "Cannot set properties of undefined (setting 'Activity')" acontecia porque
       // o Rollup movia helpers como getDefaultExportFromCjs para chunks errados
