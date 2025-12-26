@@ -11,7 +11,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "jsdom",
-    setupFiles: "./src/test/setup.ts",
+    setupFiles: ["./src/test/setup.ts", "./tests/setup-env.ts"],
     // Workaround de estabilidade (modo manutenção):
     // Em alguns ambientes (Node 22 + pool=forks), o tinypool pode reportar
     // "Worker exited unexpectedly" no teardown mesmo com todos os testes passando.

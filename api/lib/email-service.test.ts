@@ -1,5 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+// Mock do módulo Resend para evitar erro de API key
+vi.mock( "resend", () => ( {
+  Resend: vi.fn().mockImplementation( () => ( {
+    emails: {
+      send: vi.fn().mockResolvedValue( { id: "mock-email-id" } ),
+    },
+  } ) ),
+} ) );
+
 // Mock completo do email-service para testes
 vi.mock( "./email-service.js", async ( importOriginal ) =>
 {
@@ -31,12 +40,12 @@ vi.mock( "./email-service.js", async ( importOriginal ) =>
 } );
 
 import
-  {
-    sendDailySummaryEmail,
-    sendEmail,
-    sendNotificationEmail,
-    sendUrgentDeadlineAlert,
-  } from "./email-service.js";
+{
+  sendDailySummaryEmail,
+  sendEmail,
+  sendNotificationEmail,
+  sendUrgentDeadlineAlert,
+} from "./email-service.js";
 
 describe( "Email Service", () =>
 {
