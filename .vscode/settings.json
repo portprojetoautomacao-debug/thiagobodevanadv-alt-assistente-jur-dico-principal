@@ -241,11 +241,25 @@
   "sonarlint.pathToNodeExecutable": "/usr/local/share/nvm/versions/node/v22.21.1/bin/node",
   "sonarlint.pathToNpmExecutable": "/usr/local/share/nvm/versions/node/v22.21.1/bin/npm",
   "sonarlint.ls.javaHome": "/usr/local/sdkman/candidates/java/current",
-  "sonarlint.output.showAnalyzerLogs": true,
-  "sonarlint.output.showVerboseLogs": true,
+
+  // Reduzir logs para melhorar performance
+  "sonarlint.output.showAnalyzerLogs": false,
+  "sonarlint.output.showVerboseLogs": false,
+
+  // Análise otimizada
   "sonarlint.focusOnNewCode": false,
   "sonarlint.automaticAnalysis": true,
-  "sonarlint.ideLabsEnabled": true,
+  "sonarlint.ideLabsEnabled": false,
+
+  // Configurações de análise
+  "sonarlint.disableTelemetry": true,
+  "sonarlint.analyzerProperties": {
+    "sonar.javascript.node.maxspace": "4096"
+  },
+
+  // Exclusões para evitar erros de filesystem
+  "sonarlint.pathToCompileCommands": "",
+  "sonarlint.testFilePattern": "**/*.{test,spec}.{ts,tsx,js,jsx}",
 
   // Connected Mode - SonarCloud
   "sonarlint.connectedMode.connections.sonarcloud": [

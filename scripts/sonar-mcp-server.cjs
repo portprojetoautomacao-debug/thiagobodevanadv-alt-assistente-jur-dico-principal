@@ -1,5 +1,5 @@
-// @ts-check
 #!/usr/bin/env node
+// @ts-check
 
 /**
  * SonarQube MCP Server

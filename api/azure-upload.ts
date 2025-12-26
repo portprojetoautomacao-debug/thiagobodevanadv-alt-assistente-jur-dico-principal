@@ -7,7 +7,7 @@
 
 import { BlobServiceClient } from "@azure/storage-blob";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import * as formidable from "formidable";
+import formidable from "formidable";
 import { readFileSync, unlinkSync } from "fs";
 
 interface UploadResponse
@@ -67,7 +67,7 @@ export default async function handler (
     // Parse form data
     const form = formidable( {
       maxFileSize: 50 * 1024 * 1024, // 50MB max
-      filter: ( part: any ) =>
+      filter: ( part ) =>
       {
         // Aceitar apenas PDFs, DOC, DOCX, TXT
         const allowedTypes = [

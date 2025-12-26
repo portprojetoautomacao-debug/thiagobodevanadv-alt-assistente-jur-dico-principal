@@ -4,14 +4,14 @@ import { defineConfig } from "vitest/config";
 
 const forkDebug = process.env.VITEST_FORK_DEBUG === "1";
 
-export default defineConfig({
+export default defineConfig( {
   // @ts-expect-error - Vitest pode resolver tipos de Vite via dependência interna,
   // gerando incompatibilidade de tipos (PluginOption) apesar de funcionar em runtime.
-  plugins: [react()],
+  plugins: [ react() ],
   test: {
     globals: true,
     environment: "jsdom",
-    setupFiles: ["./src/test/setup.ts", "./tests/setup-env.ts"],
+    setupFiles: [ "./src/test/setup.ts", "./tests/setup-env.ts" ],
     // Workaround de estabilidade (modo manutenção):
     // Em alguns ambientes (Node 22 + pool=forks), o tinypool pode reportar
     // "Worker exited unexpectedly" no teardown mesmo com todos os testes passando.
@@ -32,11 +32,11 @@ export default defineConfig({
         maxForks: 1,
         // Isolamento por arquivo (recycle do processo) para evitar vazamento de cache/mocks.
         isolate: true,
-        ...(forkDebug
+        ...( forkDebug
           ? {
-              execArgv: ["--trace-uncaught", "--trace-warnings", "--unhandled-rejections=strict"],
-            }
-          : {}),
+            execArgv: [ "--trace-uncaught", "--trace-warnings", "--unhandled-rejections=strict" ],
+          }
+          : {} ),
       },
     },
     // Rodar de forma sequencial para maximizar determinismo
@@ -48,7 +48,7 @@ export default defineConfig({
     // Use --shard=1/4 --shard=2/4 etc nos comandos
     // Este config é voltado ao frontend (React + JSDOM).
     // Testes de API/integração rodam em ambiente Node via vitest.config.node.ts.
-    include: ["src/**/*.{test,spec}.{ts,tsx}", "tests/**/*.test.ts"],
+    include: [ "src/**/*.{test,spec}.{ts,tsx}", "tests/**/*.test.ts" ],
     exclude: [
       "**/node_modules/**",
       "**/dist/**",
@@ -63,8 +63,8 @@ export default defineConfig({
     // reporters will be handled via a separate converter script (vitest json -> SARIF)
     coverage: {
       provider: "v8",
-      reporter: ["text", "json", "html"],
-      exclude: ["node_modules/", "src/test/", "**/*.d.ts", "**/*.config.*", "**/mockData", "dist/"],
+      reporter: [ "text", "json", "html" ],
+      exclude: [ "node_modules/", "src/test/", "**/*.d.ts", "**/*.config.*", "**/mockData", "dist/" ],
     },
     // Configurar para usar .env.test
     env: {
@@ -74,7 +74,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@": resolve(__dirname, "./src"),
+      "@": resolve( __dirname, "./src" ),
     },
   },
-});
+} );

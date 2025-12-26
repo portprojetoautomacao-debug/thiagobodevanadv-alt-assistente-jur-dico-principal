@@ -154,19 +154,33 @@ describe( 'Azure Storage Service', () =>
     {
       const { AzureBlobStorageService } = await import( '@/lib/azure-storage-service' );
 
+      // Mock para retornar vazio ANTES de criar serviço
+      const mockEmptyIterator = async function* () { };
+
+      const mockBlockBlobClient = {
+        url: 'https://test.blob.core.windows.net/empty/none.pdf',
+        uploadData: vi.fn( () => Promise.resolve( { requestId: 'test' } ) ),
+        download: vi.fn(),
+        delete: vi.fn(),
+        setMetadata: vi.fn(),
+        getProperties: vi.fn( () => Promise.resolve( { metadata: {} } ) )
+      };
+
+      const mockContainerClient = {
+        listBlobsFlat: vi.fn( () => ( { [ Symbol.asyncIterator ]: mockEmptyIterator } ) ),
+        createIfNotExists: vi.fn( () => Promise.resolve() ),
+        exists: vi.fn( () => Promise.resolve( true ) ),
+        getBlockBlobClient: vi.fn( () => mockBlockBlobClient )
+      };
+
+      const mockBlobServiceClient = {
+        getContainerClient: vi.fn( () => mockContainerClient )
+      };
+
+      vi.mocked( BlobServiceClient.fromConnectionString ).mockReturnValueOnce( mockBlobServiceClient as any );
+
       const service = new AzureBlobStorageService();
       await service.initialize();
-
-      // Mock para retornar vazio
-      const mockEmptyIterator = async function* () { };
-      const mockClient = {
-        getContainerClient: vi.fn(() => ({
-          listBlobsFlat: () => ({ [Symbol.asyncIterator]: mockEmptyIterator }),
-          createIfNotExists: vi.fn(() => Promise.resolve()),
-          exists: vi.fn(() => Promise.resolve(true))
-        }))
-      };
-      vi.mocked( BlobServiceClient.fromConnectionString ).mockReturnValueOnce(mockClient as any);
 
       const docs = await service.listProcessFiles( '9999999-99.9999.9.99.9999' );
       expect( docs ).toEqual( [] );
@@ -184,9 +198,9 @@ describe( 'Azure Storage Service', () =>
 
       const blob = await service.downloadFile( 'test/123_doc.pdf' );
 
-      // O mock retorna null devido à implementação de stream
-      // Em teste real com Azurite, retornaria Blob
-      expect( blob ).toBeNull(); // Ajustado para realidade do mock
+      // Mock retorna blob válido
+      expect( blob ).not.toBeNull();
+      expect( blob ).toBeInstanceOf( Blob );
     } );
   } );
 
