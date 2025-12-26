@@ -155,3 +155,4 @@ console-*.log
 .claude/anthropic-skills-reference/
 .claude/skills-inventory.json
 .claude/skills/test-validation.js
+!.vscode/launch.example.json
