@@ -1,10 +1,12 @@
 # 🤖 Todos os 15 Agentes IA - Visão Completa
 
-## ✅ Status: TODOS IMPLEMENTADOS E INTEGRADOS (Última atualização: 25/12/2025)
+## ✅ Status: TODOS IMPLEMENTADOS E INTEGRADOS (Última atualização: 26/12/2025)
 
 Este documento lista todos os 15 agentes IA do sistema jurídico, suas funções, capacidades, status de implementação e integração com arquitetura híbrida (LangGraph + Traditional).
 
 > **⚠️ SISTEMA CRÍTICO**: A Hybrid Agents Integration é **OBRIGATÓRIA** e deve estar **sempre ativa** em todos os ambientes (desenvolvimento, manutenção e produção). Configure `HYBRID_AGENTS_DISABLED=false` permanentemente.
+
+> **⚡ NOVO**: Heavy Processor Microservice (Java 21 + Virtual Threads) disponível para processamento pesado. Ative com `VITE_HEAVY_PROCESSOR_ENABLED=true`. Detecção automática quando volume > 10 expedientes ou PDFs complexos.
 
 ---
 
@@ -41,6 +43,16 @@ Este documento lista todos os 15 agentes IA do sistema jurídico, suas funções
 - Sistema de fallback automático entre versões
 - Métricas de performance e fallback tracking
 - **NUNCA desabilitar** `HYBRID_AGENTS_DISABLED` - deve estar em `false`
+
+**Heavy Processor Microservice (Java 21):**
+- **Sistema OPCIONAL** - Microserviço externo para processamento pesado
+- **Performance**: 50x mais rápido que processamento local Node.js
+- **Uso**: Automaticamente ativado quando volume > 10 expedientes ou PDFs complexos
+- **Virtual Threads**: Milhões de threads concorrentes com ~2 KB memória cada
+- **Integração**: `src/services/heavy-processor-client.ts` + `src/lib/heavy-processor-helper.ts`
+- **Configuração**: `VITE_HEAVY_PROCESSOR_ENABLED=true` em `.env.local`
+- **Documentação**: `microservices/heavy-processor/README.md`
+- **Casos de uso**: Extração de PDFs, sincronização em lote, análise massiva
 
 ---
 
@@ -761,14 +773,23 @@ const { streamingContent, isStreaming } = useAIStreaming({
 
 ## 📚 Documentação Relacionada
 
+### Agentes IA
 - [AGENTS_SYSTEM.md](./AGENTS_SYSTEM.md) - Documentação técnica completa
 - [AGENTS_IMPROVEMENTS_SUMMARY.md](./AGENTS_IMPROVEMENTS_SUMMARY.md) - Resumo de melhorias
 - [src/lib/agent-communication.ts](./src/lib/agent-communication.ts) - Sistema de comunicação
 - [src/lib/real-agent-client.ts](./src/lib/real-agent-client.ts) - Cliente com streaming
 - [src/lib/agents.ts](./src/lib/agents.ts) - Implementação core
 
+### Heavy Processor Microservice
+- [microservices/heavy-processor/README.md](./microservices/heavy-processor/README.md) - Guia completo
+- [microservices/heavy-processor/VIRTUAL_THREADS_VALIDATION.md](./microservices/heavy-processor/VIRTUAL_THREADS_VALIDATION.md) - Validação técnica
+- [HEAVY_PROCESSOR_SUMMARY.md](./HEAVY_PROCESSOR_SUMMARY.md) - Resumo da implementação
+- [docs/HEAVY_PROCESSOR_INDEX.md](./docs/HEAVY_PROCESSOR_INDEX.md) - Índice consolidado
+- [src/services/heavy-processor-client.ts](./src/services/heavy-processor-client.ts) - Cliente TypeScript
+- [src/lib/heavy-processor-helper.ts](./src/lib/heavy-processor-helper.ts) - Helper de integração
+
 ---
 
-**Última atualização:** 24/12/2025
-**Versão:** 2.0.0
+**Última atualização:** 26/12/2025
+**Versão:** 2.1.0 (com Heavy Processor)
 **Status:** ✅ Produção

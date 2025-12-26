@@ -11,6 +11,8 @@
 
 **🔧 NOVO - Configuração Otimizada (25/12/2025):** Type checking completo em TypeScript e JavaScript + VS Code otimizado → [Ver Detalhes](docs/TYPESCRIPT_JAVASCRIPT_CONFIG_25DEC2025.md)
 
+**🎯 NOVO - Sistema AOP Logging (26/12/2025):** Logging automático estilo Spring Boot com decorators TypeScript + CorrelationId + PII Filtering → [📖 Ver Documentação Completa](docs/AOP_LOGGING_SYSTEM.md)
+
 ---
 
 ## 🎯 Versão Atual: 1.4.0 - LGPD Compliance

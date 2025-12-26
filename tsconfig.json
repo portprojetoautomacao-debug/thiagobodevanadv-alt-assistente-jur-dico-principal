@@ -9,6 +9,8 @@
     "allowSyntheticDefaultImports": true,
     "allowJs": true,
     "checkJs": false,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
 
     /* Bundler mode - compatível com Vite/Vercel */
     "moduleResolution": "bundler",

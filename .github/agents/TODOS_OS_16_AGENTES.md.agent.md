@@ -1,11 +1,19 @@
 # 🤖 Sistema de 15 Agentes IA - Configuração Completa
 
-## 📌 Visão Geral do Sistema (Atualizado: 24/12/2025)
+## 📌 Visão Geral do Sistema (Atualizado: 26/12/2025)
 
 O Assistente Jurídico PJe possui **15 agentes especializados**, dos quais:
 - **9 agentes ativos 24/7** (fluxo automático de análise)
 - **6 agentes sob demanda** (ativação manual)
 - **9 agentes com arquitetura híbrida** (LangGraph + Traditional)
+
+### ⚡ Heavy Processor Microservice (NOVO)
+
+**Sistema opcional** de processamento pesado com Java 21 + Virtual Threads:
+- **Performance**: 50x mais rápido que Node.js local
+- **Uso**: Automático quando volume > 10 expedientes ou PDFs complexos
+- **Configuração**: `VITE_HEAVY_PROCESSOR_ENABLED=true`
+- **Documentação**: `microservices/heavy-processor/README.md`
 
 ---
 
@@ -1620,6 +1628,52 @@ Assistente Jurídico PJe
 | Otimizar prompts | DSPy | `docs/UPGRADE_AGENTES_RESUMO_COMPLETO.md` |
 | RAG jurídico | Haystack | `src/lib/datajud-service.ts` |
 | Multi-LLM | LiteLLM | `src/lib/gemini-service.ts` |
+| Processamento pesado | Java 21 Virtual Threads | `microservices/heavy-processor/README.md` |
+
+---
+
+## ⚡ Heavy Processor Microservice - Integração
+
+### Quando Usar
+
+✅ Volume > 10 expedientes simultâneos
+✅ PDFs complexos (> 10 MB)
+✅ Análise em lote
+✅ Evitar timeouts do Vercel (30s)
+
+### Performance Esperada
+
+- **Throughput**: 281 req/s (vs 5 req/s sem Virtual Threads)
+- **Latência p(95)**: 2.1s (vs 35s)
+- **Concorrência**: Milhões de threads (vs 10)
+- **Memória/thread**: 2 KB (vs 2 MB)
+
+### Arquivos de Integração
+
+- `src/services/heavy-processor-client.ts` - Cliente HTTP com streaming
+- `src/lib/heavy-processor-helper.ts` - Helper de fallback automático
+- `src/hooks/use-heavy-processor-integration.ts` - Hook React
+
+### Detecção Automática
+
+```typescript
+import { shouldUseHeavyProcessor } from '@/services/heavy-processor-client';
+
+if (shouldUseHeavyProcessor(expedientes)) {
+  // Delega para Java 21 + Virtual Threads
+  await heavyProcessorClient.processBatch(...);
+} else {
+  // Processamento local Node.js
+  await processLocally(...);
+}
+```
+
+### Documentação Completa
+
+- 📖 `microservices/heavy-processor/README.md` - Guia completo
+- 📖 `microservices/heavy-processor/VIRTUAL_THREADS_VALIDATION.md` - Validação técnica
+- 📖 `HEAVY_PROCESSOR_SUMMARY.md` - Resumo da implementação
+- 📖 `docs/HEAVY_PROCESSOR_INDEX.md` - Índice consolidado
 
 ---
 
