@@ -1129,4 +1129,5 @@ export function createTaskGenerator(
 
 /**
  * Re-export hybrid agents integration for unified access
- * Allows seamless coordination between traditional and Lan
+ * Allows seamless coordination between traditional and LangGraph agents
+ */
