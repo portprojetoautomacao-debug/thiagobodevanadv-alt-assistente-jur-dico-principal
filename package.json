@@ -75,7 +75,11 @@
     "dev:with-tracing": "npm run tracing:start & npm run dev",
     "vercel:logs": "tsx scripts/vercel-monitor.ts logs",
     "vercel:status": "tsx scripts/vercel-monitor.ts status",
-    "vercel:list": "tsx scripts/vercel-monitor.ts list"
+    "vercel:list": "tsx scripts/vercel-monitor.ts list",
+    "vercel:env:list": "tsx scripts/vercel-env-manager.ts list",
+    "vercel:env:add": "tsx scripts/vercel-env-manager.ts add",
+    "vercel:env:remove": "tsx scripts/vercel-env-manager.ts remove",
+    "vercel:env:sync": "tsx scripts/vercel-env-manager.ts sync"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
