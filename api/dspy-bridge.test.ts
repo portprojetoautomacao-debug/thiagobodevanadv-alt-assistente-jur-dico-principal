@@ -71,7 +71,7 @@ if ( !fastapiAvailable || process.env.DSPY_BRIDGE_ENABLED === "false" )
     // Test health endpoint
     const health = await fetch( `http://127.0.0.1:${ port }/health` );
     expect( health.status ).toBe( 200 );
-    const json = await health.json();
+    const json = await health.json() as typeof mockHealthResponse;
     expect( json.service ).toBe( "dspy-bridge" );
 
     // Test optimize endpoint
@@ -81,7 +81,7 @@ if ( !fastapiAvailable || process.env.DSPY_BRIDGE_ENABLED === "false" )
       body: JSON.stringify( { prompt: "Hello please optimize me" } ),
     } );
     expect( res.status ).toBe( 200 );
-    const body = await res.json();
+    const body = await res.json() as typeof mockOptimizeResponse;
     expect( body.optimized_prompt ).toBeDefined();
     expect( body.metadata ).toBeDefined();
   } );
@@ -102,7 +102,7 @@ if ( !fastapiAvailable || process.env.DSPY_BRIDGE_ENABLED === "false" )
     {
       const health = await fetch( `http://127.0.0.1:${ port }/health` );
       expect( health.status ).toBe( 200 );
-      const json = await health.json();
+      const json = await health.json() as typeof mockHealthResponse;
       expect( json.service ).toBe( "dspy-bridge" );
 
       const res = await fetch( `http://127.0.0.1:${ port }/optimize`, {
@@ -111,7 +111,7 @@ if ( !fastapiAvailable || process.env.DSPY_BRIDGE_ENABLED === "false" )
         body: JSON.stringify( { prompt: "Hello please optimize me" } ),
       } );
       expect( res.status ).toBe( 200 );
-      const body = await res.json();
+      const body = await res.json() as typeof mockOptimizeResponse;
       expect( body.optimized_prompt ).toBeDefined();
       expect( body.metadata ).toBeDefined();
     } finally
