@@ -2,6 +2,8 @@
 
 ## ✅ Implementação Validada com Artigo "50x de Performance"
 
+> **⚠️ IMPORTANTE**: Este microserviço é **OBRIGATÓRIO** em produção para garantir estabilidade e performance. O processamento local Node.js deve ser usado apenas para desenvolvimento/testes.
+
 ### 📊 Conformidade com Melhores Práticas
 
 | Prática | Status | Arquivo |

@@ -9,10 +9,10 @@ O Assistente Jurídico PJe possui **15 agentes especializados**, dos quais:
 
 ### ⚡ Heavy Processor Microservice (NOVO)
 
-**Sistema opcional** de processamento pesado com Java 21 + Virtual Threads:
-- **Performance**: 50x mais rápido que Node.js local
+**Sistema OBRIGATÓRIO** de processamento pesado com Java 21 + Virtual Threads:
+- **Performance**: 50x mais rápido que Node.js local (281 req/s vs 5 req/s)
 - **Uso**: Automático quando volume > 10 expedientes ou PDFs complexos
-- **Configuração**: `VITE_HEAVY_PROCESSOR_ENABLED=true`
+- **Configuração**: `VITE_HEAVY_PROCESSOR_ENABLED=true` (DEVE estar ativo em produção)
 - **Documentação**: `microservices/heavy-processor/README.md`
 
 ---

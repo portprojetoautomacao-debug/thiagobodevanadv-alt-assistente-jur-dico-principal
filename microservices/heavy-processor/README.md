@@ -1,17 +1,19 @@
 # Heavy Processor Microservice
 
+> **⚠️ OBRIGATÓRIO EM PRODUÇÃO**: Este microserviço é **essencial** para o funcionamento estável do sistema em produção. Deve estar sempre ativo e acessível.
+
 ## 🎯 Visão Geral
 
 Microserviço Java 21 (Spring Boot 3.2) com **Virtual Threads (Project Loom)** para processar tarefas pesadas de forma assíncrona, garantindo estabilidade da aplicação principal React/Node.js.
 
 ### 🔥 Por que Virtual Threads?
 
-| Métrica | Threads Nativas | Virtual Threads |
-|---------|----------------|-----------------|
-| **Memória por thread** | ~2 MB | ~2 KB |
-| **Máximo de threads** | ~10.000 | ~10.000.000 |
-| **Overhead de contexto** | Alto | Mínimo |
-| **Gerenciamento** | Manual | Automático (JVM) |
+| Métrica                  | Threads Nativas | Virtual Threads  |
+| ------------------------ | --------------- | ---------------- |
+| **Memória por thread**   | ~2 MB           | ~2 KB            |
+| **Máximo de threads**    | ~10.000         | ~10.000.000      |
+| **Overhead de contexto** | Alto            | Mínimo           |
+| **Gerenciamento**        | Manual          | Automático (JVM) |
 
 **Resultado**: Processe **milhões de expedientes** simultaneamente com hardware modesto!
 
@@ -155,13 +157,13 @@ for await (const chunk of client.processWithStreaming({...})) {
 O sistema detecta automaticamente quando deve usar o Heavy Processor:
 
 ```typescript
-import { tryHeavyProcessorFallback } from '@/lib/heavy-processor-helper';
+import { tryHeavyProcessorFallback } from "@/lib/heavy-processor-helper";
 
 // Dentro de processNextTask em use-autonomous-agents.ts
 const usedFallback = await tryHeavyProcessorFallback(task, expedientes, {
   onChunk: (id, chunk) => console.log(chunk),
-  onComplete: (results) => console.log('Concluído!'),
-  updateTaskStatus: (id, status) => setTaskStatus(id, status)
+  onComplete: (results) => console.log("Concluído!"),
+  updateTaskStatus: (id, status) => setTaskStatus(id, status),
 });
 
 if (usedFallback) {
@@ -330,7 +332,7 @@ cors:
 ```typescript
 // Frontend
 const client = new HeavyProcessorClient({
-  apiKey: import.meta.env.VITE_HEAVY_PROCESSOR_API_KEY
+  apiKey: import.meta.env.VITE_HEAVY_PROCESSOR_API_KEY,
 });
 
 // Backend valida header Authorization: Bearer <api-key>
@@ -340,13 +342,13 @@ const client = new HeavyProcessorClient({
 
 ## 🎯 Quando Usar
 
-| Cenário | Usar Heavy Processor? | Razão |
-|---------|----------------------|--------|
-| < 10 expedientes | ❌ | Overhead não justificado |
-| > 10 expedientes | ✅ | Paralelismo massivo |
-| PDFs > 10 MB | ✅ | Evita timeout no Vercel |
-| Análise complexa | ✅ | Não bloqueia agentes |
-| Tempo real crítico | ❌ | Latência de rede |
+| Cenário            | Usar Heavy Processor? | Razão                    |
+| ------------------ | --------------------- | ------------------------ |
+| < 10 expedientes   | ❌                    | Overhead não justificado |
+| > 10 expedientes   | ✅                    | Paralelismo massivo      |
+| PDFs > 10 MB       | ✅                    | Evita timeout no Vercel  |
+| Análise complexa   | ✅                    | Não bloqueia agentes     |
+| Tempo real crítico | ❌                    | Latência de rede         |
 
 ---
 
@@ -363,6 +365,7 @@ const client = new HeavyProcessorClient({
 **MODO MANUTENÇÃO**: Sistema em produção estável. Apenas correções de bugs são aceitas.
 
 Para reportar bugs: abra issue com:
+
 1. Versão Java
 2. Payload de teste
 3. Logs completos

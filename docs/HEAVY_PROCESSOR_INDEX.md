@@ -2,6 +2,8 @@
 
 ## 🎯 Visão Geral
 
+> **⚠️ OBRIGATÓRIO EM PRODUÇÃO**: Este microserviço é **essencial** para garantir estabilidade e performance do sistema em produção. Sem ele, o sistema pode sofrer timeouts e degradação de performance com volume alto.
+
 Este índice consolida toda a documentação relacionada ao **Heavy Processor Microservice** - um microserviço Java 21 com Virtual Threads para processamento pesado e escalável.
 
 ---

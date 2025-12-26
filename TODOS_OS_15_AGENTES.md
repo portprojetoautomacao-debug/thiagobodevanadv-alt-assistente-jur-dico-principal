@@ -50,7 +50,7 @@ Este documento lista todos os 15 agentes IA do sistema jurídico, suas funções
 - **NUNCA desabilitar** `HYBRID_AGENTS_DISABLED` - deve estar em `false`
 
 **Heavy Processor Microservice (Java 21):**
-- **Sistema OPCIONAL** - Microserviço externo para processamento pesado
+- **Sistema OBRIGATÓRIO** - Microserviço externo para processamento pesado em produção
 - **Performance**: 50x mais rápido que processamento local Node.js (281 req/s vs 5 req/s)
 - **Uso**: Automaticamente ativado quando volume > 10 expedientes ou PDFs complexos
 - **Virtual Threads**: Milhões de threads concorrentes com ~2 KB memória cada (vs 2 MB threads nativas)
