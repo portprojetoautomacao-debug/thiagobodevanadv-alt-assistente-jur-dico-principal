@@ -3,7 +3,7 @@ name: Extension Release
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
 
 jobs:
   release:
@@ -17,7 +17,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18.x
-          cache: 'npm'
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -50,4 +50,3 @@ jobs:
       #   run: |
       #     echo "Add Chrome Web Store publish step here"
       #     echo "Requires CHROME_WEBSTORE_ID and CHROME_WEBSTORE_TOKEN secrets"
-

@@ -76,18 +76,27 @@ jobs:
           node-version: "22.x"
           cache: "npm"
 
+      - name: Free up Azurite ports
+        run: |
+          echo "🔍 Checking for processes on Azurite ports..."
+          sudo lsof -ti:10000 | xargs kill -9 || true
+          sudo lsof -ti:10001 | xargs kill -9 || true
+          sudo lsof -ti:10002 | xargs kill -9 || true
+          echo "✅ Ports freed"
+
       - name: Start Azurite
         run: |
+          # Use pinned stable version instead of :latest
           docker run -d \
             --name azurite \
             -p 10000:10000 \
             -p 10001:10001 \
             -p 10002:10002 \
-            mcr.microsoft.com/azure-storage/azurite:latest
-          
+            mcr.microsoft.com/azure-storage/azurite:3.28.0
+
           echo "⏳ Waiting for Azurite to be ready..."
           sleep 5
-          
+
           # Wait for Blob service to respond
           for i in {1..30}; do
             if curl -f http://localhost:10000/devstoreaccount1?comp=list &>/dev/null; then
@@ -97,7 +106,7 @@ jobs:
             echo "Waiting... ($i/30)"
             sleep 2
           done
-          
+
           echo "❌ Azurite failed to start"
           docker logs azurite
           exit 1

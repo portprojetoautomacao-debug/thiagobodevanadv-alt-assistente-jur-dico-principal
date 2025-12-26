@@ -83,9 +83,9 @@ jobs:
           # Executar ESLint com formato legível e capturar exit code
           npm run lint -- --max-warnings 350 || EXIT_CODE=$?
 
-          # Gerar arquivo SARIF para upload (sempre, independente do exit code)
-          echo "📊 Gerando arquivo SARIF..."
-          npm run lint:sarif || true
+          # Gerar arquivo SARIF para upload (independente do resultado)
+          echo "📊 Gerando relatório SARIF..."
+          npm run lint:sarif || echo "⚠️  Falha ao gerar SARIF, mas continuando..."
 
           if [[ $EXIT_CODE -eq 0 ]]; then
             echo "✅ ESLint passou sem erros ou warnings"
