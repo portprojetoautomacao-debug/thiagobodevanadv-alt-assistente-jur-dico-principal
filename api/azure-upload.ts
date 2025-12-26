@@ -114,7 +114,7 @@ export default async function handler (
 
     // Criar container se não existir
     await containerClient.createIfNotExists( {
-      access: "private",
+      access: "blob",
     } );
 
     // Gerar nome único para o blob

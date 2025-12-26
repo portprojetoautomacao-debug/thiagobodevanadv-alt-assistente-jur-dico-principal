@@ -20,6 +20,19 @@ jobs:
     env:
       NODE_OPTIONS: --max-old-space-size=8192
 
+    services:
+      azurite:
+        image: mcr.microsoft.com/azure-storage/azurite:latest
+        ports:
+          - 10000:10000
+          - 10001:10001
+          - 10002:10002
+        options: >-
+          --health-cmd "curl -f http://localhost:10000/devstoreaccount1?comp=list"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     strategy:
       matrix:
         node-version: ["22.x"]
