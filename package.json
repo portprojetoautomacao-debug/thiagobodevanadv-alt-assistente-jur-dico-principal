@@ -72,7 +72,10 @@
     "setup:mcp": "pwsh -ExecutionPolicy Bypass -File scripts/verify-serena-setup.ps1",
     "setup:mcp:bash": "bash scripts/verify-serena-setup.sh",
     "tracing:start": "node scripts/otlp-mock-server.cjs",
-    "dev:with-tracing": "npm run tracing:start & npm run dev"
+    "dev:with-tracing": "npm run tracing:start & npm run dev",
+    "vercel:logs": "tsx scripts/vercel-monitor.ts logs",
+    "vercel:status": "tsx scripts/vercel-monitor.ts status",
+    "vercel:list": "tsx scripts/vercel-monitor.ts list"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
@@ -177,6 +180,7 @@
     "@types/three": "^0.172.0",
     "@typescript-eslint/eslint-plugin": "^8.18.1",
     "@typescript-eslint/parser": "^8.18.1",
+    "@vercel/sdk": "^1.18.5",
     "@vitejs/plugin-react": "^5.1.2",
     "@vitest/coverage-v8": "^4.0.16",
     "@vitest/ui": "^4.0.16",
@@ -193,6 +197,7 @@
     "playwright": "^1.57.0",
     "prettier": "^3.4.2",
     "sass-embedded": "^1.97.1",
+    "tsx": "^4.21.0",
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.49.0",
     "vite-plugin-pwa": "^1.2.0",
