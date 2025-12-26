@@ -48,7 +48,7 @@ export default defineConfig({
     // Use --shard=1/4 --shard=2/4 etc nos comandos
     // Este config é voltado ao frontend (React + JSDOM).
     // Testes de API/integração rodam em ambiente Node via vitest.config.node.ts.
-    include: ["src/**/*.{test,spec}.{ts,tsx}"],
+    include: ["src/**/*.{test,spec}.{ts,tsx}", "tests/**/*.test.ts"],
     exclude: [
       "**/node_modules/**",
       "**/dist/**",

@@ -1,22 +1,20 @@
 {
+  "extends": "../tsconfig.json",
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "ES2021",
+    "lib": ["ES2021"],
+    "types": ["node"],
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "ignoreDeprecations": "5.0",
-    "strict": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
+    "strict": false,
     "resolveJsonModule": true,
-    "isolatedModules": true,
     "noEmit": true,
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "types": ["node"],
     "baseUrl": ".",
     "paths": {}
   },
-  "include": ["./**/*.ts", "./**/*.d.ts"],
-  "exclude": ["node_modules", "tests"]
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules", "dist", "../node_modules"]
 }
