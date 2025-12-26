@@ -158,7 +158,7 @@ async function workflowCompletoAOP() {
     // 1. Analisar intimação
     const analysis = await agent.analyzeIntimacao({
       id: "123",
-      tipo: "INTIMACAO",
+      tipo: "intimacao",
       conteudo: "Intimação para manifestação em 15 dias",
     } as Expediente);
 
@@ -229,7 +229,7 @@ export const processAutonomousTaskWithAOP = wrapAgentFunction(
 async function processarTarefaComAOP(task: AgentTask) {
   return withRequestContext(
     async () => {
-      const result = await processAutonomousTaskWithAOP(task);
+      const result = await processAutonomousTaskWithAOP(task as any);
 
       // Log consolidado disponível
       const log = generateConsolidatedLog();

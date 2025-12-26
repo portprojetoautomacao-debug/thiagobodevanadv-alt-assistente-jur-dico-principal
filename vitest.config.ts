@@ -69,6 +69,11 @@ export default defineConfig( {
     env: {
       NODE_ENV: "test",
       VITEST: "true",
+      ENABLE_HYBRID_AGENTS: "true",
+      LANGGRAPH_API_URL: "http://localhost:8000",
+      AUTOGEN_API_KEY: "test-autogen-key",
+      GEMINI_API_KEY: "test-gemini-key",
+      RESEND_API_KEY: "re_test_key_123",
     },
   },
   resolve: {

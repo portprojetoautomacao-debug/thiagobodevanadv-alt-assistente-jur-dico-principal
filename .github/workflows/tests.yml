@@ -24,6 +24,11 @@ jobs:
           - 10000:10000
           - 10001:10001
           - 10002:10002
+        options: >-
+          --health-cmd "curl -f http://localhost:10000/devstoreaccount1?comp=list || exit 1"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
 
     steps:
       - name: Checkout
@@ -52,7 +57,21 @@ jobs:
       - name: Wait for Azurite
         run: |
           echo "⏳ Waiting for Azurite..."
-          timeout 30 bash -c 'until curl -f http://localhost:10000/devstoreaccount1?comp=list &>/dev/null; do sleep 1; done'
+          max_attempts=60
+          attempt=0
+          until curl -f -s http://localhost:10000/devstoreaccount1?comp=list &>/dev/null; do
+            attempt=$((attempt+1))
+            if [ $attempt -ge $max_attempts ]; then
+              echo "❌ Azurite failed to start after $max_attempts seconds"
+              echo "Checking if Azurite container is running:"
+              docker ps -a
+              echo "Checking Azurite logs:"
+              docker logs $(docker ps -aq --filter ancestor=mcr.microsoft.com/azure-storage/azurite:latest) 2>&1 || echo "No logs available"
+              exit 1
+            fi
+            echo "Attempt $attempt/$max_attempts - Azurite not ready yet, waiting..."
+            sleep 1
+          done
           echo "✅ Azurite ready!"
 
       - name: Run unit tests with OOM monitoring
@@ -75,8 +94,8 @@ jobs:
 
           echo "✅ Tests completed successfully"
         env:
-          AZURE_STORAGE_CONNECTION_STRING: AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEhRtFSBP;BlobEndpoint=http://localhost:10000/devstoreaccount1;
-          VITE_AZURE_STORAGE_CONNECTION_STRING: AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEhRtFSBP;BlobEndpoint=http://localhost:10000/devstoreaccount1;
+          AZURE_STORAGE_CONNECTION_STRING: AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtVQGXEOyHu1Z6L2iZBz3Yfj8AzuriteDefaultKey==;BlobEndpoint=http://localhost:10000/devstoreaccount1;
+          VITE_AZURE_STORAGE_CONNECTION_STRING: AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtVQGXEOyHu1Z6L2iZBz3Yfj8AzuriteDefaultKey==;BlobEndpoint=http://localhost:10000/devstoreaccount1;
           AZURE_STORAGE_CONTAINER_NAME: process-documents
           VITE_USE_AZURITE: true
 
