@@ -55,7 +55,6 @@ export default defineConfig( {
       "**/build/**",
       "**/.{git,cache,output,temp}/**",
       "api/**",
-      "tests/integration/**",
       // Testes locais que sobem servidor real devem ser executados via scripts dedicados
       "**/*.local-e2e.test.ts",
       "tests/e2e/**",
