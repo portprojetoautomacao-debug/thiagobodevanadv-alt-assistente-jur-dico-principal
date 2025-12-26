@@ -506,6 +506,55 @@ export function useAutonomousAgents() {
       try {
         let result: AgentTaskResult;
 
+        // 🔥 HEAVY PROCESSOR FALLBACK - Verifica se deve usar processamento Java
+        // Importante: verificar ANTES de executar híbrido ou tradicional
+        const expedientes = validatedTask.data?.expedientes as Expediente[] | undefined;
+        if (expedientes && expedientes.length > 0) {
+          const { tryHeavyProcessorFallback } = await import("@/lib/heavy-processor-helper");
+          
+          const usedFallback = await tryHeavyProcessorFallback(validatedTask, expedientes, {
+            onChunk: (expedienteId, chunk) => {
+              setStreamingContent((prev) => ({
+                ...prev,
+                [agent.id]: (prev[agent.id] || "") + chunk,
+              }));
+            },
+            onComplete: (results) => {
+              console.log(`[Heavy Processor] Tarefa ${validatedTask.id} concluída`, results);
+            },
+            updateTaskStatus: (taskId, status) => {
+              setTaskQueue((current) =>
+                updateTaskInQueue(current || [], taskId, { status: status as any })
+              );
+            },
+          });
+
+          if (usedFallback) {
+            // Heavy Processor lidou com a tarefa - marcar como concluída
+            result = {
+              success: true,
+              data: { mode: "heavy-processor", processed: expedientes.length },
+              message: `Processado via Heavy Processor Java (${expedientes.length} expedientes)`,
+              processingTimeMs: Date.now() - startTime,
+              confidence: 1.0,
+            };
+
+            // Pular para conclusão da tarefa
+            handleTaskCompletion(
+              validatedTask,
+              result,
+              agent.id,
+              setTaskQueue,
+              setCompletedTasks,
+              setAgents,
+              logActivity
+            );
+
+            processingRef.current.delete(agent.id);
+            return; // Termina aqui - não executar híbrido/tradicional
+          }
+        }
+
         // 🔥 NOVA INTEGRAÇÃO HÍBRIDA - Verifica se agente tem versão LangGraph
         const hasHybrid = hasHybridVersion(agent.id);
 
