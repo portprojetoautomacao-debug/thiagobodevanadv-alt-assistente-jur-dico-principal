@@ -7,8 +7,7 @@
 
 import { BlobServiceClient } from "@azure/storage-blob";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import formidable from "formidable";
-import fs from "fs";
+import * as formidable from "formidable";
 
 interface UploadResponse
 {
@@ -67,18 +66,19 @@ export default async function handler (
     // Parse form data
     const form = formidable( {
       maxFileSize: 50 * 1024 * 1024, // 50MB max
-      filter: ( part ) =>
+      filter: ( part: any ) =>
       {
-        // Aceitar apenas PDFs, DOC, DOCX, TXT
-        const allowedTypes = [
-          "application/pdf",
-          "application/msword",
-          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-          "text/plain",
-        ];
-        return part.mimetype ? allowedTypes.includes( part.mimetype ) : false;
-      },
-    } );
+        {
+          // Aceitar apenas PDFs, DOC, DOCX, TXT
+          const allowedTypes = [
+            "application/pdf",
+            "application/msword",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "text/plain",
+          ];
+          return part.mimetype ? allowedTypes.includes( part.mimetype ) : false;
+        },
+      } );
 
     const [ fields, files ] = await form.parse( req );
 
@@ -126,7 +126,7 @@ export default async function handler (
     const blockBlobClient = containerClient.getBlockBlobClient( blobName );
 
     // Ler arquivo do disco
-    const fileBuffer = fs.readFileSync( file.filepath );
+    const fileBuffer = readFileSync( file.filepath );
 
     await blockBlobClient.uploadData( fileBuffer, {
       blobHTTPHeaders: {
@@ -142,7 +142,7 @@ export default async function handler (
     } );
 
     // Limpar arquivo temporário
-    fs.unlinkSync( file.filepath );
+    unlinkSync( file.filepath );
 
     console.log( `[Azure Upload] ✅ Upload concluído: ${ blobName }` );
 
