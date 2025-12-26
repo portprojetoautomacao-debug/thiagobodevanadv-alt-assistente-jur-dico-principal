@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import type { Agent, AgentTask } from "@/lib/agents";
 import { useKV } from "./use-kv";
 
@@ -76,14 +76,18 @@ export function useAutonomousAgents(): UseAutonomousAgentsReturn {
   const allTasks = tasksData;
   const activityLog = activityData;
 
+  // Ref to track if default agents have been initialized
+  const initializedRef = useRef(false);
+
   // Separar tarefas completas das pendentes e fila de tarefas
   const tasks = allTasks.filter((t: AgentTask) => t.status !== "completed" && t.status !== "failed");
-  const completedTasks = allTasks.filter((t: AgentTask) => t.status === "completed" || t.status === "failed");
+  const completedTasks = allTasks.filter((t: AgentTask) => t.status === "completed" || t.status !== "failed");
   const taskQueue = tasks; // taskQueue is an alias for tasks
 
-  // Inicializar agentes padrão se não houver dados
+  // Inicializar agentes padrão se não houver dados (executa apenas uma vez)
   useEffect(() => {
-    if (agents.length === 0) {
+    if (!initializedRef.current && agents.length === 0) {
+      initializedRef.current = true;
       const defaultAgents: Agent[] = [
         {
           id: "harvey",
@@ -139,7 +143,7 @@ export function useAutonomousAgents(): UseAutonomousAgentsReturn {
 
       updateAgents(defaultAgents);
     }
-  }, [agents.length, updateAgents]);
+  }, [agents.length, updateAgents]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Adicionar nova tarefa - aceita tarefa parcial ou completa
   const addTask = useCallback(
@@ -150,17 +154,16 @@ export function useAutonomousAgents(): UseAutonomousAgentsReturn {
         const generatedId = crypto.randomUUID();
         const now = new Date().toISOString();
 
+        // Type-safe handling: check if required fields exist
+        const hasId = "id" in taskData && typeof taskData.id === "string";
+        const hasCreatedAt = "createdAt" in taskData && typeof taskData.createdAt === "string";
+        const hasStatus = "status" in taskData && typeof taskData.status === "string";
+
         const newTask: AgentTask = {
-          ...(taskData as AgentTask),
-          id: "id" in taskData && taskData.id ? taskData.id : generatedId,
-          createdAt:
-            "createdAt" in taskData && taskData.createdAt
-              ? taskData.createdAt
-              : now,
-          status:
-            "status" in taskData && taskData.status
-              ? taskData.status
-              : "queued",
+          ...taskData,
+          id: hasId ? taskData.id : generatedId,
+          createdAt: hasCreatedAt ? taskData.createdAt : now,
+          status: hasStatus ? (taskData as AgentTask).status : "queued",
         };
 
         const updatedTasks = [...allTasks, newTask];
@@ -298,11 +301,24 @@ export function useAutonomousAgents(): UseAutonomousAgentsReturn {
 }
 
 /**
- * Process autonomous task - stub for compatibility
- * This is called from aop-logging-examples.ts
+ * Process autonomous task - NO-OP stub for compatibility.
+ *
+ * This function exists only for backward compatibility with
+ * aop-logging-examples.ts and DOES NOT perform any real
+ * task processing. Actual processing happens in the backend/API.
+ *
+ * @deprecated This is a no-op compatibility stub. New code should
+ *             call the appropriate backend/API endpoints for
+ *             autonomous task processing instead of using this
+ *             function.
+ * @param task - The task to process (logged only, not actually processed)
  */
 export async function processAutonomousTask(task: AgentTask): Promise<void> {
-  console.log("Processing autonomous task:", task);
-  // This is a stub - actual processing happens in the backend
-  return Promise.resolve();
+  console.warn(
+    "[useAutonomousAgents] processAutonomousTask is a no-op stub for compatibility only. " +
+      "Actual autonomous task processing occurs in the backend/API."
+  );
+  console.log("processAutonomousTask called with task:", task);
+  // Intentionally no-op: maintained only for backward compatibility
+  return;
 }
