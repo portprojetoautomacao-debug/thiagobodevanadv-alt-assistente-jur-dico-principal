@@ -10,24 +10,24 @@ import { VitePWA } from "vite-plugin-pwa";
 import { phosphorIconOptimizer } from "./vite-icon-optimizer.js";
 
 // Resolve robusto para ESM (funciona em Windows/Linux)
-const __dirname = fileURLToPath(new URL(".", import.meta.url));
+const __dirname = fileURLToPath( new URL( ".", import.meta.url ) );
 const projectRoot = process.env.PROJECT_ROOT || __dirname;
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig( {
   plugins: [
     react(),
     tailwindcss(),
     phosphorIconOptimizer(),
     // createIconImportProxy() as PluginOption, // REMOVIDO: dependia de @github/spark
     // sparkPlugin() as PluginOption, // REMOVIDO: dependia de @github/spark
-    VitePWA({
+    VitePWA( {
       registerType: "autoUpdate",
       // ✅ FIX: Usar 'inline' ao invés do padrão para evitar problemas com CSP
       // O script de registro será injetado diretamente no HTML ao invés de arquivo separado
       injectRegister: "inline",
       // ✅ Remover robots.txt/sitemap.xml do precache - não são necessários offline
-      includeAssets: ["*.svg", "*.png", "*.ico"],
+      includeAssets: [ "*.svg", "*.png", "*.ico" ],
       manifest: {
         id: "/",
         name: "Assistente Jurídico PJe",
@@ -79,7 +79,7 @@ export default defineConfig({
         mode: process.env.NODE_ENV === "production" ? "production" : "development",
         // ✅ INCLUIR todos os chunks no precache (inclusive lazy-loaded)
         // O cleanupOutdatedCaches vai remover versões antigas automaticamente
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
+        globPatterns: [ "**/*.{js,css,html,ico,png,svg,woff,woff2}" ],
         // ❌ REMOVIDO globIgnores - chunks lazy devem ser precacheados
         // O problema de 404 acontecia porque chunks eram excluídos do cache
         // mas o SW interceptava a request e não encontrava no cache
@@ -109,28 +109,28 @@ export default defineConfig({
           // Isso elimina erros 404 do fonts.gstatic.com
         ],
         navigateFallback: "/index.html",
-        navigateFallbackDenylist: [/^\/_/, /^\/api/],
+        navigateFallbackDenylist: [ /^\/_/, /^\/api/ ],
       },
-    }),
+    } ),
   ],
   resolve: {
     alias: {
-      "@": resolve(projectRoot, "src"),
+      "@": resolve( projectRoot, "src" ),
       // Stub local pro Todoist (evita dependência externa em runtime)
-      "@doist/todoist-api-typescript": resolve(projectRoot, "src/lib/todoist-stub.ts"),
+      "@doist/todoist-api-typescript": resolve( projectRoot, "src/lib/todoist-stub.ts" ),
       // REMOVIDO: @github/spark - agora usando Gemini 2.5 Pro diretamente
     },
   },
   optimizeDeps: {
     // ✅ FIX: Incluir clsx e tailwind-merge para pre-bundling
     // Garante que cn() esteja disponível antes de qualquer componente
-    include: ["clsx", "tailwind-merge"],
+    include: [ "clsx", "tailwind-merge" ],
     // Evita que o Vite tente pré-bundlar esse pacote (usa o stub)
-    exclude: ["@doist/todoist-api-typescript"],
+    exclude: [ "@doist/todoist-api-typescript" ],
   },
   server: {
     host: "0.0.0.0", // Aceita conexões de 127.0.0.1, localhost e IPs externos
-    port: process.env.PORT ? Number(process.env.PORT) : 5173,
+    port: process.env.PORT ? Number( process.env.PORT ) : 5173,
     headers: {
       // Permite usar window.open com preview de PDF / impressão sem quebrar tudo
       "Cross-Origin-Opener-Policy": "same-origin-allow-popups",
@@ -141,41 +141,44 @@ export default defineConfig({
       process.env.DISABLE_API_PROXY === "true"
         ? undefined
         : {
-            // Proxy para APIs - desenvolvimento aponta para Vercel produção
-            "/api": {
-              target:
-                process.env.VITE_API_TARGET || "https://assistente-juridico-github.vercel.app",
-              changeOrigin: true,
-              secure: true,
-              configure: (proxy, _options) => {
-                proxy.on("error", (err, _req, _res) => {
-                  console.log("Proxy error:", err);
-                });
-                proxy.on("proxyReq", (proxyReq, req, _res) => {
-                  console.log(
-                    "Proxying request:",
-                    req.method,
-                    req.url,
-                    "->",
-                    proxyReq.getHeader("host") + proxyReq.path
-                  );
-                });
-              },
-            },
-            // Proxy para endpoints legados /_spark/* -> /api/*
-            "/_spark/llm": {
-              target: "https://assistente-juridico-github.vercel.app",
-              changeOrigin: true,
-              secure: true,
-              rewrite: (path) => path.replace(/^\/_spark\/llm/, "/api/llm-proxy"),
-            },
-            "/_spark/kv": {
-              target: "https://assistente-juridico-github.vercel.app",
-              changeOrigin: true,
-              secure: true,
-              rewrite: (path) => path.replace(/^\/_spark\/kv/, "/api/kv"),
+          // Proxy para APIs - desenvolvimento aponta para Vercel produção
+          "/api": {
+            target:
+              process.env.VITE_API_TARGET || "https://assistente-juridico-github.vercel.app",
+            changeOrigin: true,
+            secure: true,
+            configure: ( proxy, _options ) =>
+            {
+              proxy.on( "error", ( err, _req, _res ) =>
+              {
+                console.log( "Proxy error:", err );
+              } );
+              proxy.on( "proxyReq", ( proxyReq, req, _res ) =>
+              {
+                console.log(
+                  "Proxying request:",
+                  req.method,
+                  req.url,
+                  "->",
+                  proxyReq.getHeader( "host" ) + proxyReq.path
+                );
+              } );
             },
           },
+          // Proxy para endpoints legados /_spark/* -> /api/*
+          "/_spark/llm": {
+            target: "https://assistente-juridico-github.vercel.app",
+            changeOrigin: true,
+            secure: true,
+            rewrite: ( path ) => path.replace( /^\/_spark\/llm/, "/api/llm-proxy" ),
+          },
+          "/_spark/kv": {
+            target: "https://assistente-juridico-github.vercel.app",
+            changeOrigin: true,
+            secure: true,
+            rewrite: ( path ) => path.replace( /^\/_spark\/kv/, "/api/kv" ),
+          },
+        },
   },
   build: {
     cssMinify: "lightningcss",
@@ -195,22 +198,31 @@ export default defineConfig({
     modulePreload: {
       polyfill: true,
       // Não fazer preload de chunks que contêm ProseMirror/Tiptap
-      resolveDependencies: (_filename, deps, { hostId: _hostId, hostType: _hostType }) => {
+      resolveDependencies: ( _filename, deps, { hostId: _hostId, hostType: _hostType } ) =>
+      {
         // Filtrar dependências que não devem ser preloaded
-        return deps.filter((dep) => {
+        return deps.filter( ( dep ) =>
+        {
           // Não preload editor chunks - eles serão carregados sob demanda
-          if (dep.includes("editor") || dep.includes("tiptap") || dep.includes("prosemirror")) {
+          if ( dep.includes( "editor" ) || dep.includes( "tiptap" ) || dep.includes( "prosemirror" ) )
+          {
             return false;
           }
           // Não preload Minutas - lazy loaded
-          if (dep.includes("Minutas") || dep.includes("minutas")) {
+          if ( dep.includes( "Minutas" ) || dep.includes( "minutas" ) )
+          {
             return false;
           }
           return true;
-        });
+        } );
       },
     },
     rollupOptions: {
+      // ✅ FIX: Externalizar módulos CKEditor opcionais que não estão instalados
+      external: [
+        "@ckeditor/ckeditor5-ckfinder",
+        "@ckeditor/ckeditor5-ckfinder/dist/index.js"
+      ],
       // ✅ FIX: Desabilita hoisting de imports transitivos para evitar dependências circulares
       // O erro "Cannot set properties of undefined (setting 'Activity')" acontecia porque
       // o Rollup movia helpers como getDefaultExportFromCjs para chunks errados
@@ -226,16 +238,18 @@ export default defineConfig({
         chunkFileNames: "assets/[name]-[hash].js",
         entryFileNames: "assets/[name]-[hash].js",
         assetFileNames: "assets/[name]-[hash][extname]",
-        manualChunks(id) {
+        manualChunks ( id )
+        {
           // ✅ FIX CRÍTICO: CSS utilities PRIMEIRO - evita ReferenceError
           // clsx, tailwind-merge E src/lib/utils.ts (que contém cn()) precisam
           // estar disponíveis ANTES de qualquer componente que use cn()
           if (
-            id.includes("clsx") ||
-            id.includes("class-variance-authority") ||
-            id.includes("tailwind-merge") ||
-            id.includes("src/lib/utils")
-          ) {
+            id.includes( "clsx" ) ||
+            id.includes( "class-variance-authority" ) ||
+            id.includes( "tailwind-merge" ) ||
+            id.includes( "src/lib/utils" )
+          )
+          {
             return "css-utils";
           }
 
@@ -244,11 +258,12 @@ export default defineConfig({
           // O erro "Cannot set properties of undefined (setting 'Activity')"
           // acontecia porque editor-vendor era importado antes do React estar pronto
           if (
-            id.includes("node_modules/react") ||
-            id.includes("node_modules/react-dom") ||
-            id.includes("node_modules/scheduler") ||
-            id.includes("@phosphor-icons/react")
-          ) {
+            id.includes( "node_modules/react" ) ||
+            id.includes( "node_modules/react-dom" ) ||
+            id.includes( "node_modules/scheduler" ) ||
+            id.includes( "@phosphor-icons/react" )
+          )
+          {
             return "react-vendor";
           }
 
@@ -257,47 +272,56 @@ export default defineConfig({
           // Isso evita que react-vendor precise importar de editor-vendor
 
           // Radix UI components - usa cn(), então vem DEPOIS de css-utils
-          if (id.includes("@radix-ui")) {
+          if ( id.includes( "@radix-ui" ) )
+          {
             return "ui-vendor";
           }
 
           // Framer Motion - lazy loaded
-          if (id.includes("framer-motion")) {
+          if ( id.includes( "framer-motion" ) )
+          {
             return "animation";
           }
 
           // Three.js - lazy loaded, pesado
-          if (id.includes("three")) {
+          if ( id.includes( "three" ) )
+          {
             return "three";
           }
 
           // DnD Kit (drag and drop para Kanban) - lazy loaded
-          if (id.includes("@dnd-kit")) {
+          if ( id.includes( "@dnd-kit" ) )
+          {
             return "dnd";
           }
 
           // PDF e upload de arquivos - lazy loaded
-          if (id.includes("pdf") || id.includes("file-upload")) {
+          if ( id.includes( "pdf" ) || id.includes( "file-upload" ) )
+          {
             return "files";
           }
 
           // Date utilities - usado frequentemente
-          if (id.includes("date-fns")) {
+          if ( id.includes( "date-fns" ) )
+          {
             return "date-utils";
           }
 
           // Sentry - lazy loaded com delay
-          if (id.includes("@sentry")) {
+          if ( id.includes( "@sentry" ) )
+          {
             return "sentry";
           }
 
           // Sonner toasts - usado frequentemente
-          if (id.includes("sonner")) {
+          if ( id.includes( "sonner" ) )
+          {
             return "toasts";
           }
 
           // Sample data (apenas desenvolvimento/demo)
-          if (id.includes("sample-data")) {
+          if ( id.includes( "sample-data" ) )
+          {
             return "sample-data";
           }
 
@@ -307,18 +331,21 @@ export default defineConfig({
 
           // ✅ FIX CRÍTICO: Split Tiptap/ProseMirror separado do MinutasManager
           // Tiptap é GRANDE (>500KB), precisa estar em chunk separado
-          if (id.includes("@tiptap") || id.includes("prosemirror")) {
+          if ( id.includes( "@tiptap" ) || id.includes( "prosemirror" ) )
+          {
             return "tiptap-prosemirror"; // Todo o editor em um chunk
           }
 
           // ✅ FIX: Split MinutasManagerV2 SEM Tiptap
           // Agora o MinutasManager ficará menor porque Tiptap está separado
-          if (id.includes("MinutasManager") && id.includes("src/components")) {
+          if ( id.includes( "MinutasManager" ) && id.includes( "src/components" ) )
+          {
             return "minutas-ui"; // UI do manager sem editor
           }
 
           // Templates de documentos - lazy loaded
-          if (id.includes("document-templates") || id.includes("template")) {
+          if ( id.includes( "document-templates" ) || id.includes( "template" ) )
+          {
             return "templates"; // Separar templates de documentos
           }
 
@@ -339,24 +366,24 @@ export default defineConfig({
     setupFiles: "./src/test/setup.ts",
 
     // ✅ Incluir testes de API e src
-    include: ["**/api/**/*.test.ts", "**/src/**/*.test.{ts,tsx}"],
+    include: [ "**/api/**/*.test.ts", "**/src/**/*.test.{ts,tsx}" ],
 
     // ✅ Configuração específica por arquivo
     environmentMatchGlobs: [
       // API tests usam node environment
-      ["**/api/**/*.test.ts", "node"],
+      [ "**/api/**/*.test.ts", "node" ],
       // Lib tests (sem DOM) podem usar node
-      ["**/src/lib/**/*.test.ts", "node"],
+      [ "**/src/lib/**/*.test.ts", "node" ],
     ],
 
-    exclude: ["**/node_modules/**", "**/dist/**", "tests/e2e/**"],
+    exclude: [ "**/node_modules/**", "**/dist/**", "tests/e2e/**" ],
 
     coverage: {
       provider: "v8",
-      reporter: ["text", "json", "html", "lcov"],
+      reporter: [ "text", "json", "html", "lcov" ],
       reportsDirectory: "./coverage",
       // ✅ Incluir API e src para cobertura
-      include: ["**/api/**/*.ts", "**/src/**/*.{ts,tsx}"],
+      include: [ "**/api/**/*.ts", "**/src/**/*.{ts,tsx}" ],
       exclude: [
         "node_modules/",
         "dist/",
@@ -374,4 +401,4 @@ export default defineConfig({
     // ✅ Passar sem testes OK (útil para CI)
     passWithNoTests: true,
   },
-});
+} );

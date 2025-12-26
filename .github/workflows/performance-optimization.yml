@@ -30,6 +30,11 @@ concurrency:
   group: performance-optimization-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
 jobs:
   # ==========================================
   # 📦 ANÁLISE DE BUNDLE
