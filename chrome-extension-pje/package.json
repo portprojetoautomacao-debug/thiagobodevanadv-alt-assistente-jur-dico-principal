@@ -2,10 +2,11 @@
   "name": "pje-sync-extension",
   "version": "1.0.0",
   "description": "Extensão Chrome para sincronização em tempo real do PJe com Assistente Jurídico",
+  "type": "module",
   "main": "dist/background.js",
   "scripts": {
-    "dev": "webpack --mode development --watch",
-    "build": "webpack --mode production",
+    "dev": "npx webpack --mode development --watch --config webpack.config.cjs",
+    "build": "npx webpack --mode production --config webpack.config.cjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",

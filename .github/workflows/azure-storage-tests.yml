@@ -63,21 +63,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
-    services:
-      azurite:
-        image: mcr.microsoft.com/azure-storage/azurite:latest
-        ports:
-          - 10000:10000
-          - 10001:10001
-          - 10002:10002
-        env:
-          AZURITE_ACCOUNTS: devstoreaccount1:Eby8vdM02xNOcqFlqUwJPLlmEtVQGXEOyHu1Z6L2iZBz3Yfj8AzuriteDefaultKey==
-        options: >-
-          --health-cmd "curl -f http://localhost:10000/devstoreaccount1?comp=list || exit 1"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -91,34 +76,34 @@ jobs:
           node-version: "22.x"
           cache: "npm"
 
+      - name: Start Azurite
+        run: |
+          docker run -d \
+            --name azurite \
+            -p 10000:10000 \
+            -p 10001:10001 \
+            -p 10002:10002 \
+            mcr.microsoft.com/azure-storage/azurite:latest
+          
+          echo "⏳ Waiting for Azurite to be ready..."
+          sleep 5
+          
+          # Wait for Blob service to respond
+          for i in {1..30}; do
+            if curl -f http://localhost:10000/devstoreaccount1?comp=list &>/dev/null; then
+              echo "✅ Azurite is ready!"
+              exit 0
+            fi
+            echo "Waiting... ($i/30)"
+            sleep 2
+          done
+          
+          echo "❌ Azurite failed to start"
+          docker logs azurite
+          exit 1
+
       - name: Install dependencies
         run: npm ci
-
-      - name: Wait for Azurite to be ready
-        run: |
-          echo "⏳ Waiting for Azurite to be ready..."
-          max_attempts=60
-          attempt=0
-          until curl -f -s http://localhost:10000/devstoreaccount1?comp=list &>/dev/null; do
-            attempt=$((attempt+1))
-            if [ $attempt -ge $max_attempts ]; then
-              echo "❌ Azurite failed to start after $max_attempts seconds"
-              echo "Checking if Azurite container is running:"
-              docker ps -a
-              echo "Checking Azurite logs:"
-              docker logs $(docker ps -aq --filter ancestor=mcr.microsoft.com/azure-storage/azurite:latest) 2>&1 || echo "No logs available"
-              exit 1
-            fi
-            echo "Attempt $attempt/$max_attempts - Azurite not ready yet, waiting..."
-            sleep 1
-          done
-          echo "✅ Azurite is ready!"
-
-      - name: Verify Azurite connection
-        run: |
-          echo "🔍 Testing Azurite connection..."
-          curl -v http://localhost:10000/devstoreaccount1?comp=list 2>&1 | head -20
-          echo "✅ Azurite connection verified"
 
       - name: Start dev server in background
         run: |
@@ -140,7 +125,11 @@ jobs:
         if: failure()
         run: |
           echo "📋 Azurite container logs:"
-          docker logs $(docker ps -q --filter ancestor=mcr.microsoft.com/azure-storage/azurite:latest) 2>&1 | tail -100
+          docker logs azurite 2>&1 | tail -100
+
+      - name: Cleanup Azurite
+        if: always()
+        run: docker rm -f azurite || true
 
       - name: Upload integration test results
         if: always()

@@ -58,18 +58,10 @@ export default defineConfig({
     testTimeout: 60000,
     hookTimeout: 60000,
 
-    // Pool configuration
+    // ✅ UPDATED: Pool configuration moved to top-level (Vitest 4 migration)
     pool: "threads",
-    poolOptions: {
-      threads: {
-        // singleThread: true, // REMOVIDO: Não forçar single-thread globalmente
-        // Para testes com side effects conhecidos, use configuração por arquivo:
-        // Exemplo em api/side-effect-tests/*.test.ts:
-        // test.describe.configure({ pool: "threads", poolOptions: { threads: { singleThread: true } } });
-        minThreads: 1,
-        maxThreads: 1,
-      },
-    },
+    minThreads: 1,
+    maxThreads: 1,
     maxConcurrency: 1,
 
     // Reporters

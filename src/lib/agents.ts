@@ -1124,6 +1124,16 @@ export function createTaskGenerator(
 }
 
 // ============================================================================
+// EXPORTS
+// ============================================================================
+
+/**
+ * Export AGENTS array for tests and external consumers
+ * Alias for DEFAULT_AGENTS to maintain API compatibility
+ */
+export const AGENTS = DEFAULT_AGENTS;
+
+// ============================================================================
 // HYBRID AGENTS INTEGRATION
 // ============================================================================
 

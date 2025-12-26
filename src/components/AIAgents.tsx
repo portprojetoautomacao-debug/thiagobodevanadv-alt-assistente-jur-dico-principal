@@ -576,7 +576,9 @@ export default function AIAgents({ onNavigate }: Readonly<AIAgentsProps>) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {agents.map((agent) => {
               const IconComponent = agentIcons[agent.id] || Bot;
-              const agentStreamContent = (streamingContent as unknown as Record<string, string>)[agent.id];
+              const agentStreamContent = (streamingContent as unknown as Record<string, string>)[
+                agent.id
+              ];
               const isStreaming = !!agentStreamContent;
               const streamPreview = agentStreamContent?.slice(-100) || "";
               const statusColor = getStatusColor(agent.enabled, isStreaming, agent.status);
