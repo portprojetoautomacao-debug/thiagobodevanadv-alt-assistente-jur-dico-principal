@@ -79,7 +79,8 @@
     "vercel:env:list": "tsx scripts/vercel-env-manager.ts list",
     "vercel:env:add": "tsx scripts/vercel-env-manager.ts add",
     "vercel:env:remove": "tsx scripts/vercel-env-manager.ts remove",
-    "vercel:env:sync": "tsx scripts/vercel-env-manager.ts sync"
+    "vercel:env:sync": "tsx scripts/vercel-env-manager.ts sync",
+    "test:aop": "vitest run src/lib/aop-logging.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
