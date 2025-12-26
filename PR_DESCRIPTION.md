@@ -235,4 +235,4 @@ GitHub Copilot - Co-author
 
 ## 🔗 Link para Criar o PR
 
-Acesse: https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal/pull/new/feat/optimize-workflows-enterprise-grade
+Acesse: https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/pull/new/feat/optimize-workflows-enterprise-grade

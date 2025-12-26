@@ -52,7 +52,7 @@ for agent_info in "${AGENTS_TO_REGISTER[@]}"; do
     echo ""
     echo "🌐 Passos para registrar no GitLab:"
     echo ""
-    echo "1. Acesse: https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/clusters"
+    echo "1. Acesse: https://gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/-/clusters"
     echo "2. Clique em 'Connect a cluster'"
     echo "3. Selecione 'GitLab agent'"
     echo "4. Digite o nome do agente: '$agent_name'"

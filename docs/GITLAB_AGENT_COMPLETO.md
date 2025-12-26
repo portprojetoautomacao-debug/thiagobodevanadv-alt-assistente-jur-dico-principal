@@ -79,7 +79,7 @@ kubectl get all -n gitlab-agent-agenterevisor
    - Jobs `build_app` e `test_app` executam automaticamente
 
 3. **Deploy Manual Staging**:
-   - Acesse: https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/pipelines
+   - Acesse: https://gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/-/pipelines
    - Clique no pipeline mais recente
    - No job `docker_build`, clique em "Play" (▶️)
    - Após o build, no job `deploy_staging`, clique em "Play" (▶️)
@@ -118,7 +118,7 @@ kubectl rollout status deployment/assistente-juridico -n production
 kubectl config get-contexts
 
 # Ver pods via agent
-kubectl get pods -n staging --context=gitlab:thiagobodevan-a11y/assistente-juridico-p:agenterevisor
+kubectl get pods -n staging --context=gitlab:portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal:agenterevisor
 ```
 
 ---
@@ -160,7 +160,7 @@ Deve mostrar `assistente-juridico` em ambos.
 
 ### 3. Pipeline no GitLab
 
-Acesse: https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/pipelines
+Acesse: https://gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/-/pipelines
 
 Deve mostrar pipelines com:
 - ✅ build_app
@@ -308,7 +308,7 @@ kubectl logs -n staging -l app=assistente-juridico --tail=50
 kubectl scale deployment assistente-juridico -n staging --replicas=3
 
 # Atualizar imagem manualmente
-kubectl set image deployment/assistente-juridico assistente-juridico=registry.gitlab.com/thiagobodevan-a11y/assistente-juridico-p:latest -n staging
+kubectl set image deployment/assistente-juridico assistente-juridico=registry.gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal:latest -n staging
 
 # Ver rollout status
 kubectl rollout status deployment/assistente-juridico -n staging

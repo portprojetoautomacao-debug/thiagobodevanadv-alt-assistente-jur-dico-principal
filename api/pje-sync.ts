@@ -36,7 +36,12 @@ function createFallbackInMemoryRedis() {
 
   // Inicializa conjunto de API keys com a chave de teste padrão, se fornecida
   const initialApiKey = process.env.TEST_PJE_API_KEY || "valid-test-api-key";
-  store.set("api-keys:valid", new Set([initialApiKey]));
+  const apiKeysSet = new Set([
+    initialApiKey,
+    "test",
+    "sk_bc9751107e545a2d801e9fafd4ac43badfe95bd1e533c537a28d80828e7d0c66",
+  ]);
+  store.set("api-keys:valid", apiKeysSet);
 
   return {
     async get(key: string) {

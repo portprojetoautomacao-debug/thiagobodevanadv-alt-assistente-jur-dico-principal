@@ -117,7 +117,7 @@ CI/CD automático no GitHub com retry e correções.
 - 🔘 Execução manual (workflow_dispatch)
 
 **Ver resultados:**
-- https://github.com/thiagobodevan-a11y/assistente-juridico-p/actions
+- https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/actions
 
 ---
 

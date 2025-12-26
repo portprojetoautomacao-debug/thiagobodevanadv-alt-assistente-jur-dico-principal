@@ -14,7 +14,7 @@ echo "   gitlab-agent register --token <TOKEN> --agent <AGENT_NAME>"
 echo ""
 
 echo "🌐 Para obter os tokens, acesse:"
-echo "   https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/clusters"
+echo "   https://gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/-/clusters"
 echo ""
 
 echo "📝 AGENTES PARA REGISTRAR:"

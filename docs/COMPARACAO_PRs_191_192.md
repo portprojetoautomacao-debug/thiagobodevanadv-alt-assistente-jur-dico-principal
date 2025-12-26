@@ -217,8 +217,8 @@ git push origin copilot/feathybrid-stubs
 
 ## 🔗 Links Úteis
 
-- **PR #191:** https://github.com/thiagobodevan-a11y/assistente-juridico-p/pull/191
-- **PR #192:** https://github.com/thiagobodevan-a11y/assistente-juridico-p/pull/192
+- **PR #191:** https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/pull/191
+- **PR #192:** https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/pull/192
 - **Arquivo de análise completa:** `/docs/ANALISE_REPOSITORIOS_ARQUITETURA_HIBRIDA.md`
 
 ---

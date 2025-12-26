@@ -5,7 +5,7 @@
 - ✅ SonarLint instalado no VS Code
 - ✅ `.sonarcloud.properties` criado
 - ✅ Connected Mode habilitado em `.vscode/settings.json`
-- ✅ Projeto existe no SonarCloud: `thiagobodevan-a11y_assistente-juridico-p`
+- ✅ Projeto existe no SonarCloud: `portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal`
 
 ---
 
@@ -50,7 +50,7 @@ sqa_1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r
 5. **Selecione a organização:**
    - `thiagobodevan-a11y-assistente-juridico-p`
 6. **Selecione o projeto:**
-   - `thiagobodevan-a11y_assistente-juridico-p`
+   - `portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal`
 7. Aguarde sincronização (5-10 segundos)
 
 ### Opção B - Manualmente (Alternativa)
@@ -68,7 +68,7 @@ Se a Opção A não funcionar, edite `.vscode/settings.json`:
   ],
   "sonarlint.connectedMode.project": {
     "connectionId": "sonarcloud-assistente-juridico",
-    "projectKey": "thiagobodevan-a11y_assistente-juridico-p"
+    "projectKey": "portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal"
   }
 }
 ```
@@ -87,7 +87,7 @@ Se a Opção A não funcionar, edite `.vscode/settings.json`:
 Você deve ver:
 - ✅ **Connected Mode:** Ativo
 - ✅ **Connection:** `sonarcloud-assistente-juridico`
-- ✅ **Project:** `thiagobodevan-a11y_assistente-juridico-p`
+- ✅ **Project:** `portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal`
 - ✅ **Quality Profile:** Sincronizado
 
 ### 3.3 Testar Análise
@@ -109,7 +109,7 @@ Para análise automática em PRs e pushes:
 
 ### 4.1 Acessar GitHub Secrets
 
-🌐 **Abra:** https://github.com/thiagobodevan-a11y/assistente-juridico-p/settings/secrets/actions
+🌐 **Abra:** https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/settings/secrets/actions
 
 ### 4.2 Criar Secret
 
@@ -128,7 +128,7 @@ git commit -m "test: verificar integração SonarCloud"
 git push
 
 # Verificar workflow rodando
-# https://github.com/thiagobodevan-a11y/assistente-juridico-p/actions
+# https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/actions
 ```
 
 ---
@@ -167,7 +167,7 @@ rm -rf ~/.sonarlint/work/*
 
 C) **Verificar organização e projeto:**
 - Organization: `thiagobodevan-a11y-assistente-juridico-p`
-- Project: `thiagobodevan-a11y_assistente-juridico-p`
+- Project: `portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal`
 
 ### Problema 2: "Quality Profile not synchronized"
 
@@ -201,7 +201,7 @@ Ctrl+Shift+P → "SonarLint: Show SonarLint Output"
 **Verificar:**
 
 1. **SONAR_TOKEN existe:**
-   - https://github.com/thiagobodevan-a11y/assistente-juridico-p/settings/secrets/actions
+   - https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/settings/secrets/actions
 
 2. **Token é válido:**
    - Gere novo se necessário
@@ -210,7 +210,7 @@ Ctrl+Shift+P → "SonarLint: Show SonarLint Output"
    - `.github/workflows/sonarcloud.yml` deve existir
 
 4. **Ver logs do workflow:**
-   - https://github.com/thiagobodevan-a11y/assistente-juridico-p/actions
+   - https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/actions
 
 ---
 
@@ -261,7 +261,7 @@ Ctrl+Shift+P → "SonarLint: Show SonarLint Output"
 Após conectar:
 
 1. **Explorar SonarCloud Dashboard**
-   - https://sonarcloud.io/project/overview?id=thiagobodevan-a11y_assistente-juridico-p
+   - https://sonarcloud.io/project/overview?id=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal
 
 2. **Configurar Quality Gate**
    - Coverage > 80%

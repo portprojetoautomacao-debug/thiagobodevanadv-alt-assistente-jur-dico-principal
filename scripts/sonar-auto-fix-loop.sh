@@ -22,7 +22,7 @@ readonly PROJECT_ROOT="${SCRIPT_DIR}/.."
 readonly RESULTS_DIR="${PROJECT_ROOT}/.sonar-results"
 readonly LOG_FILE="${RESULTS_DIR}/auto-fix-loop.log"
 readonly SONAR_TOKEN="${SONAR_TOKEN:-}"
-readonly SONAR_PROJECT="thiagobodevan-a11y_assistente-juridico-p"
+readonly SONAR_PROJECT="portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal"
 
 # Parâmetros
 MAX_ITERATIONS=50
@@ -78,7 +78,7 @@ fetch_sonar_issues() {
         echo "0"
         return
     fi
-    
+
     local response
     response=$(curl -s -u "${SONAR_TOKEN}:" \
         "https://sonarcloud.io/api/issues/search?componentKeys=${SONAR_PROJECT}&statuses=OPEN&ps=100&s=SEVERITY&asc=false" \
@@ -87,11 +87,11 @@ fetch_sonar_issues() {
         echo "0"
         return
     }
-    
+
     # Salvar issues para processamento
     echo "$response" | jq -r '.issues[] | "\(.severity)|\(.rule)|\(.component | split(":")[1])|\(.line // 0)|\(.message[0:100])"' \
         > "${RESULTS_DIR}/current-issues.txt" 2>/dev/null || true
-    
+
     echo "$response" | jq '.total // 0'
 }
 
@@ -106,7 +106,7 @@ fix_eslint_issues() {
 
 fix_window_to_globalthis() {
     log FIX "Corrigindo: window → globalThis.window"
-    
+
     # Lista de arquivos com o problema
     local files=(
         "src/lib/spark-client-fixes.ts"
@@ -114,18 +114,18 @@ fix_window_to_globalthis() {
         "src/hooks/useErrorTracking.ts"
         "src/hooks/use-notifications.ts"
     )
-    
+
     for file in "${files[@]}"; do
         local filepath="${PROJECT_ROOT}/${file}"
         if [[ -f "$filepath" ]]; then
             # Substituir 'typeof window' por 'typeof globalThis.window'
             sed -i 's/typeof window === "undefined"/typeof globalThis.window === "undefined"/g' "$filepath" 2>/dev/null || true
             sed -i "s/typeof window === 'undefined'/typeof globalThis.window === 'undefined'/g" "$filepath" 2>/dev/null || true
-            
+
             # Substituir 'if (window.' por 'if (globalThis.window.'
             # Mas NÃO substituir 'globalThis.window' novamente
             sed -i 's/\bwindow\./globalThis.window./g' "$filepath" 2>/dev/null || true
-            
+
             # Corrigir duplicatas acidentais
             sed -i 's/globalThis\.globalThis\./globalThis./g' "$filepath" 2>/dev/null || true
         fi
@@ -134,11 +134,11 @@ fix_window_to_globalthis() {
 
 fix_replace_to_replaceall() {
     # DESABILITADO: Requer correção manual - sed está quebrando regexes
-    # A substituição de .replace(/regex/g, ...) para .replaceAll() precisa 
+    # A substituição de .replace(/regex/g, ...) para .replaceAll() precisa
     # ser feita manualmente para não quebrar expressões regulares
     log WARN "replace() → replaceAll() requer correção manual"
     log WARN "  - src/lib/notifications.ts:136,151,252"
-    
+
     # Correção manual segura seria:
     # .replace(/pattern/g, replacement) → .replaceAll("pattern", replacement)
     # Mas apenas para strings literais, não regexes complexas
@@ -146,12 +146,12 @@ fix_replace_to_replaceall() {
 
 fix_zero_fractions() {
     log FIX "Corrigindo: 0.0 → 0"
-    
+
     local files=(
         "src/hooks/use-fluent-motion.ts"
         "src/lib/tracing.ts"
     )
-    
+
     for file in "${files[@]}"; do
         local filepath="${PROJECT_ROOT}/${file}"
         if [[ -f "$filepath" ]]; then
@@ -163,7 +163,7 @@ fix_zero_fractions() {
 
 fix_unused_imports() {
     log FIX "Removendo imports não utilizados..."
-    
+
     # AdvancedNLPDashboard.test.tsx - remover 'Check' não usado
     local file="${PROJECT_ROOT}/src/components/AdvancedNLPDashboard.test.tsx"
     if [[ -f "$file" ]]; then
@@ -174,7 +174,7 @@ fix_unused_imports() {
 
 fix_unused_params() {
     log FIX "Prefixando parâmetros não usados com _"
-    
+
     # todoist-agent.ts - processNumber → _processNumber
     local file="${PROJECT_ROOT}/src/lib/agents/todoist-agent.ts"
     if [[ -f "$file" ]]; then
@@ -185,7 +185,7 @@ fix_unused_params() {
 
 fix_any_types() {
     log FIX "Corrigindo tipos 'any' → tipos específicos"
-    
+
     # Estes precisam de correção manual mais cuidadosa
     # Apenas logamos para revisão
     log WARN "Tipos 'any' requerem revisão manual em:"
@@ -199,15 +199,15 @@ fix_any_types() {
 
 apply_all_fixes() {
     header "🔧 Aplicando Correções Automáticas (Iteração $ITERATION)"
-    
+
     local changes_before
     changes_before=$(git diff --stat 2>/dev/null | wc -l || echo "0")
-    
+
     if [[ "$DRY_RUN" == "true" ]]; then
         log WARN "Modo DRY-RUN: Nenhuma alteração será aplicada"
         return 0
     fi
-    
+
     # Aplicar correções em ordem
     fix_eslint_issues
     fix_window_to_globalthis
@@ -215,16 +215,16 @@ apply_all_fixes() {
     fix_zero_fractions
     fix_unused_imports
     fix_unused_params
-    
+
     # Verificar se houve mudanças
     local changes_after
     changes_after=$(git diff --stat 2>/dev/null | wc -l || echo "0")
-    
+
     if [[ "$changes_after" -gt "$changes_before" ]]; then
         local files_changed=$((changes_after - changes_before))
         log OK "$files_changed arquivo(s) modificado(s)"
         TOTAL_FIXED=$((TOTAL_FIXED + files_changed))
-        
+
         # Commit automático se habilitado
         if [[ "$AUTO_COMMIT" == "true" ]]; then
             git add -A
@@ -238,7 +238,7 @@ apply_all_fixes() {
 Gerado por sonar-auto-fix-loop.sh" 2>/dev/null || true
             log OK "Commit criado automaticamente"
         fi
-        
+
         return 0
     else
         log INFO "Nenhuma nova correção aplicada"
@@ -252,9 +252,9 @@ Gerado por sonar-auto-fix-loop.sh" 2>/dev/null || true
 
 validate_fixes() {
     header "✅ Validando Correções"
-    
+
     local has_errors=false
-    
+
     # TypeScript check
     log INFO "Verificando TypeScript..."
     if ! npx tsc --noEmit --skipLibCheck 2>&1 | head -5; then
@@ -263,27 +263,27 @@ validate_fixes() {
     else
         log OK "TypeScript: OK"
     fi
-    
+
     # ESLint check
     log INFO "Verificando ESLint..."
     local lint_result
     lint_result=$(npm run lint 2>&1) || true
     local error_count
     error_count=$(echo "$lint_result" | grep -oP '\d+(?= errors?)' | head -1 || echo "0")
-    
+
     if [[ "$error_count" -gt 0 ]]; then
         log ERROR "ESLint encontrou $error_count erros!"
         has_errors=true
     else
         log OK "ESLint: OK"
     fi
-    
+
     if [[ "$has_errors" == "true" ]]; then
         log WARN "Revertendo alterações problemáticas..."
         git checkout -- . 2>/dev/null || true
         return 1
     fi
-    
+
     return 0
 }
 
@@ -299,20 +299,20 @@ run_loop() {
     log INFO "  Dry-run: $DRY_RUN"
     log INFO "  Auto-commit: $AUTO_COMMIT"
     echo ""
-    
+
     # Buscar issues iniciais
     ISSUES_BEFORE=$(fetch_sonar_issues)
     log INFO "Issues iniciais do SonarCloud: $ISSUES_BEFORE"
-    
+
     local consecutive_no_changes=0
-    
+
     while [[ $ITERATION -lt $MAX_ITERATIONS ]]; do
         ITERATION=$((ITERATION + 1))
-        
+
         # Aplicar correções
         if apply_all_fixes; then
             consecutive_no_changes=0
-            
+
             # Validar
             if ! validate_fixes; then
                 log ERROR "Validação falhou. Pulando para próxima iteração."
@@ -320,29 +320,29 @@ run_loop() {
             fi
         else
             consecutive_no_changes=$((consecutive_no_changes + 1))
-            
+
             # Se não houver mudanças por 3 iterações consecutivas, parar
             if [[ $consecutive_no_changes -ge 3 ]]; then
                 log INFO "Sem novas correções por 3 iterações. Finalizando."
                 break
             fi
         fi
-        
+
         # Verificar issues restantes
         local current_issues
         current_issues=$(fetch_sonar_issues)
-        
+
         if [[ "$current_issues" == "0" ]]; then
             log OK "🎉 TODOS OS ISSUES FORAM RESOLVIDOS!"
             break
         fi
-        
+
         log INFO "Issues restantes: $current_issues (era: $ISSUES_BEFORE)"
         log INFO "Aguardando ${INTERVAL}s antes da próxima iteração..."
-        
+
         sleep "$INTERVAL"
     done
-    
+
     # Relatório final
     header "📊 RELATÓRIO FINAL"
     echo ""
@@ -352,18 +352,18 @@ run_loop() {
     echo -e "${CYAN}║${NC} Iterações executadas: $ITERATION"
     echo -e "${CYAN}║${NC} Arquivos corrigidos: $TOTAL_FIXED"
     echo -e "${CYAN}║${NC} Issues iniciais: $ISSUES_BEFORE"
-    
+
     local final_issues
     final_issues=$(fetch_sonar_issues)
     echo -e "${CYAN}║${NC} Issues finais: $final_issues"
-    
+
     if [[ "$final_issues" -lt "$ISSUES_BEFORE" ]]; then
         local reduced=$((ISSUES_BEFORE - final_issues))
         echo -e "${CYAN}║${NC} ${GREEN}✅ Redução: $reduced issues${NC}"
     fi
-    
+
     echo -e "${CYAN}╚════════════════════════════════════════════════════════════╝${NC}"
-    
+
     # Sugestão de push
     if [[ "$AUTO_COMMIT" == "true" ]] && git log --oneline -1 | grep -q "sonar"; then
         echo ""
@@ -422,13 +422,13 @@ parse_args() {
 
 main() {
     parse_args "$@"
-    
+
     # Setup
     mkdir -p "$RESULTS_DIR"
     cd "$PROJECT_ROOT"
-    
+
     echo "===== Auto-Fix Loop iniciado em $(date '+%Y-%m-%d %H:%M:%S') =====" >> "$LOG_FILE"
-    
+
     run_loop
 }
 

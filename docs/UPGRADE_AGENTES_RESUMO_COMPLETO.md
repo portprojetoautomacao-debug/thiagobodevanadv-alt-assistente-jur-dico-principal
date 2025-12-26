@@ -1109,7 +1109,7 @@ Com a Arquitetura H�brida Superior implementada, o sistema atinge:
 **Status**: ? **Pronto para Ativa��o + Arquitetura H�brida Superior Documentada**
 
 Links dos repositorios de referencia para consultar sempre que precisar:  Refer�ncias e reposit�rios usados como inspira��o
-thiagobodevan-a11y/assistente-juridico-p � https://github.com/thiagobodevan-a11y/assistente-juridico-p (reposit�rio alvo)
+portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal � https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal (reposit�rio alvo)
 microsoft/autogen � https://github.com/microsoft/autogen (orquestra��o multi-agent, execu��o de c�digo por agentes)
 langchain-ai/langchain � https://github.com/langchain-ai/langchain (workflows, LangGraph, tool-calling e mem�ria)
 microsoft/semantic-kernel � https://github.com/microsoft/semantic-kernel (planners, plugins enterprise)

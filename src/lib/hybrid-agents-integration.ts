@@ -1,28 +1,29 @@
 /**
  * Hybrid Agents Integration
  *
- * DESABILITADO (modo manutenção): Este arquivo foi temporariamente desabilitado
- * pois depende de agentes LangGraph que não estão disponíveis no build Vercel.
+ * HABILITADO TEMPORARIAMENTE PARA MANUTENÇÃO (25/12/2025)
  *
- * Motivo: Sistema em produção estável - foco em corrigir bugs, não adicionar features.
- * Os agentes LangGraph estão localizados em src/agents/ mas causam erros de build
- * devido a incompatibilidades de path alias @/agents/
+ * ⚠️ ATENÇÃO: Este sistema está habilitado apenas para verificação e manutenção.
+ * Não adicione novas funcionalidades. Apenas corrija bugs se necessário.
  *
- * Para reativar: Configure path mapping correto no tsconfig.json e vercel.json
+ * Motivo da habilitação: Verificar status de funcionamento dos agentes LangGraph
+ * após otimizações de TypeScript/JavaScript realizadas.
+ *
+ * Os agentes LangGraph estão localizados em src/agents/
  */
 
 /**
- * Integra os agentes LangGraph com o sistema existente de 15 agentes
+ * Integra os agentes LangGraph com o sistema existente de 16 agentes
  * Permite execução paralela e coordenação entre agentes tradicionais e híbridos
  */
 
-// CÓDIGO DESABILITADO - Mantido para referência futura
-export const HYBRID_AGENTS_DISABLED = true;
+// HABILITADO TEMPORARIAMENTE PARA MANUTENÇÃO
+export const HYBRID_AGENTS_DISABLED = false;
 
 let hasWarnedDisabled = false;
 
 function warnDisabledOnce(): void {
-  // Evita poluir logs de testes/CI e também não spam o console.
+  // Aviso quando desabilitado - agora está habilitado
   const isBrowser = typeof globalThis.window !== "undefined";
   const isDev = process.env.NODE_ENV === "development";
 
@@ -30,7 +31,7 @@ function warnDisabledOnce(): void {
   if (hasWarnedDisabled) return;
 
   hasWarnedDisabled = true;
-  console.warn("⚠️  Hybrid Agents Integration está desabilitado (modo manutenção)");
+  console.log("✅ Hybrid Agents Integration HABILITADO para manutenção (25/12/2025)");
 }
 
 // Stub functions para manter compatibilidade

@@ -154,7 +154,7 @@ test.describe("UI Overhaul - E2E Tests", () => {
       // Total deve ser número > 0
       const total = page.locator(".text-2xl.font-bold").first();
       const totalText = await total.textContent();
-      expect(parseInt(totalText || "0")).toBeGreaterThanOrEqual(0);
+      expect(Number.parseInt(totalText || "0")).toBeGreaterThanOrEqual(0);
     });
   });
 

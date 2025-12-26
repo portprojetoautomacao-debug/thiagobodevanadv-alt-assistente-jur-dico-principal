@@ -39,7 +39,7 @@ VITE_APP_ENV=production
 ### 1. Clonar o Repositório
 
 ```bash
-git clone https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal
+git clone https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
 cd assistente-jur-dico-principal
 ```
 

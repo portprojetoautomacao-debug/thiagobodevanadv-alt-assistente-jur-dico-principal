@@ -42,9 +42,9 @@
 
 ```yaml
 variables:
-  KUBE_CONTEXT_PRIMARY: "thiagobodevan-a11y/assistente-juridico-p:agenterevisor"
-  KUBE_CONTEXT_SECONDARY: "thiagobodevan-a11y/assistente-juridico-p:agenterevisor2"
-  KUBE_CONTEXT: "thiagobodevan-a11y/assistente-juridico-p:agenterevisor2"  # Usando agent 2
+  KUBE_CONTEXT_PRIMARY: "portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal:agenterevisor"
+  KUBE_CONTEXT_SECONDARY: "portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal:agenterevisor2"
+  KUBE_CONTEXT: "portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal:agenterevisor2"  # Usando agent 2
 ```
 
 ### `.gitlab/agents/agenterevisor2/config.yaml`
@@ -60,13 +60,13 @@ gitops:
 
 ci_access:
   projects:
-  - id: thiagobodevan-a11y/assistente-juridico-p
+  - id: portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
 
 user_access:
   access_as:
     agent: {}
   projects:
-  - id: thiagobodevan-a11y/assistente-juridico-p
+  - id: portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
 ```
 
 ---
@@ -142,10 +142,10 @@ Se quiser usar o agent original como primário:
 ```bash
 # Editar .gitlab-ci.yml
 # Mudar:
-KUBE_CONTEXT: "thiagobodevan-a11y/assistente-juridico-p:agenterevisor2"
+KUBE_CONTEXT: "portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal:agenterevisor2"
 
 # Para:
-KUBE_CONTEXT: "thiagobodevan-a11y/assistente-juridico-p:agenterevisor"
+KUBE_CONTEXT: "portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal:agenterevisor"
 
 # Commit e push
 git add .gitlab-ci.yml

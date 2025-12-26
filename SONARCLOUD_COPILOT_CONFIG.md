@@ -9,7 +9,7 @@ A extensão **SonarQube for IDE** (SonarLint) foi configurada com sucesso em Con
 | Item | Valor |
 |------|-------|
 | **Organização** | thiagobodevanadv-alt |
-| **Project Key** | thiagobodevanadv-alt_assistente-jur-dico-principal |
+| **Project Key** | portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal |
 | **Project Name** | Assistente Jurídico PJe |
 | **Token** | ee13b3dd049fe0da3696d783020804f4a9e93566 |
 | **Servidor** | SonarCloud (https://sonarcloud.io) |
@@ -77,7 +77,7 @@ Se precisar trocar token ou projeto:
 
 ### 📚 Documentação
 
-- **SonarCloud Dashboard**: https://sonarcloud.io/project/overview?id=thiagobodevanadv-alt_assistente-jur-dico-principal
+- **SonarCloud Dashboard**: https://sonarcloud.io/project/overview?id=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal
 - **Instruções MCP**: `.github/instructions/sonarqube_mcp.instructions.md`
 - **SonarLint Docs**: https://docs.sonarsource.com/sonarlint/vs-code/
 

@@ -187,7 +187,7 @@ Após o push para GitHub:
 
 **Monitorar em**:
 - https://vercel.com/thiagobodevanadv-alt/assistente-juridico-p/deployments
-- https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal/actions
+- https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/actions
 
 ---
 

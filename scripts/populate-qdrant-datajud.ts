@@ -41,7 +41,7 @@ const args = process.argv.slice(2);
 const isDryRun = args.includes("--dry-run");
 const shouldValidate = args.includes("--validate");
 const maxDocsArg = args.find((arg) => arg.startsWith("--max-docs="));
-const maxDocs = maxDocsArg ? parseInt(maxDocsArg.split("=")[1]) : Infinity;
+const maxDocs = maxDocsArg ? Number.parseInt(maxDocsArg.split("=")[1]) : Infinity;
 
 // ============================================================================
 // VALIDAÇÃO DE EMBEDDINGS
@@ -59,7 +59,7 @@ function validateEmbedding(
   }
 
   // 2. Validar valores NaN/Infinity
-  const hasInvalidValues = embedding.some((v) => !isFinite(v));
+  const hasInvalidValues = embedding.some((v) => !Number.isFinite(v));
   if (hasInvalidValues) {
     issues.push("Contém valores NaN ou Infinity");
   }

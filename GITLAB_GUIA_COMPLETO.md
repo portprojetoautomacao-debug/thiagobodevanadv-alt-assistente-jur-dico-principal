@@ -36,7 +36,7 @@ Pipeline roda automaticamente:
 4. 🔧 Deploy (manual)
 
 ### Deploy Staging
-1. Acesse: https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/pipelines
+1. Acesse: https://gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/-/pipelines
 2. Clique no pipeline
 3. Stage "docker" → Clique ▶️ em `docker_build`
 4. Stage "deploy" → Clique ▶️ em `deploy_staging`
@@ -73,12 +73,12 @@ kubectl create namespace production
 3. **Criar deployment:**
 ```bash
 kubectl create deployment assistente-juridico \
-  --image=registry.gitlab.com/thiagobodevan-a11y/assistente-juridico-p:latest \
+  --image=registry.gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal:latest \
   --replicas=3 \
   -n staging
 
 kubectl create deployment assistente-juridico \
-  --image=registry.gitlab.com/thiagobodevan-a11y/assistente-juridico-p:latest \
+  --image=registry.gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal:latest \
   --replicas=3 \
   -n production
 ```
@@ -98,7 +98,7 @@ sudo gitlab-runner register \
 ```
 
 **Registration Token:**
-https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/settings/ci_cd
+https://gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/-/settings/ci_cd
 (expanda "Runners" → copie o token)
 
 ---
@@ -137,8 +137,8 @@ https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/settings/ci_cd
 ### GitLab Container Registry (Grátis)
 
 **Suas imagens:**
-- `registry.gitlab.com/thiagobodevan-a11y/assistente-juridico-p:latest`
-- `registry.gitlab.com/thiagobodevan-a11y/assistente-juridico-p:abc1234` (commit SHA)
+- `registry.gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal:latest`
+- `registry.gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal:abc1234` (commit SHA)
 
 **Login local:**
 ```bash
@@ -149,13 +149,13 @@ docker login registry.gitlab.com
 
 **Pull:**
 ```bash
-docker pull registry.gitlab.com/thiagobodevan-a11y/assistente-juridico-p:latest
+docker pull registry.gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal:latest
 ```
 
 **Run:**
 ```bash
 docker run -p 10000:10000 \
-  registry.gitlab.com/thiagobodevan-a11y/assistente-juridico-p:latest
+  registry.gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal:latest
 ```
 
 ---
@@ -171,7 +171,7 @@ Coverage é calculado automaticamente no job `test_app`.
 
 **Badge no README:**
 ```markdown
-[![Coverage](https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/badges/main/coverage.svg)](https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/graphs/main/charts)
+[![Coverage](https://gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/badges/main/coverage.svg)](https://gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/-/graphs/main/charts)
 ```
 
 ---
@@ -200,11 +200,11 @@ Coverage é calculado automaticamente no job `test_app`.
 
 ## 📚 LINKS ÚTEIS
 
-- **Pipeline:** https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/pipelines
-- **Container Registry:** https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/container_registry
-- **Environments:** https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/environments
-- **CI/CD Settings:** https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/settings/ci_cd
-- **Coverage:** https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/graphs/main/charts
+- **Pipeline:** https://gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/-/pipelines
+- **Container Registry:** https://gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/container_registry
+- **Environments:** https://gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/-/environments
+- **CI/CD Settings:** https://gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/-/settings/ci_cd
+- **Coverage:** https://gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/-/graphs/main/charts
 
 ---
 

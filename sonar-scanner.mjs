@@ -9,7 +9,7 @@ import scanner from "sonarqube-scanner";
           serverUrl: "https://sonarcloud.io",
           token: process.env.SONAR_TOKEN,
           options: {
-            "sonar.projectKey": "thiagobodevan-a11y_assistente-juridico-p",
+            "sonar.projectKey": "portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal",
             "sonar.organization": "thiagobodevan-a11y",
             "sonar.sources": "src",
             "sonar.tests": "src",

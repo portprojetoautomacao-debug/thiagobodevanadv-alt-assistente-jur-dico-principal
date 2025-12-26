@@ -155,7 +155,7 @@ Criado `scripts/configure-branch-protection.sh` que configura via GitHub API:
 ./scripts/configure-branch-protection.sh
 
 # OU manualmente via GitHub UI:
-# https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal/settings/branches
+# https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/settings/branches
 ```
 
 ### Passo 2: Configurar Ambientes com Revisores
@@ -205,11 +205,11 @@ updates:
 
 ```bash
 # Verificar proteção atual
-gh api /repos/thiagobodevanadv-alt/assistente-jur-dico-principal/branches/main/protection | jq
+gh api /repos/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/branches/main/protection | jq
 
 # Criar um PR de teste com Dependabot
 gh api --method POST \
-  /repos/thiagobodevanadv-alt/assistente-jur-dico-principal/dispatches \
+  /repos/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/dispatches \
   -f event_type=dependabot-test
 ```
 
@@ -322,7 +322,7 @@ Se falhar, configure manualmente via UI do GitHub.
 gh run cancel <RUN_ID>
 
 # Ou via UI
-# https://github.com/thiagobodevanadv-alt/assistente-jur-dico-principal/actions
+# https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/actions
 ```
 
 ### "Cache não está sendo usado"

@@ -8,14 +8,14 @@ gitops:
 
 ci_access:
   projects:
-  - id: thiagobodevan-a11y/assistente-juridico-p
+  - id: portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
 
 user_access:
   access_as:
     agent: {} # for free
     user: {} # for premium+
   projects:
-  - id: thiagobodevan-a11y/assistente-juridico-p
+  - id: portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
 
 observability:
   logging:

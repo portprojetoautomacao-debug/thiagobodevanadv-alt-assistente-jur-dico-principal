@@ -52,7 +52,7 @@ README.md                        # Seção "📧 API de Emails"
 
 #### Opção A: Via Dashboard (Recomendado)
 
-1. Acesse: https://vercel.com/thiagobodevan-a11y/assistente-juridico-p/settings/environment-variables
+1. Acesse: https://vercel.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/settings/environment-variables
 2. Adicione as variáveis:
 
 | Variável           | Valor                                      | Ambientes         |
@@ -82,7 +82,7 @@ vercel env add EMAIL_API_KEY
 ### 4. Redeploy da Aplicação
 
 **Via Dashboard:**
-1. Acesse: https://vercel.com/thiagobodevan-a11y/assistente-juridico-p/deployments
+1. Acesse: https://vercel.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/deployments
 2. Selecione o último deployment
 3. Clique nos 3 pontos (...) → **"Redeploy"**
 
@@ -215,7 +215,7 @@ npm run test:coverage -- email-service.test.ts
 
 ### Logs no Vercel
 
-1. Acesse: https://vercel.com/thiagobodevan-a11y/assistente-juridico-p/logs
+1. Acesse: https://vercel.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/logs
 2. Filtre por função: `api/emails`
 3. Procure por:
    - ✅ `Email enviado com sucesso: [messageId]`
@@ -239,7 +239,7 @@ npm run test:coverage -- email-service.test.ts
 **Causa**: Variável de ambiente não definida no Vercel
 
 **Solução**:
-1. Acesse: https://vercel.com/thiagobodevan-a11y/assistente-juridico-p/settings/environment-variables
+1. Acesse: https://vercel.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/settings/environment-variables
 2. Adicione `RESEND_API_KEY` com valor `re_...`
 3. Redeploy da aplicação
 

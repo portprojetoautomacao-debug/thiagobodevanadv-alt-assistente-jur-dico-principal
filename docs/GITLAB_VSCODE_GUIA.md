@@ -6,7 +6,7 @@ Seu token do GitLab foi configurado com sucesso!
 
 **Token**: `glpat-TyuAdkI93U_tsO0s6QexmG86MQp1Oml4ZThxCw.01.12094aj61`  
 **URL**: https://gitlab.com  
-**Projeto**: 76287668 (thiagobodevan-a11y/assistente-juridico-p)
+**Projeto**: 76287668 (portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal)
 
 ---
 
@@ -202,8 +202,8 @@ git remote -v
 
 Você verá:
 ```
-gitlab  https://oauth2:TOKEN@gitlab.com/thiagobodevan-a11y/assistente-juridico-p.git (fetch)
-gitlab  https://oauth2:TOKEN@gitlab.com/thiagobodevan-a11y/assistente-juridico-p.git (push)
+gitlab  https://oauth2:TOKEN@gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal.git (fetch)
+gitlab  https://oauth2:TOKEN@gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal.git (push)
 ```
 
 ---
@@ -222,7 +222,7 @@ gitlab  https://oauth2:TOKEN@gitlab.com/thiagobodevan-a11y/assistente-juridico-p
 
 Clique na barra de status ou use:
 ```
-https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p/-/pipelines
+https://gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/-/pipelines
 ```
 
 ---
@@ -339,7 +339,7 @@ Para criar um novo token:
 
 - **Documentação Oficial**: https://docs.gitlab.com/ee/editor_extensions/visual_studio_code/
 - **Issues da Extensão**: https://gitlab.com/gitlab-org/gitlab-vscode-extension/-/issues
-- **Projeto no GitLab**: https://gitlab.com/thiagobodevan-a11y/assistente-juridico-p
+- **Projeto no GitLab**: https://gitlab.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal
 
 ---
 

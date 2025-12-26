@@ -372,7 +372,7 @@ Ou **desabilite email service** (stubs vão retornar erro, mas não quebra o sis
 ## 📞 Suporte
 
 **Problemas?** Abra uma issue no GitHub:
-https://github.com/thiagobodevan-a11y/assistente-juridico-p/issues
+https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/issues
 
 **Documentação adicional**:
 - `HYBRID_ARCHITECTURE.md` - Visão técnica completa

@@ -31,10 +31,11 @@ readonly NC='\033[0m'
 # Configurações
 readonly PROJECT_ROOT="${SCRIPT_DIR}/.."
 readonly SONAR_TOKEN="${SONAR_TOKEN:-}"
-readonly SONAR_PROJECT="thiagobodevan-a11y_assistente-juridico-p"
-readonly SONAR_ORG="thiagobodevan-a11y-assistente-juridico-p"
+readonly SONAR_PROJECT="portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal"
+readonly SONAR_ORG="portprojetoautomacao-debug"
 readonly RESULTS_DIR="${PROJECT_ROOT}/.sonar-results"
 readonly LOG_FILE="${RESULTS_DIR}/analysis.log"
+readonly NPX_CMD="/usr/local/share/nvm/versions/node/v22.21.1/bin/npx"
 
 # Flags
 FIX_MODE=false
@@ -73,10 +74,10 @@ log_header() {
 
 setup() {
     mkdir -p "$RESULTS_DIR"
-    
+
     # Iniciar log
     echo "===== Análise iniciada em $(date '+%Y-%m-%d %H:%M:%S') =====" >> "$LOG_FILE"
-    
+
     cd "$PROJECT_ROOT"
 }
 
@@ -86,29 +87,29 @@ setup() {
 
 run_local_analysis() {
     log_header "🔍 Análise Local (ESLint + TypeScript)"
-    
+
     local errors=0
     local warnings=0
-    
+
     # TypeScript check
     log_info "Executando type-check..."
-    if npx tsc --noEmit --skipLibCheck 2>&1 | tee -a "$LOG_FILE"; then
+    if "$NPX_CMD" tsc --noEmit --skipLibCheck 2>&1 | tee -a "$LOG_FILE"; then
         log_success "TypeScript: 0 erros"
     else
         log_error "TypeScript: erros encontrados"
         ((errors++)) || true
     fi
-    
+
     # ESLint
     log_info "Executando ESLint..."
     local eslint_output
     eslint_output=$(npm run lint 2>&1) || true
     echo "$eslint_output" >> "$LOG_FILE"
-    
+
     # Extrair contagem de erros e warnings
     local lint_summary
     lint_summary=$(echo "$eslint_output" | grep -E "✖.*problems" || echo "0 problems")
-    
+
     if echo "$lint_summary" | grep -q "0 errors"; then
         log_success "ESLint: 0 erros"
     else
@@ -117,19 +118,19 @@ run_local_analysis() {
         log_error "ESLint: $error_count erros"
         errors=$((errors + error_count))
     fi
-    
+
     local warning_count
     warning_count=$(echo "$lint_summary" | grep -oP '\d+(?= warnings?)' || echo "0")
     warnings=$((warnings + warning_count))
     log_info "ESLint: $warning_count warnings"
-    
+
     # Salvar resumo
     {
         echo "timestamp: $(date -Iseconds)"
         echo "errors: $errors"
         echo "warnings: $warnings"
     } > "${RESULTS_DIR}/local-summary.txt"
-    
+
     return $errors
 }
 
@@ -139,14 +140,14 @@ run_local_analysis() {
 
 run_sonarcloud_analysis() {
     log_header "☁️ Análise SonarCloud (API)"
-    
+
     if [[ -z "$SONAR_TOKEN" ]]; then
         log_warn "SONAR_TOKEN não configurado. Pulando análise remota."
         return 0
     fi
-    
+
     log_info "Buscando issues do SonarCloud..."
-    
+
     # Buscar issues OPEN ordenados por severidade
     local response
     response=$(curl -s -u "${SONAR_TOKEN}:" \
@@ -155,38 +156,38 @@ run_sonarcloud_analysis() {
         log_error "Falha ao conectar com SonarCloud"
         return 1
     }
-    
+
     # Verificar se resposta é válida
     if ! echo "$response" | jq -e '.issues' > /dev/null 2>&1; then
         log_error "Resposta inválida do SonarCloud"
         echo "$response" >> "$LOG_FILE"
         return 1
     fi
-    
+
     # Extrair métricas
     local total_issues
     total_issues=$(echo "$response" | jq '.total // 0')
-    
+
     local blocker_count critical_count major_count minor_count
     blocker_count=$(echo "$response" | jq '[.issues[] | select(.severity == "BLOCKER")] | length')
     critical_count=$(echo "$response" | jq '[.issues[] | select(.severity == "CRITICAL")] | length')
     major_count=$(echo "$response" | jq '[.issues[] | select(.severity == "MAJOR")] | length')
     minor_count=$(echo "$response" | jq '[.issues[] | select(.severity == "MINOR")] | length')
-    
+
     log_info "Total de issues: $total_issues"
     [[ "$blocker_count" -gt 0 ]] && log_error "BLOCKER: $blocker_count"
     [[ "$critical_count" -gt 0 ]] && log_error "CRITICAL: $critical_count"
     [[ "$major_count" -gt 0 ]] && log_warn "MAJOR: $major_count"
     [[ "$minor_count" -gt 0 ]] && log_info "MINOR: $minor_count"
-    
+
     # Salvar issues para processamento
     echo "$response" | jq '.issues' > "${RESULTS_DIR}/sonar-issues.json"
-    
+
     # Gerar relatório legível
     log_info "Gerando relatório de issues..."
     echo "$response" | jq -r '.issues[] | "\(.severity) | \(.rule | split(":")[1]) | \(.component | split(":")[1]) | L\(.line // "?") | \(.message[0:60])..."' \
         > "${RESULTS_DIR}/sonar-issues.txt"
-    
+
     # Salvar resumo
     {
         echo "timestamp: $(date -Iseconds)"
@@ -196,7 +197,7 @@ run_sonarcloud_analysis() {
         echo "major: $major_count"
         echo "minor: $minor_count"
     } > "${RESULTS_DIR}/sonar-summary.txt"
-    
+
     log_success "Relatório salvo em ${RESULTS_DIR}/sonar-issues.txt"
 }
 
@@ -206,15 +207,15 @@ run_sonarcloud_analysis() {
 
 run_auto_fix() {
     log_header "🔧 Auto-Fix (ESLint)"
-    
+
     log_info "Aplicando correções automáticas..."
-    
+
     if npm run lint -- --fix 2>&1 | tee -a "$LOG_FILE"; then
         log_success "Correções automáticas aplicadas"
     else
         log_warn "Algumas correções podem ter falhado"
     fi
-    
+
     # Verificar se há mudanças
     if git diff --quiet; then
         log_info "Nenhuma mudança detectada"
@@ -222,7 +223,7 @@ run_auto_fix() {
         local changed_files
         changed_files=$(git diff --name-only | wc -l)
         log_success "$changed_files arquivo(s) modificado(s)"
-        
+
         # Listar arquivos modificados
         git diff --name-only | head -10 | while read -r file; do
             log_info "  📝 $file"
@@ -236,18 +237,18 @@ run_auto_fix() {
 
 run_full_analysis() {
     log_header "🚀 Análise Completa do Projeto"
-    
+
     # 1. Análise local
     run_local_analysis || true
-    
+
     # 2. Análise SonarCloud
     run_sonarcloud_analysis || true
-    
+
     # 3. Auto-fix se habilitado
     if [[ "$FIX_MODE" == "true" ]]; then
         run_auto_fix
     fi
-    
+
     # 4. Testes unitários
     log_header "🧪 Testes Unitários"
     log_info "Executando testes..."
@@ -256,7 +257,7 @@ run_full_analysis() {
     else
         log_warn "Alguns testes falharam"
     fi
-    
+
     # 5. Gerar relatório final
     generate_report
 }
@@ -267,9 +268,9 @@ run_full_analysis() {
 
 generate_report() {
     log_header "📊 Relatório Final"
-    
+
     local report_file="${RESULTS_DIR}/report-$(date +%Y%m%d-%H%M%S).md"
-    
+
     cat > "$report_file" << EOF
 # 📊 Relatório de Análise de Código
 
@@ -300,28 +301,28 @@ $(head -20 "${RESULTS_DIR}/sonar-issues.txt" 2>/dev/null || echo "Nenhum issue e
 ---
 *Gerado automaticamente por sonar-auto-analyze.sh*
 EOF
-    
+
     log_success "Relatório salvo em: $report_file"
-    
+
     # Exibir resumo no terminal
     echo ""
     echo -e "${CYAN}╔════════════════════════════════════════════════════════════╗${NC}"
     echo -e "${CYAN}║                    RESUMO DA ANÁLISE                       ║${NC}"
     echo -e "${CYAN}╠════════════════════════════════════════════════════════════╣${NC}"
-    
+
     if [[ -f "${RESULTS_DIR}/local-summary.txt" ]]; then
         local local_errors local_warnings
         local_errors=$(grep "errors:" "${RESULTS_DIR}/local-summary.txt" | cut -d: -f2 | tr -d ' ')
         local_warnings=$(grep "warnings:" "${RESULTS_DIR}/local-summary.txt" | cut -d: -f2 | tr -d ' ')
         echo -e "${CYAN}║${NC} TypeScript/ESLint: ${local_errors:-0} erros, ${local_warnings:-0} warnings"
     fi
-    
+
     if [[ -f "${RESULTS_DIR}/sonar-summary.txt" ]]; then
         local sonar_total
         sonar_total=$(grep "total:" "${RESULTS_DIR}/sonar-summary.txt" | cut -d: -f2 | tr -d ' ')
         echo -e "${CYAN}║${NC} SonarCloud: ${sonar_total:-?} issues"
     fi
-    
+
     echo -e "${CYAN}╚════════════════════════════════════════════════════════════╝${NC}"
 }
 
@@ -332,14 +333,14 @@ EOF
 run_watch_mode() {
     log_header "👁️ Modo Watch Ativado"
     log_info "Analisando a cada 5 minutos. Pressione Ctrl+C para parar."
-    
+
     while true; do
         run_local_analysis || true
-        
+
         if [[ "$FIX_MODE" == "true" ]]; then
             run_auto_fix
         fi
-        
+
         log_info "Próxima análise em 5 minutos..."
         sleep 300
     done
@@ -385,19 +386,19 @@ parse_args() {
 main() {
     parse_args "$@"
     setup
-    
+
     if [[ "$WATCH_MODE" == "true" ]]; then
         run_watch_mode
     elif [[ "$FULL_MODE" == "true" ]]; then
         run_full_analysis
     else
         run_local_analysis || true
-        
+
         if [[ "$FIX_MODE" == "true" ]]; then
             run_auto_fix
         fi
     fi
-    
+
     log_info "Análise concluída em $(date '+%H:%M:%S')"
 }
 

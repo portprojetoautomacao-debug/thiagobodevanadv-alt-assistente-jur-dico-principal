@@ -33,7 +33,7 @@ Veja o guia completo: **`SONARQUBE_INTERFACE_VISUAL.md`**
 ### 3️⃣ Bind Projeto
 
 1. Clique em **"Bind Project"**
-2. Selecione: `thiagobodevan-a11y_assistente-juridico-p`
+2. Selecione: `portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal`
 3. Confirme
 
 **Pronto!** Veja o status na barra inferior do VS Code.
@@ -64,7 +64,7 @@ Em vez de usar o comando, configure diretamente no arquivo de configuração:
     }
   ],
   "sonarlint.connectedMode.project": {
-    "projectKey": "thiagobodevan-a11y_assistente-juridico-p",
+    "projectKey": "portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal",
     "connectionId": "thiagobodevan-a11y-assistente-juridico-p"
   }
 }
@@ -166,7 +166,7 @@ Você **não precisa** executar o comando manualmente! A análise automática j�
 
 Se a extensão não funcionar imediatamente, você pode usar o SonarCloud web:
 
-1. Acesse: https://sonarcloud.io/project/overview?id=thiagobodevan-a11y_assistente-juridico-p
+1. Acesse: https://sonarcloud.io/project/overview?id=portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal
 2. Faça login
 3. Veja análises após cada push no GitHub
 

@@ -1,5 +1,5 @@
-import { execSync } from "child_process";
-import { expect, test, vi, beforeAll, afterAll } from "vitest";
+import { execSync, spawn } from "child_process";
+import { afterAll, beforeAll, expect, test, vi } from "vitest";
 
 // Mock fetch globally
 const mockFetch = vi.fn();

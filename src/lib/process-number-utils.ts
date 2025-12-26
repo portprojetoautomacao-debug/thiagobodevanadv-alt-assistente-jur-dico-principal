@@ -11,7 +11,7 @@
  */
 export function normalizeProcessNumber(numero: string | undefined): string {
   if (!numero) return "";
-  return numero.replace(/\D/g, "");
+  return numero.replaceAll(/\D/g, "");
 }
 
 /**

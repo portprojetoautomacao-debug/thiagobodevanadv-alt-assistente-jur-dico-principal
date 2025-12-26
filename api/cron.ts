@@ -20,7 +20,8 @@ import { createHash } from "node:crypto";
 
 // ================= KV UTILS (INLINE) =================
 
-interface AgentTask {
+interface AgentTask
+{
   id: string;
   title?: string;
   agentId?: string;
@@ -55,7 +56,8 @@ const KV_KEYS = {
 // const _CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
 // const _MAX_CACHE_SIZE = 500; // Max cached publications
 
-interface MonitoredLawyer {
+interface MonitoredLawyer
+{
   id: string;
   name: string;
   oab: string;
@@ -67,7 +69,8 @@ interface MonitoredLawyer {
 // Type alias para evitar repetição de union types (SonarCloud S4323)
 type DJENMatchType = "nome" | "oab" | "ambos";
 
-interface StoredPublication {
+interface StoredPublication
+{
   id: string;
   djenId?: number;
   tribunal: string;
@@ -89,7 +92,8 @@ interface StoredPublication {
   createdAt: string;
 }
 
-interface Agent {
+interface Agent
+{
   id: string;
   name: string;
   enabled: boolean;
@@ -103,140 +107,170 @@ interface Agent {
 
 let _kvClient: Redis | null = null;
 
-async function getKv() {
-  if (_kvClient) return _kvClient;
-  if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
-    _kvClient = new Redis({
+async function getKv ()
+{
+  if ( _kvClient ) return _kvClient;
+  if ( process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN )
+  {
+    _kvClient = new Redis( {
       url: process.env.UPSTASH_REDIS_REST_URL.trim(),
       token: process.env.UPSTASH_REDIS_REST_TOKEN.trim(),
-    });
+    } );
     return _kvClient;
   }
-  throw new Error("No KV storage available (Upstash Redis required)");
+  throw new Error( "No KV storage available (Upstash Redis required)" );
 }
 
-async function getMonitoredLawyers(): Promise<MonitoredLawyer[]> {
-  try {
+async function getMonitoredLawyers (): Promise<MonitoredLawyer[]>
+{
+  try
+  {
     const kv = await getKv();
-    const lawyers = await kv.get(KV_KEYS.MONITORED_LAWYERS);
-    return (lawyers as MonitoredLawyer[]) || [];
-  } catch (error) {
-    console.error("[KV] Error getting monitored lawyers:", error);
+    const lawyers = await kv.get( KV_KEYS.MONITORED_LAWYERS );
+    return ( lawyers as MonitoredLawyer[] ) || [];
+  } catch ( error )
+  {
+    console.error( "[KV] Error getting monitored lawyers:", error );
     return [];
   }
 }
 
-async function storePublication(publication: StoredPublication): Promise<void> {
-  try {
+async function storePublication ( publication: StoredPublication ): Promise<void>
+{
+  try
+  {
     const kv = await getKv();
-    const key = `${KV_KEYS.PUBLICATIONS}:${publication.lawyerId}`;
-    const existing = ((await kv.get(key)) as StoredPublication[]) || [];
+    const key = `${ KV_KEYS.PUBLICATIONS }:${ publication.lawyerId }`;
+    const existing = ( ( await kv.get( key ) ) as StoredPublication[] ) || [];
 
     // Check duplicate using hash for better performance
     const pubHash =
       publication.hash ||
-      `${publication.tribunal}-${publication.data}-${publication.numeroProcesso}`;
-    const isDuplicate = existing.some((p) => {
-      const existingHash = p.hash || `${p.tribunal}-${p.data}-${p.numeroProcesso}`;
+      `${ publication.tribunal }-${ publication.data }-${ publication.numeroProcesso }`;
+    const isDuplicate = existing.some( ( p ) =>
+    {
+      const existingHash = p.hash || `${ p.tribunal }-${ p.data }-${ p.numeroProcesso }`;
       return existingHash === pubHash;
-    });
+    } );
 
-    if (isDuplicate) {
-      console.log(`[KV] Skipped duplicate: ${pubHash}`);
+    if ( isDuplicate )
+    {
+      console.log( `[KV] Skipped duplicate: ${ pubHash }` );
       return;
     }
 
-    existing.unshift(publication);
+    existing.unshift( publication );
     // Use pipeline for atomic operations
-    await kv.set(key, existing.slice(0, 1000));
+    await kv.set( key, existing.slice( 0, 1000 ) );
 
     // Update hash index for fast duplicate checking
-    const hashKey = `${KV_KEYS.PUBLICATION_HASHES}:${publication.lawyerId}`;
-    const hashes = ((await kv.get(hashKey)) as string[]) || [];
-    hashes.unshift(pubHash);
-    await kv.set(hashKey, hashes.slice(0, 2000));
+    const hashKey = `${ KV_KEYS.PUBLICATION_HASHES }:${ publication.lawyerId }`;
+    const hashes = ( ( await kv.get( hashKey ) ) as string[] ) || [];
+    hashes.unshift( pubHash );
+    await kv.set( hashKey, hashes.slice( 0, 2000 ) );
 
-    console.log(`[KV] Stored publication: ${pubHash}`);
-  } catch (error) {
-    console.error("[KV] Error storing publication:", error);
+    console.log( `[KV] Stored publication: ${ pubHash }` );
+  } catch ( error )
+  {
+    console.error( "[KV] Error storing publication:", error );
     throw error;
   }
 }
 
 // Check if publication already exists (fast hash lookup)
-async function publicationExists(lawyerId: string, hash: string): Promise<boolean> {
-  try {
+async function publicationExists ( lawyerId: string, hash: string ): Promise<boolean>
+{
+  try
+  {
     const kv = await getKv();
-    const hashKey = `${KV_KEYS.PUBLICATION_HASHES}:${lawyerId}`;
-    const hashes = ((await kv.get(hashKey)) as string[]) || [];
-    return hashes.includes(hash);
-  } catch {
+    const hashKey = `${ KV_KEYS.PUBLICATION_HASHES }:${ lawyerId }`;
+    const hashes = ( ( await kv.get( hashKey ) ) as string[] ) || [];
+    return hashes.includes( hash );
+  } catch
+  {
     return false;
   }
 }
 
-async function updateLastDJENCheck(): Promise<void> {
-  try {
+async function updateLastDJENCheck (): Promise<void>
+{
+  try
+  {
     const kv = await getKv();
-    await kv.set(KV_KEYS.LAST_DJEN_CHECK, new Date().toISOString());
-  } catch (error) {
-    console.error("[KV] Error updating last DJEN check:", error);
+    await kv.set( KV_KEYS.LAST_DJEN_CHECK, new Date().toISOString() );
+  } catch ( error )
+  {
+    console.error( "[KV] Error updating last DJEN check:", error );
   }
 }
 
-async function getAgents(): Promise<Agent[]> {
-  try {
+async function getAgents (): Promise<Agent[]>
+{
+  try
+  {
     const kv = await getKv();
-    const agents = await kv.get(KV_KEYS.AGENTS);
-    return (agents as Agent[]) || [];
-  } catch (error) {
-    console.error("[KV] Error getting agents:", error);
+    const agents = await kv.get( KV_KEYS.AGENTS );
+    return ( agents as Agent[] ) || [];
+  } catch ( error )
+  {
+    console.error( "[KV] Error getting agents:", error );
     return [];
   }
 }
 
-async function updateAgents(agents: Agent[]): Promise<void> {
-  try {
+async function updateAgents ( agents: Agent[] ): Promise<void>
+{
+  try
+  {
     const kv = await getKv();
-    await kv.set(KV_KEYS.AGENTS, agents);
-  } catch (error) {
-    console.error("[KV] Error updating agents:", error);
+    await kv.set( KV_KEYS.AGENTS, agents );
+  } catch ( error )
+  {
+    console.error( "[KV] Error updating agents:", error );
     throw error;
   }
 }
 
-async function getCompletedTasks(): Promise<unknown[]> {
-  try {
+async function getCompletedTasks (): Promise<unknown[]>
+{
+  try
+  {
     const kv = await getKv();
-    const tasks = await kv.get(KV_KEYS.COMPLETED_TASKS);
-    return (tasks as unknown[]) || [];
-  } catch (error) {
-    console.error("[KV] Error getting completed tasks:", error);
+    const tasks = await kv.get( KV_KEYS.COMPLETED_TASKS );
+    return ( tasks as unknown[] ) || [];
+  } catch ( error )
+  {
+    console.error( "[KV] Error getting completed tasks:", error );
     return [];
   }
 }
 
-async function updateCompletedTasks(tasks: unknown[]): Promise<void> {
-  try {
+async function updateCompletedTasks ( tasks: unknown[] ): Promise<void>
+{
+  try
+  {
     const kv = await getKv();
-    await kv.set(KV_KEYS.COMPLETED_TASKS, tasks);
-  } catch (error) {
-    console.error("[KV] Error updating completed tasks:", error);
+    await kv.set( KV_KEYS.COMPLETED_TASKS, tasks );
+  } catch ( error )
+  {
+    console.error( "[KV] Error updating completed tasks:", error );
     throw error;
   }
 }
 
-async function queueNotification(notification: {
+async function queueNotification ( notification: {
   type: "publication" | "agent" | "system";
   title: string;
   message: string;
   data?: unknown;
   recipientEmail?: string;
-}): Promise<void> {
-  try {
+} ): Promise<void>
+{
+  try
+  {
     const kv = await getKv();
     const queue =
-      ((await kv.get(KV_KEYS.NOTIFICATION_QUEUE)) as Array<{
+      ( ( await kv.get( KV_KEYS.NOTIFICATION_QUEUE ) ) as Array<{
         id: string;
         type: string;
         title: string;
@@ -245,53 +279,60 @@ async function queueNotification(notification: {
         recipientEmail?: string;
         createdAt: string;
         sent: boolean;
-      }>) || [];
-    queue.push({
+      }> ) || [];
+    queue.push( {
       ...notification,
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
       sent: false,
-    });
-    await kv.set(KV_KEYS.NOTIFICATION_QUEUE, queue);
-  } catch (error) {
-    console.error("[KV] Error queuing notification:", error);
+    } );
+    await kv.set( KV_KEYS.NOTIFICATION_QUEUE, queue );
+  } catch ( error )
+  {
+    console.error( "[KV] Error queuing notification:", error );
   }
 }
 
 // Send real-time notification via webhooks
-async function sendRealTimeNotification(notification: {
+async function sendRealTimeNotification ( notification: {
   type: string;
   title: string;
   message: string;
   priority?: string;
   metadata?: Record<string, unknown>;
-}): Promise<void> {
-  try {
+} ): Promise<void>
+{
+  try
+  {
     const baseUrl = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
+      ? `https://${ process.env.VERCEL_URL }`
       : "http://localhost:3000";
 
-    await fetch(`${baseUrl}/api/notifications/send`, {
+    await fetch( `${ baseUrl }/api/notifications/send`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+      body: JSON.stringify( {
         ...notification,
         priority: notification.priority || "normal",
-      }),
-    });
-  } catch (error) {
-    console.error("[Notification] Failed to send real-time notification:", error);
+      } ),
+    } );
+  } catch ( error )
+  {
+    console.error( "[Notification] Failed to send real-time notification:", error );
   }
 }
 
-async function addTaskToQueue(task: AgentTask): Promise<void> {
-  try {
+async function addTaskToQueue ( task: AgentTask ): Promise<void>
+{
+  try
+  {
     const kv = await getKv();
-    const queue = ((await kv.get("agent-task-queue")) as AgentTask[]) || [];
-    queue.push(task);
-    await kv.set("agent-task-queue", queue);
-  } catch (error) {
-    console.error("[KV] Error adding task to queue:", error);
+    const queue = ( ( await kv.get( "agent-task-queue" ) ) as AgentTask[] ) || [];
+    queue.push( task );
+    await kv.set( "agent-task-queue", queue );
+  } catch ( error )
+  {
+    console.error( "[KV] Error adding task to queue:", error );
   }
 }
 
@@ -302,7 +343,8 @@ async function addTaskToQueue(task: AgentTask): Promise<void> {
  * Interface de Comunicação retornada pela API DJEN
  * Endpoint: GET /api/v1/comunicacao
  */
-interface DJENComunicacao {
+interface DJENComunicacao
+{
   id: number;
   datadisponibilizacao: string; // Campo oficial: datadisponibilizacao
   data_disponibilizacao?: string; // Alias para compatibilidade
@@ -341,16 +383,18 @@ interface DJENComunicacao {
  * Resposta da API DJEN
  * A API pode retornar array direto ou objeto com items
  */
-interface DJENResponse {
+interface DJENResponse
+{
   status?: string;
   message?: string;
   count?: number;
   items?: DJENComunicacao[];
   // API pode retornar array direto em alguns casos
-  [index: number]: DJENComunicacao;
+  [ index: number ]: DJENComunicacao;
 }
 
-interface DJENQueryParams {
+interface DJENQueryParams
+{
   numeroOab?: string;
   ufOab?: string;
   nomeAdvogado?: string;
@@ -366,128 +410,140 @@ const DJEN_TIMEOUT = 30000;
 const DJEN_DELAY = 2000; // Delay entre tribunais para evitar rate limit
 const DJEN_RATE_LIMIT_WAIT = 60000; // 1 minuto conforme documentação DJEN para erro 429
 
-function normalizeText(text: string): string {
+function normalizeText ( text: string ): string
+{
   return text
     .toLowerCase()
-    .normalize("NFD")
-    .replaceAll(/[\u0300-\u036f]/g, "")
+    .normalize( "NFD" )
+    .replaceAll( /[\u0300-\u036f]/g, "" )
     .trim();
 }
 
-function parseOAB(numeroOAB: string): { numero?: string; uf?: string } {
-  if (!numeroOAB || numeroOAB.length > 50) return {};
+function parseOAB ( numeroOAB: string ): { numero?: string; uf?: string }
+{
+  if ( !numeroOAB || numeroOAB.length > 50 ) return {};
   const value = numeroOAB.trim();
-  const matchOABPattern = /OAB\s*\/\s*([A-Z]{2})\s+(\d+)/i.exec(value);
-  if (matchOABPattern) return { numero: matchOABPattern[2], uf: matchOABPattern[1].toUpperCase() };
-  const matchNumericUF = /(\d+)\s*\/\s*([A-Z]{2})/i.exec(value);
-  if (matchNumericUF) return { numero: matchNumericUF[1], uf: matchNumericUF[2].toUpperCase() };
-  const matchNumeric = /^(\d+)$/.exec(value);
-  if (matchNumeric) return { numero: matchNumeric[1] };
+  const matchOABPattern = /OAB\s*\/\s*([A-Z]{2})\s+(\d+)/i.exec( value );
+  if ( matchOABPattern ) return { numero: matchOABPattern[ 2 ], uf: matchOABPattern[ 1 ].toUpperCase() };
+  const matchNumericUF = /(\d+)\s*\/\s*([A-Z]{2})/i.exec( value );
+  if ( matchNumericUF ) return { numero: matchNumericUF[ 1 ], uf: matchNumericUF[ 2 ].toUpperCase() };
+  const matchNumeric = /^(\d+)$/.exec( value );
+  if ( matchNumeric ) return { numero: matchNumeric[ 1 ] };
   // Handle MG184404 format
-  const matchUFNum = /^([A-Z]{2})(\d+)$/i.exec(value);
-  if (matchUFNum) return { uf: matchUFNum[1].toUpperCase(), numero: matchUFNum[2] };
+  const matchUFNum = /^([A-Z]{2})(\d+)$/i.exec( value );
+  if ( matchUFNum ) return { uf: matchUFNum[ 1 ].toUpperCase(), numero: matchUFNum[ 2 ] };
   return {};
 }
 
-function buildDJENQueryString(params: DJENQueryParams): string {
+function buildDJENQueryString ( params: DJENQueryParams ): string
+{
   const queryParams: string[] = [];
-  if (params.numeroOab) queryParams.push(`numeroOab=${encodeURIComponent(params.numeroOab)}`);
-  if (params.ufOab) queryParams.push(`ufOab=${encodeURIComponent(params.ufOab)}`);
-  if (params.nomeAdvogado)
-    queryParams.push(`nomeAdvogado=${encodeURIComponent(params.nomeAdvogado)}`);
-  if (params.dataDisponibilizacaoInicio)
-    queryParams.push(`dataDisponibilizacaoInicio=${params.dataDisponibilizacaoInicio}`);
-  if (params.dataDisponibilizacaoFim)
-    queryParams.push(`dataDisponibilizacaoFim=${params.dataDisponibilizacaoFim}`);
-  if (params.siglaTribunal)
-    queryParams.push(`siglaTribunal=${encodeURIComponent(params.siglaTribunal)}`);
-  if (params.pagina) queryParams.push(`pagina=${params.pagina}`);
-  if (params.itensPorPagina) queryParams.push(`itensPorPagina=${params.itensPorPagina}`);
-  if (params.meio) queryParams.push(`meio=${params.meio}`);
-  return queryParams.join("&");
+  if ( params.numeroOab ) queryParams.push( `numeroOab=${ encodeURIComponent( params.numeroOab ) }` );
+  if ( params.ufOab ) queryParams.push( `ufOab=${ encodeURIComponent( params.ufOab ) }` );
+  if ( params.nomeAdvogado )
+    queryParams.push( `nomeAdvogado=${ encodeURIComponent( params.nomeAdvogado ) }` );
+  if ( params.dataDisponibilizacaoInicio )
+    queryParams.push( `dataDisponibilizacaoInicio=${ params.dataDisponibilizacaoInicio }` );
+  if ( params.dataDisponibilizacaoFim )
+    queryParams.push( `dataDisponibilizacaoFim=${ params.dataDisponibilizacaoFim }` );
+  if ( params.siglaTribunal )
+    queryParams.push( `siglaTribunal=${ encodeURIComponent( params.siglaTribunal ) }` );
+  if ( params.pagina ) queryParams.push( `pagina=${ params.pagina }` );
+  if ( params.itensPorPagina ) queryParams.push( `itensPorPagina=${ params.itensPorPagina }` );
+  if ( params.meio ) queryParams.push( `meio=${ params.meio }` );
+  return queryParams.join( "&" );
 }
 
-async function consultarComunicacoes(
+async function consultarComunicacoes (
   params: DJENQueryParams,
   retryOnRateLimit = true
 ): Promise<{
   response: DJENResponse | null;
   rateLimitInfo: { limit?: number; remaining?: number };
   rateLimitHit?: boolean;
-}> {
-  const queryString = buildDJENQueryString(params);
-  const url = `https://comunicaapi.pje.jus.br/api/v1/comunicacao?${queryString}`;
+}>
+{
+  const queryString = buildDJENQueryString( params );
+  const url = `https://comunicaapi.pje.jus.br/api/v1/comunicacao?${ queryString }`;
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), DJEN_TIMEOUT);
+  const timeoutId = setTimeout( () => controller.abort(), DJEN_TIMEOUT );
 
-  try {
-    console.log(`[DJEN] Consultando: ${url}`);
-    const response = await fetch(url, {
+  try
+  {
+    console.log( `[DJEN] Consultando: ${ url }` );
+    const response = await fetch( url, {
       method: "GET",
       headers: { Accept: "application/json" },
       signal: controller.signal,
-    });
-    clearTimeout(timeoutId);
+    } );
+    clearTimeout( timeoutId );
 
     // Captura headers de rate limit conforme documentação DJEN
     const rateLimitInfo = {
-      limit: response.headers.get("x-ratelimit-limit")
-        ? Number.parseInt(response.headers.get("x-ratelimit-limit")!, 10)
+      limit: response.headers.get( "x-ratelimit-limit" )
+        ? Number.parseInt( response.headers.get( "x-ratelimit-limit" )!, 10 )
         : undefined,
-      remaining: response.headers.get("x-ratelimit-remaining")
-        ? Number.parseInt(response.headers.get("x-ratelimit-remaining")!, 10)
+      remaining: response.headers.get( "x-ratelimit-remaining" )
+        ? Number.parseInt( response.headers.get( "x-ratelimit-remaining" )!, 10 )
         : undefined,
     };
 
     console.log(
-      `[DJEN] Rate Limit - Limit: ${rateLimitInfo.limit}, Remaining: ${rateLimitInfo.remaining}`
+      `[DJEN] Rate Limit - Limit: ${ rateLimitInfo.limit }, Remaining: ${ rateLimitInfo.remaining }`
     );
 
     // Erro 429 - Conforme doc: aguardar 1 minuto para retomar
-    if (response.status === 429) {
-      console.warn(`[DJEN] Rate limit atingido (429). Conforme documentação, aguardar 1 minuto.`);
-      if (retryOnRateLimit) {
-        console.log(`[DJEN] Aguardando ${DJEN_RATE_LIMIT_WAIT / 1000}s antes de retry...`);
-        await new Promise((resolve) => setTimeout(resolve, DJEN_RATE_LIMIT_WAIT));
-        return consultarComunicacoes(params, false); // Tenta novamente sem retry
+    if ( response.status === 429 )
+    {
+      console.warn( `[DJEN] Rate limit atingido (429). Conforme documentação, aguardar 1 minuto.` );
+      if ( retryOnRateLimit )
+      {
+        console.log( `[DJEN] Aguardando ${ DJEN_RATE_LIMIT_WAIT / 1000 }s antes de retry...` );
+        await new Promise( ( resolve ) => setTimeout( resolve, DJEN_RATE_LIMIT_WAIT ) );
+        return consultarComunicacoes( params, false ); // Tenta novamente sem retry
       }
       return { response: null, rateLimitInfo, rateLimitHit: true };
     }
 
     // Erro 422 - Erro negocial (parâmetros inválidos)
-    if (response.status === 422) {
+    if ( response.status === 422 )
+    {
       const errorBody = await response.text();
-      console.error(`[DJEN] Erro negocial (422): ${errorBody}`);
-      throw new Error(`Erro negocial DJEN: ${errorBody}`);
+      console.error( `[DJEN] Erro negocial (422): ${ errorBody }` );
+      throw new Error( `Erro negocial DJEN: ${ errorBody }` );
     }
 
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    if ( !response.ok ) throw new Error( `HTTP ${ response.status }` );
 
-    const data = (await response.json()) as DJENResponse;
-    console.log(`[DJEN] Consulta retornou ${data.count || data.items?.length || 0} comunicações`);
+    const data = ( await response.json() ) as DJENResponse;
+    console.log( `[DJEN] Consulta retornou ${ data.count || data.items?.length || 0 } comunicações` );
     return { response: data, rateLimitInfo };
-  } catch (error) {
-    clearTimeout(timeoutId);
-    console.error(`[DJEN] Error:`, error);
+  } catch ( error )
+  {
+    clearTimeout( timeoutId );
+    console.error( `[DJEN] Error:`, error );
     return { response: null, rateLimitInfo: {}, rateLimitHit: false };
   }
 }
 
-function formatDJENDate(date: Date): string {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+function formatDJENDate ( date: Date ): string
+{
+  return `${ date.getFullYear() }-${ String( date.getMonth() + 1 ).padStart(
     2,
     "0"
-  )}-${String(date.getDate()).padStart(2, "0")}`;
+  ) }-${ String( date.getDate() ).padStart( 2, "0" ) }`;
 }
 
 // ===== Helper functions for consultarDJENForLawyer (reduced CC) =====
 
-interface OABParsed {
+interface OABParsed
+{
   numero?: string;
   uf?: string;
 }
 
-interface LawyerQueryContext {
+interface LawyerQueryContext
+{
   nomeAdvogado?: string;
   numeroOabNumerico?: string;
   ufOab?: string;
@@ -496,13 +552,15 @@ interface LawyerQueryContext {
   meio?: "D" | "E";
 }
 
-function parseOABInfo(numeroOAB?: string): OABParsed {
-  if (!numeroOAB) return {};
-  const parsed = parseOAB(numeroOAB);
+function parseOABInfo ( numeroOAB?: string ): OABParsed
+{
+  if ( !numeroOAB ) return {};
+  const parsed = parseOAB( numeroOAB );
   return { numero: parsed.numero, uf: parsed.uf };
 }
 
-function buildDJENQueryParams(tribunal: string, ctx: LawyerQueryContext): DJENQueryParams {
+function buildDJENQueryParams ( tribunal: string, ctx: LawyerQueryContext ): DJENQueryParams
+{
   const params: DJENQueryParams = {
     siglaTribunal: tribunal,
     dataDisponibilizacaoInicio: ctx.queryDataInicio,
@@ -510,35 +568,37 @@ function buildDJENQueryParams(tribunal: string, ctx: LawyerQueryContext): DJENQu
     itensPorPagina: 100,
     pagina: 1,
   };
-  if (ctx.nomeAdvogado) params.nomeAdvogado = ctx.nomeAdvogado;
-  if (ctx.numeroOabNumerico) params.numeroOab = ctx.numeroOabNumerico;
-  if (ctx.ufOab) params.ufOab = ctx.ufOab;
-  if (ctx.meio) params.meio = ctx.meio;
+  if ( ctx.nomeAdvogado ) params.nomeAdvogado = ctx.nomeAdvogado;
+  if ( ctx.numeroOabNumerico ) params.numeroOab = ctx.numeroOabNumerico;
+  if ( ctx.ufOab ) params.ufOab = ctx.ufOab;
+  if ( ctx.meio ) params.meio = ctx.meio;
   return params;
 }
 
-function determineAdvogadoMatchType(
+function determineAdvogadoMatchType (
   dest: { advogado: { nome: string; numero_oab: string; uf_oab: string } },
   nomeAdvogado?: string,
   numeroOabNumerico?: string,
   ufOab?: string
-): "nome" | "oab" | "ambos" | null {
+): "nome" | "oab" | "ambos" | null
+{
   const matchNome = nomeAdvogado
-    ? normalizeText(dest.advogado.nome).includes(normalizeText(nomeAdvogado))
+    ? normalizeText( dest.advogado.nome ).includes( normalizeText( nomeAdvogado ) )
     : false;
   const matchOab = numeroOabNumerico
     ? dest.advogado.numero_oab === numeroOabNumerico && dest.advogado.uf_oab === ufOab
     : false;
 
-  if (matchNome && matchOab) return "ambos";
-  if (matchOab) return "oab";
-  if (matchNome) return "nome";
+  if ( matchNome && matchOab ) return "ambos";
+  if ( matchOab ) return "oab";
+  if ( matchNome ) return "nome";
   return null;
 }
 
 type AdvogadoMatchType = "nome" | "oab" | "ambos";
 
-interface LocalDJENFilteredResult {
+interface LocalDJENFilteredResult
+{
   id: number;
   tribunal: string;
   data: string;
@@ -557,29 +617,33 @@ interface LocalDJENFilteredResult {
   }[];
 }
 
-function findAdvogadoMatch(
+function findAdvogadoMatch (
   comunicacao: DJENComunicacao,
   nomeAdvogado?: string,
   numeroOabNumerico?: string,
   ufOab?: string
-): { found: boolean; matchType: AdvogadoMatchType } {
+): { found: boolean; matchType: AdvogadoMatchType }
+{
   let matchType: AdvogadoMatchType = "nome";
   const found =
-    comunicacao.destinatarioadvogados?.some((dest) => {
-      const type = determineAdvogadoMatchType(dest, nomeAdvogado, numeroOabNumerico, ufOab);
-      if (type) {
+    comunicacao.destinatarioadvogados?.some( ( dest ) =>
+    {
+      const type = determineAdvogadoMatchType( dest, nomeAdvogado, numeroOabNumerico, ufOab );
+      if ( type )
+      {
         matchType = type;
         return true;
       }
       return false;
-    }) || false;
+    } ) || false;
   return { found, matchType };
 }
 
-function mapComunicacaoToResult(
+function mapComunicacaoToResult (
   comunicacao: DJENComunicacao,
   matchType: AdvogadoMatchType
-): LocalDJENFilteredResult {
+): LocalDJENFilteredResult
+{
   const dataDisp = comunicacao.datadisponibilizacao || comunicacao.data_disponibilizacao || "";
   return {
     id: comunicacao.id,
@@ -594,51 +658,56 @@ function mapComunicacaoToResult(
     hash: comunicacao.hash,
     matchType,
     advogados:
-      comunicacao.destinatarioadvogados?.map((dest) => ({
+      comunicacao.destinatarioadvogados?.map( ( dest ) => ( {
         nome: dest.advogado.nome,
         numero_oab: dest.advogado.numero_oab,
         uf_oab: dest.advogado.uf_oab,
-      })) || [],
+      } ) ) || [],
   };
 }
 
-async function processTribunalQuery(
+async function processTribunalQuery (
   tribunal: string,
   ctx: LawyerQueryContext,
   resultados: LocalDJENFilteredResult[],
   erros: Array<{ tribunal: string; erro: string }>
-): Promise<boolean> {
-  console.log(`[DJEN] Consultando ${tribunal} para ${ctx.nomeAdvogado || ctx.numeroOabNumerico}`);
-  const queryParams = buildDJENQueryParams(tribunal, ctx);
-  const { response, rateLimitInfo, rateLimitHit } = await consultarComunicacoes(queryParams);
+): Promise<boolean>
+{
+  console.log( `[DJEN] Consultando ${ tribunal } para ${ ctx.nomeAdvogado || ctx.numeroOabNumerico }` );
+  const queryParams = buildDJENQueryParams( tribunal, ctx );
+  const { response, rateLimitInfo, rateLimitHit } = await consultarComunicacoes( queryParams );
 
-  if (rateLimitInfo.remaining !== undefined && rateLimitInfo.remaining < 10) {
+  if ( rateLimitInfo.remaining !== undefined && rateLimitInfo.remaining < 10 )
+  {
     console.warn(
-      `[DJEN] Atenção: apenas ${rateLimitInfo.remaining} requisições restantes na janela`
+      `[DJEN] Atenção: apenas ${ rateLimitInfo.remaining } requisições restantes na janela`
     );
   }
 
-  if (!response) {
+  if ( !response )
+  {
     const errorMsg = rateLimitHit
       ? "Rate limit atingido (429) - aguarde 1 minuto"
       : "Erro na consulta";
-    erros.push({ tribunal, erro: errorMsg });
+    erros.push( { tribunal, erro: errorMsg } );
     return rateLimitHit || false;
   }
 
-  const comunicacoes: DJENComunicacao[] = Array.isArray(response) ? response : response.items || [];
+  const comunicacoes: DJENComunicacao[] = Array.isArray( response ) ? response : response.items || [];
 
-  console.log(`[DJEN] Processando ${comunicacoes.length} comunicações do ${tribunal}`);
+  console.log( `[DJEN] Processando ${ comunicacoes.length } comunicações do ${ tribunal }` );
 
-  for (const comunicacao of comunicacoes) {
+  for ( const comunicacao of comunicacoes )
+  {
     const { found, matchType } = findAdvogadoMatch(
       comunicacao,
       ctx.nomeAdvogado,
       ctx.numeroOabNumerico,
       ctx.ufOab
     );
-    if (found) {
-      resultados.push(mapComunicacaoToResult(comunicacao, matchType));
+    if ( found )
+    {
+      resultados.push( mapComunicacaoToResult( comunicacao, matchType ) );
     }
   }
 
@@ -647,7 +716,7 @@ async function processTribunalQuery(
 
 // ===== Main refactored function =====
 
-async function consultarDJENForLawyer(
+async function consultarDJENForLawyer (
   tribunais: string[],
   nomeAdvogado?: string,
   numeroOAB?: string,
@@ -658,13 +727,15 @@ async function consultarDJENForLawyer(
   resultados: LocalDJENFilteredResult[];
   erros: Array<{ tribunal: string; erro: string }>;
   rateLimitWarning?: boolean;
-}> {
-  if (!nomeAdvogado && !numeroOAB) {
-    throw new Error("É necessário fornecer pelo menos nomeAdvogado ou numeroOAB");
+}>
+{
+  if ( !nomeAdvogado && !numeroOAB )
+  {
+    throw new Error( "É necessário fornecer pelo menos nomeAdvogado ou numeroOAB" );
   }
 
-  const defaultDate = formatDJENDate(new Date());
-  const oabInfo = parseOABInfo(numeroOAB);
+  const defaultDate = formatDJENDate( new Date() );
+  const oabInfo = parseOABInfo( numeroOAB );
 
   const ctx: LawyerQueryContext = {
     nomeAdvogado,
@@ -679,24 +750,28 @@ async function consultarDJENForLawyer(
   const erros: Array<{ tribunal: string; erro: string }> = [];
   let rateLimitWarning = false;
 
-  for (let i = 0; i < tribunais.length; i++) {
-    const tribunal = tribunais[i];
-    try {
-      const hitRateLimit = await processTribunalQuery(tribunal, ctx, resultados, erros);
+  for ( let i = 0; i < tribunais.length; i++ )
+  {
+    const tribunal = tribunais[ i ];
+    try
+    {
+      const hitRateLimit = await processTribunalQuery( tribunal, ctx, resultados, erros );
       rateLimitWarning = rateLimitWarning || hitRateLimit;
 
-      if (i < tribunais.length - 1) {
-        await new Promise((resolve) => setTimeout(resolve, DJEN_DELAY));
+      if ( i < tribunais.length - 1 )
+      {
+        await new Promise( ( resolve ) => setTimeout( resolve, DJEN_DELAY ) );
       }
-    } catch (error) {
-      erros.push({
+    } catch ( error )
+    {
+      erros.push( {
         tribunal,
         erro: error instanceof Error ? error.message : "Erro desconhecido",
-      });
+      } );
     }
   }
 
-  console.log(`[DJEN] Consulta finalizada: ${resultados.length} comunicações encontradas`);
+  console.log( `[DJEN] Consulta finalizada: ${ resultados.length } comunicações encontradas` );
   return { resultados, erros, rateLimitWarning: rateLimitWarning || undefined };
 }
 
@@ -706,69 +781,81 @@ async function consultarDJENForLawyer(
  * Interface base para todos os resultados de ações cron
  * Inclui index signature para compatibilidade com ActionResult
  */
-interface BaseCronResult {
+interface BaseCronResult
+{
   success: boolean;
   timestamp: string;
   errors: string[];
-  [key: string]: unknown;
+  [ key: string ]: unknown;
 }
 
-interface DailyResetResult extends BaseCronResult {
+interface DailyResetResult extends BaseCronResult
+{
   agentsReset: number;
   tasksArchived: number;
 }
 
-interface DJENMonitorResult extends BaseCronResult {
+interface DJENMonitorResult extends BaseCronResult
+{
   publicationsFound: number;
   lawyersChecked: number;
   tribunaisChecked: string[];
   rateLimitWarning: boolean;
 }
 
-interface AgentQueueResult extends BaseCronResult {
+interface AgentQueueResult extends BaseCronResult
+{
   tasksProcessed: number;
   tasksFailed: number;
 }
 
-interface NotificationResult extends BaseCronResult {
+interface NotificationResult extends BaseCronResult
+{
   emailsSent: number;
   webhooksSent: number;
 }
 
-interface CalendarSyncResult extends BaseCronResult {
+interface CalendarSyncResult extends BaseCronResult
+{
   eventsCreated: number;
   eventsUpdated: number;
   deadlinesSynced: number;
 }
 
-interface BackupResult extends BaseCronResult {
+interface BackupResult extends BaseCronResult
+{
   keysBackedUp: number;
   totalSize: string;
 }
 
-interface DataJudResult extends BaseCronResult {
+interface DataJudResult extends BaseCronResult
+{
   processesChecked: number;
   updatesFound: number;
 }
 
-interface DeadlineAlertResult extends BaseCronResult {
+interface DeadlineAlertResult extends BaseCronResult
+{
   alertsSent: number;
   urgentDeadlines: number;
   upcomingDeadlines: number;
 }
 
-interface WatchdogResult extends BaseCronResult {
+interface WatchdogResult extends BaseCronResult
+{
   agentsReset: number;
   tasksTimedOut: number;
 }
 
-interface CompletedTask {
+interface CompletedTask
+{
   completedAt?: string | null;
-  [key: string]: unknown;
+  [ key: string ]: unknown;
 }
 
 // Process types for various handlers
-interface ProcessDeadline {
+interface ProcessDeadline
+{
   id: string;
   descricao: string;
   dataFinal: string;
@@ -778,33 +865,38 @@ interface ProcessDeadline {
   alertSent?: boolean;
 }
 
-interface ProcessWithDeadlines {
+interface ProcessWithDeadlines
+{
   id: string;
   numeroCNJ: string;
   titulo: string;
   prazos?: ProcessDeadline[];
 }
 
-interface ProcessWithAlertDeadlines {
+interface ProcessWithAlertDeadlines
+{
   id: string;
   numeroCNJ: string;
   titulo: string;
   prazos?: ProcessDeadline[];
 }
 
-interface CalendarSettings {
+interface CalendarSettings
+{
   enabled?: boolean;
   accessToken?: string;
   refreshToken?: string;
   calendarId?: string;
 }
 
-interface ProcessMovement {
+interface ProcessMovement
+{
   data: string;
   descricao: string;
 }
 
-interface ProcessWithMovements {
+interface ProcessWithMovements
+{
   id: string;
   numeroCNJ: string;
   titulo: string;
@@ -813,25 +905,29 @@ interface ProcessWithMovements {
   movimentos?: ProcessMovement[];
 }
 
-interface DataJudMovimento {
+interface DataJudMovimento
+{
   dataHora: string;
   nome: string;
   complemento?: string;
 }
 
-interface DataJudHit {
+interface DataJudHit
+{
   _source?: {
     movimentos?: DataJudMovimento[];
   };
 }
 
-interface DataJudResponse {
+interface DataJudResponse
+{
   hits?: {
     hits?: DataJudHit[];
   };
 }
 
-interface DeadlineInfo {
+interface DeadlineInfo
+{
   processo: string;
   prazo: string;
   dataFinal: string;
@@ -844,8 +940,9 @@ interface DeadlineInfo {
  * Handle daily-reset action
  * Resets agent counters and archives old tasks
  */
-async function handleDailyReset(timestamp: string): Promise<DailyResetResult> {
-  console.log(`[Cron Daily Reset] Starting execution at ${timestamp}`);
+async function handleDailyReset ( timestamp: string ): Promise<DailyResetResult>
+{
+  console.log( `[Cron Daily Reset] Starting execution at ${ timestamp }` );
 
   const result: DailyResetResult = {
     success: true,
@@ -857,41 +954,45 @@ async function handleDailyReset(timestamp: string): Promise<DailyResetResult> {
 
   // Reset agent counters
   const agents = await getAgents();
-  console.log(`[Cron Daily Reset] Found ${agents.length} agents`);
+  console.log( `[Cron Daily Reset] Found ${ agents.length } agents` );
 
-  if (agents.length > 0) {
-    const updatedAgents = agents.map((agent) => ({
+  if ( agents.length > 0 )
+  {
+    const updatedAgents = agents.map( ( agent ) => ( {
       ...agent,
       tasksToday: 0,
-    }));
+    } ) );
 
-    await updateAgents(updatedAgents);
+    await updateAgents( updatedAgents );
     result.agentsReset = agents.length;
-    console.log(`[Cron Daily Reset] Reset counters for ${agents.length} agents`);
+    console.log( `[Cron Daily Reset] Reset counters for ${ agents.length } agents` );
   }
 
   // Archive old completed tasks (>30 days)
-  const completedTasks = (await getCompletedTasks()) as CompletedTask[];
-  console.log(`[Cron Daily Reset] Found ${completedTasks.length} completed tasks`);
+  const completedTasks = ( await getCompletedTasks() ) as CompletedTask[];
+  console.log( `[Cron Daily Reset] Found ${ completedTasks.length } completed tasks` );
 
-  if (completedTasks.length > 0) {
+  if ( completedTasks.length > 0 )
+  {
     const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - 30);
+    cutoffDate.setDate( cutoffDate.getDate() - 30 );
 
-    const tasksToKeep = completedTasks.filter((task) => {
-      if (!task.completedAt) return true;
-      return new Date(task.completedAt) >= cutoffDate;
-    });
+    const tasksToKeep = completedTasks.filter( ( task ) =>
+    {
+      if ( !task.completedAt ) return true;
+      return new Date( task.completedAt ) >= cutoffDate;
+    } );
 
     result.tasksArchived = completedTasks.length - tasksToKeep.length;
 
-    if (result.tasksArchived > 0) {
-      await updateCompletedTasks(tasksToKeep);
-      console.log(`[Cron Daily Reset] Archived ${result.tasksArchived} old tasks`);
+    if ( result.tasksArchived > 0 )
+    {
+      await updateCompletedTasks( tasksToKeep );
+      console.log( `[Cron Daily Reset] Archived ${ result.tasksArchived } old tasks` );
     }
   }
 
-  console.log(`[Cron Daily Reset] Completed successfully`);
+  console.log( `[Cron Daily Reset] Completed successfully` );
   return result;
 }
 
@@ -899,8 +1000,9 @@ async function handleDailyReset(timestamp: string): Promise<DailyResetResult> {
  * Handle process-agent-queue action
  * Processes pending tasks from the agent queue
  */
-async function handleProcessAgentQueue(timestamp: string): Promise<AgentQueueResult> {
-  console.log(`[Cron Agent Queue] Starting execution at ${timestamp}`);
+async function handleProcessAgentQueue ( timestamp: string ): Promise<AgentQueueResult>
+{
+  console.log( `[Cron Agent Queue] Starting execution at ${ timestamp }` );
 
   const result: AgentQueueResult = {
     success: true,
@@ -910,114 +1012,129 @@ async function handleProcessAgentQueue(timestamp: string): Promise<AgentQueueRes
     errors: [],
   };
 
-  try {
+  try
+  {
     const kv = await getKv();
-    const taskQueue = ((await kv.get("agent-task-queue")) as AgentTask[]) || [];
-    const pendingTasks = taskQueue.filter((t) => t.status === "pending" || t.status === "queued");
+    const taskQueue = ( ( await kv.get( "agent-task-queue" ) ) as AgentTask[] ) || [];
+    const pendingTasks = taskQueue.filter( ( t ) => t.status === "pending" || t.status === "queued" );
 
     // Histórico de profundidade da fila (mantém últimos 200 registros)
-    try {
+    try
+    {
       const history =
-        ((await kv.get(KV_KEYS.AGENT_QUEUE_DEPTH_HISTORY)) as Array<{
+        ( ( await kv.get( KV_KEYS.AGENT_QUEUE_DEPTH_HISTORY ) ) as Array<{
           timestamp: string;
           queueLength: number;
           pendingCount: number;
-        }>) || [];
-      history.unshift({
+        }> ) || [];
+      history.unshift( {
         timestamp,
         queueLength: taskQueue.length,
         pendingCount: pendingTasks.length,
-      });
-      await kv.set(KV_KEYS.AGENT_QUEUE_DEPTH_HISTORY, history.slice(0, 200));
-    } catch (error_) {
-      console.warn("[Cron Agent Queue] Falha registrar histórico fila:", error_);
+      } );
+      await kv.set( KV_KEYS.AGENT_QUEUE_DEPTH_HISTORY, history.slice( 0, 200 ) );
+    } catch ( error_ )
+    {
+      console.warn( "[Cron Agent Queue] Falha registrar histórico fila:", error_ );
     }
 
-    console.log(`[Cron Agent Queue] Found ${pendingTasks.length} pending tasks`);
+    console.log( `[Cron Agent Queue] Found ${ pendingTasks.length } pending tasks` );
 
-    if (pendingTasks.length === 0) {
+    if ( pendingTasks.length === 0 )
+    {
       return result;
     }
 
     // ===== Throughput Dinâmico =====
     // Estatísticas para decidir limite de processamento
     let tasksLimit = 10; // padrão
-    try {
+    try
+    {
       const history =
-        ((await kv.get(KV_KEYS.AGENT_QUEUE_DEPTH_HISTORY)) as Array<{
+        ( ( await kv.get( KV_KEYS.AGENT_QUEUE_DEPTH_HISTORY ) ) as Array<{
           timestamp: string;
           queueLength: number;
           pendingCount: number;
-        }>) || [];
-      const recent = history.slice(0, 12);
+        }> ) || [];
+      const recent = history.slice( 0, 12 );
       const avgPending =
-        recent.reduce((acc, h) => acc + h.pendingCount, 0) / Math.max(recent.length, 1);
-      const maxPending = recent.reduce((acc, h) => Math.max(acc, h.pendingCount), 0);
-      if (avgPending >= 100 || maxPending >= 150 || pendingTasks.length >= 150) {
+        recent.reduce( ( acc, h ) => acc + h.pendingCount, 0 ) / Math.max( recent.length, 1 );
+      const maxPending = recent.reduce( ( acc, h ) => Math.max( acc, h.pendingCount ), 0 );
+      if ( avgPending >= 100 || maxPending >= 150 || pendingTasks.length >= 150 )
+      {
         tasksLimit = 40; // crítico
-      } else if (avgPending >= 50 || pendingTasks.length >= 80) {
+      } else if ( avgPending >= 50 || pendingTasks.length >= 80 )
+      {
         tasksLimit = 25; // alto
       }
 
-      if (tasksLimit > 10) {
+      if ( tasksLimit > 10 )
+      {
         console.log(
-          `[Cron Agent Queue] Scaling throughput: limit=${tasksLimit} avgPending=${avgPending.toFixed(
+          `[Cron Agent Queue] Scaling throughput: limit=${ tasksLimit } avgPending=${ avgPending.toFixed(
             1
-          )} maxPending=${maxPending}`
+          ) } maxPending=${ maxPending }`
         );
         // Registrar evento de scaling
-        try {
+        try
+        {
           const events =
-            ((await kv.get("agent-queue-scaling-events")) as Array<{
+            ( ( await kv.get( "agent-queue-scaling-events" ) ) as Array<{
               timestamp: string;
               limit: number;
               avgPending: number;
               maxPending: number;
               currentPending: number;
-            }>) || [];
-          events.unshift({
+            }> ) || [];
+          events.unshift( {
             timestamp,
             limit: tasksLimit,
             avgPending,
             maxPending,
             currentPending: pendingTasks.length,
-          });
-          await kv.set("agent-queue-scaling-events", events.slice(0, 100));
-        } catch (error_) {
-          console.warn("[Cron Agent Queue] Falha registrar scaling event:", error_);
+          } );
+          await kv.set( "agent-queue-scaling-events", events.slice( 0, 100 ) );
+        } catch ( error_ )
+        {
+          console.warn( "[Cron Agent Queue] Falha registrar scaling event:", error_ );
         }
       }
-    } catch (error_) {
-      console.warn("[Cron Agent Queue] Falha computar estatísticas fila:", error_);
+    } catch ( error_ )
+    {
+      console.warn( "[Cron Agent Queue] Falha computar estatísticas fila:", error_ );
     }
 
     const agents = await getAgents();
-    const processBatch = async (batch: AgentTask[]) => {
-      for (const task of batch) {
-        await processAgentTask(task, taskQueue, agents, result);
+    const processBatch = async ( batch: AgentTask[] ) =>
+    {
+      for ( const task of batch )
+      {
+        await processAgentTask( task, taskQueue, agents, result );
       }
     };
 
     // Primeira passagem
-    await processBatch(pendingTasks.slice(0, tasksLimit));
+    await processBatch( pendingTasks.slice( 0, tasksLimit ) );
 
     // Segunda passagem opcional (boost) se ainda há muitas pendentes e cenário alto/crítico
-    const remaining = taskQueue.filter((t) => t.status === "pending" || t.status === "queued");
-    if (tasksLimit > 10 && remaining.length > tasksLimit) {
-      console.log(`[Cron Agent Queue] Boost pass iniciada (remaining=${remaining.length})`);
-      await processBatch(remaining.slice(0, tasksLimit));
+    const remaining = taskQueue.filter( ( t ) => t.status === "pending" || t.status === "queued" );
+    if ( tasksLimit > 10 && remaining.length > tasksLimit )
+    {
+      console.log( `[Cron Agent Queue] Boost pass iniciada (remaining=${ remaining.length })` );
+      await processBatch( remaining.slice( 0, tasksLimit ) );
     }
 
     // Persistir queue atualizada
-    await kv.set("agent-task-queue", taskQueue);
-    await moveCompletedTasks(kv, taskQueue);
+    await kv.set( "agent-task-queue", taskQueue );
+    await moveCompletedTasks( kv, taskQueue );
 
     console.log(
-      `[Cron Agent Queue] Completed: ${result.tasksProcessed} processed, ${result.tasksFailed} failed (limit=${tasksLimit})`
+      `[Cron Agent Queue] Completed: ${ result.tasksProcessed } processed, ${ result.tasksFailed } failed (limit=${ tasksLimit })`
     );
-  } catch (error) {
+  } catch ( error )
+  {
     result.success = false;
-    result.errors.push(error instanceof Error ? error.message : "Unknown error");
+    result.errors.push( error instanceof Error ? error.message : "Unknown error" );
   }
 
   return result;
@@ -1026,58 +1143,66 @@ async function handleProcessAgentQueue(timestamp: string): Promise<AgentQueueRes
 /**
  * Process a single agent task
  */
-async function processAgentTask(
+async function processAgentTask (
   task: AgentTask,
   taskQueue: AgentTask[],
   agents: Agent[],
   result: AgentQueueResult
-): Promise<void> {
-  try {
-    const agent = agents.find((a) => a.id === task.agentId);
+): Promise<void>
+{
+  try
+  {
+    const agent = agents.find( ( a ) => a.id === task.agentId );
 
-    if (!agent?.enabled) {
-      console.log(`[Cron Agent Queue] Skipping task ${task.id} - agent not found or disabled`);
+    if ( !agent?.enabled )
+    {
+      console.log( `[Cron Agent Queue] Skipping task ${ task.id } - agent not found or disabled` );
       return;
     }
 
     // Update task status
     task.status = "in_progress";
-    const taskIndex = taskQueue.findIndex((t) => t.id === task.id);
-    if (taskIndex >= 0) {
-      taskQueue[taskIndex] = task;
+    const taskIndex = taskQueue.findIndex( ( t ) => t.id === task.id );
+    if ( taskIndex >= 0 )
+    {
+      taskQueue[ taskIndex ] = task;
     }
 
     // Call agent processing endpoint
     const baseUrl = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
+      ? `https://${ process.env.VERCEL_URL }`
       : "http://localhost:3000";
 
-    const agentResponse = await fetch(`${baseUrl}/api/agents?action=process-task`, {
+    const agentResponse = await fetch( `${ baseUrl }/api/agents?action=process-task`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ task, agent }),
-    });
+      body: JSON.stringify( { task, agent } ),
+    } );
 
-    if (agentResponse.ok) {
+    if ( agentResponse.ok )
+    {
       task.status = "completed";
       task.completedAt = new Date().toISOString();
       result.tasksProcessed++;
-      console.log(`[Cron Agent Queue] Task ${task.id} completed`);
-    } else {
+      console.log( `[Cron Agent Queue] Task ${ task.id } completed` );
+    } else
+    {
       task.status = "failed";
       result.tasksFailed++;
-      result.errors.push(`Task ${task.id} failed`);
+      result.errors.push( `Task ${ task.id } failed` );
     }
 
     // Update task in queue
-    if (taskIndex >= 0) {
-      taskQueue[taskIndex] = task;
+    if ( taskIndex >= 0 )
+    {
+      taskQueue[ taskIndex ] = task;
     }
-  } catch (taskError) {
+  } catch ( taskError )
+  {
     task.status = "failed";
     result.tasksFailed++;
     result.errors.push(
-      `Task ${task.id}: ${taskError instanceof Error ? taskError.message : "Unknown error"}`
+      `Task ${ task.id }: ${ taskError instanceof Error ? taskError.message : "Unknown error" }`
     );
   }
 }
@@ -1085,16 +1210,18 @@ async function processAgentTask(
 /**
  * Move completed tasks to history
  */
-async function moveCompletedTasks(kv: Redis, taskQueue: AgentTask[]): Promise<void> {
-  const completedTasksInQueue = taskQueue.filter((t) => t.status === "completed");
-  if (completedTasksInQueue.length > 0) {
-    const existingCompleted = ((await kv.get(KV_KEYS.COMPLETED_TASKS)) as AgentTask[]) || [];
-    existingCompleted.unshift(...completedTasksInQueue);
-    await kv.set(KV_KEYS.COMPLETED_TASKS, existingCompleted.slice(0, 1000));
+async function moveCompletedTasks ( kv: Redis, taskQueue: AgentTask[] ): Promise<void>
+{
+  const completedTasksInQueue = taskQueue.filter( ( t ) => t.status === "completed" );
+  if ( completedTasksInQueue.length > 0 )
+  {
+    const existingCompleted = ( ( await kv.get( KV_KEYS.COMPLETED_TASKS ) ) as AgentTask[] ) || [];
+    existingCompleted.unshift( ...completedTasksInQueue );
+    await kv.set( KV_KEYS.COMPLETED_TASKS, existingCompleted.slice( 0, 1000 ) );
 
     // Remove completed from queue
-    const remainingQueue = taskQueue.filter((t) => t.status !== "completed");
-    await kv.set("agent-task-queue", remainingQueue);
+    const remainingQueue = taskQueue.filter( ( t ) => t.status !== "completed" );
+    await kv.set( "agent-task-queue", remainingQueue );
   }
 }
 
@@ -1102,8 +1229,9 @@ async function moveCompletedTasks(kv: Redis, taskQueue: AgentTask[]): Promise<vo
  * Handle process-notifications action
  * Sends pending notifications via webhooks and email
  */
-async function handleProcessNotifications(timestamp: string): Promise<NotificationResult> {
-  console.log(`[Cron Notifications] Starting execution at ${timestamp}`);
+async function handleProcessNotifications ( timestamp: string ): Promise<NotificationResult>
+{
+  console.log( `[Cron Notifications] Starting execution at ${ timestamp }` );
 
   const result: NotificationResult = {
     success: true,
@@ -1113,10 +1241,11 @@ async function handleProcessNotifications(timestamp: string): Promise<Notificati
     errors: [],
   };
 
-  try {
+  try
+  {
     const kv = await getKv();
     const notificationQueue =
-      ((await kv.get(KV_KEYS.NOTIFICATION_QUEUE)) as Array<{
+      ( ( await kv.get( KV_KEYS.NOTIFICATION_QUEUE ) ) as Array<{
         id: string;
         type: string;
         title: string;
@@ -1125,31 +1254,34 @@ async function handleProcessNotifications(timestamp: string): Promise<Notificati
         recipientEmail?: string;
         createdAt: string;
         sent: boolean;
-      }>) || [];
+      }> ) || [];
 
-    const pendingNotifications = notificationQueue.filter((n) => !n.sent);
-    console.log(`[Cron Notifications] Found ${pendingNotifications.length} pending notifications`);
+    const pendingNotifications = notificationQueue.filter( ( n ) => !n.sent );
+    console.log( `[Cron Notifications] Found ${ pendingNotifications.length } pending notifications` );
 
-    if (pendingNotifications.length === 0) {
+    if ( pendingNotifications.length === 0 )
+    {
       return result;
     }
 
     // Process up to 20 notifications per execution
-    const toProcess = pendingNotifications.slice(0, 20);
+    const toProcess = pendingNotifications.slice( 0, 20 );
 
-    for (const notification of toProcess) {
-      await processNotification(notification, notificationQueue, result);
+    for ( const notification of toProcess )
+    {
+      await processNotification( notification, notificationQueue, result );
     }
 
     // Save updated queue (keep last 500)
-    await kv.set(KV_KEYS.NOTIFICATION_QUEUE, notificationQueue.slice(0, 500));
+    await kv.set( KV_KEYS.NOTIFICATION_QUEUE, notificationQueue.slice( 0, 500 ) );
 
     console.log(
-      `[Cron Notifications] Completed: ${result.emailsSent} emails, ${result.webhooksSent} webhooks`
+      `[Cron Notifications] Completed: ${ result.emailsSent } emails, ${ result.webhooksSent } webhooks`
     );
-  } catch (error) {
+  } catch ( error )
+  {
     result.success = false;
-    result.errors.push(error instanceof Error ? error.message : "Unknown error");
+    result.errors.push( error instanceof Error ? error.message : "Unknown error" );
   }
 
   return result;
@@ -1158,7 +1290,7 @@ async function handleProcessNotifications(timestamp: string): Promise<Notificati
 /**
  * Process a single notification
  */
-async function processNotification(
+async function processNotification (
   notification: {
     id: string;
     type: string;
@@ -1180,33 +1312,37 @@ async function processNotification(
     sent: boolean;
   }>,
   result: NotificationResult
-): Promise<void> {
-  try {
+): Promise<void>
+{
+  try
+  {
     // Send via webhook if configured
     const webhookUrl = process.env.SLACK_WEBHOOK_URL || process.env.DISCORD_WEBHOOK_URL;
-    if (webhookUrl) {
-      await sendRealTimeNotification({
+    if ( webhookUrl )
+    {
+      await sendRealTimeNotification( {
         type: notification.type,
         title: notification.title,
         message: notification.message,
         priority: "normal",
-      });
+      } );
       result.webhooksSent++;
     }
 
     // Send email if Resend is configured
-    await sendEmailNotification(notification, result);
+    await sendEmailNotification( notification, result );
 
     // Mark as sent
     notification.sent = true;
-    const idx = notificationQueue.findIndex((n) => n.id === notification.id);
-    if (idx >= 0) {
-      notificationQueue[idx] = notification;
+    const idx = notificationQueue.findIndex( ( n ) => n.id === notification.id );
+    if ( idx >= 0 )
+    {
+      notificationQueue[ idx ] = notification;
     }
-  } catch (notifError) {
+  } catch ( notifError )
+  {
     result.errors.push(
-      `Notification ${notification.id}: ${
-        notifError instanceof Error ? notifError.message : "Unknown error"
+      `Notification ${ notification.id }: ${ notifError instanceof Error ? notifError.message : "Unknown error"
       }`
     );
   }
@@ -1215,80 +1351,90 @@ async function processNotification(
 /**
  * Send email notification via Resend
  */
-async function sendEmailNotification(
+async function sendEmailNotification (
   notification: { title: string; message: string; recipientEmail?: string },
   result: NotificationResult
-): Promise<void> {
+): Promise<void>
+{
   const resendApiKey = process.env.RESEND_API_KEY;
   const recipientEmail = notification.recipientEmail || process.env.NOTIFICATION_EMAIL;
 
-  if (!resendApiKey || !recipientEmail) {
+  if ( !resendApiKey || !recipientEmail )
+  {
     return;
   }
 
   // Dedupe: evita envio repetido (mesmo título+mensagem) dentro de 10 minutos
-  try {
+  try
+  {
     const kv = await getKv();
-    const rawKey = `${notification.title}::${notification.message}`.trim();
+    const rawKey = `${ notification.title }::${ notification.message }`.trim();
     // Usar Web Crypto se disponível no ambiente; fallback para Node 'crypto'
     let hash: string;
-    try {
+    try
+    {
       // Preferir Web Crypto se disponível (edge / browser-like), senão fallback para createHash Node
-      if (typeof crypto !== "undefined" && "subtle" in crypto) {
+      if ( typeof crypto !== "undefined" && "subtle" in crypto )
+      {
         const encoder = new TextEncoder();
-        const data = encoder.encode(rawKey);
-        const digest = await crypto.subtle.digest("SHA-256", data);
-        hash = Array.from(new Uint8Array(digest))
-          .map((b) => b.toString(16).padStart(2, "0"))
-          .join("")
-          .slice(0, 32);
-      } else {
-        hash = createHash("sha256").update(rawKey).digest("hex").slice(0, 32);
+        const data = encoder.encode( rawKey );
+        const digest = await crypto.subtle.digest( "SHA-256", data );
+        hash = Array.from( new Uint8Array( digest ) )
+          .map( ( b ) => b.toString( 16 ).padStart( 2, "0" ) )
+          .join( "" )
+          .slice( 0, 32 );
+      } else
+      {
+        hash = createHash( "sha256" ).update( rawKey ).digest( "hex" ).slice( 0, 32 );
       }
-    } catch {
-      hash = rawKey.slice(0, 32);
+    } catch
+    {
+      hash = rawKey.slice( 0, 32 );
     }
-    const dedupeKey = `${KV_KEYS.NOTIFICATION_DEDUPE_PREFIX}:${hash}`;
-    const existing = await kv.get(dedupeKey);
-    if (existing) {
-      console.log("[Notifications] Dedupe hit - email ignorado");
+    const dedupeKey = `${ KV_KEYS.NOTIFICATION_DEDUPE_PREFIX }:${ hash }`;
+    const existing = await kv.get( dedupeKey );
+    if ( existing )
+    {
+      console.log( "[Notifications] Dedupe hit - email ignorado" );
       return;
     }
     // TTL 600s (10 minutos). Upstash aceita objeto de opções (ex: { ex: 600 })
-    await kv.set(dedupeKey, { sentAt: Date.now() }, { ex: 600 } as { ex: number });
-  } catch (error_) {
-    console.warn("[Notifications] Falha dedupe, prosseguindo envio:", error_);
+    await kv.set( dedupeKey, { sentAt: Date.now() }, { ex: 600 } as { ex: number } );
+  } catch ( error_ )
+  {
+    console.warn( "[Notifications] Falha dedupe, prosseguindo envio:", error_ );
   }
 
-  const emailResponse = await fetch("https://api.resend.com/emails", {
+  const emailResponse = await fetch( "https://api.resend.com/emails", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${resendApiKey}`,
+      Authorization: `Bearer ${ resendApiKey }`,
     },
-    body: JSON.stringify({
+    body: JSON.stringify( {
       from: process.env.EMAIL_FROM || "Assistente Jurídico <noreply@resend.dev>",
       to: recipientEmail,
       subject: notification.title,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #333;">${notification.title}</h2>
-          <p style="color: #666; font-size: 16px; line-height: 1.6;">${notification.message.replaceAll(
-            "\n",
-            "<br>"
-          )}</p>
+          <h2 style="color: #333;">${ notification.title }</h2>
+          <p style="color: #666; font-size: 16px; line-height: 1.6;">${ notification.message.replaceAll(
+        "\n",
+        "<br>"
+      ) }</p>
           <p style="color: #999; font-size: 12px;">
             Enviado automaticamente pelo Assistente Jurídico PJe<br>
-            ${new Date().toLocaleString("pt-BR", {
-              timeZone: "America/Sao_Paulo",
-            })}
+            ${ new Date().toLocaleString( "pt-BR", {
+        timeZone: "America/Sao_Paulo",
+      } ) }
           </p>
         </div>
       `,
-    }),
-  });
+    } ),
+  } );
 
-  if (emailResponse.ok) {
+  if ( emailResponse.ok )
+  {
     result.emailsSent++;
   }
 }
@@ -1297,8 +1443,9 @@ async function sendEmailNotification(
  * Handle calendar-sync action
  * Synchronizes deadlines with Google Calendar
  */
-async function handleCalendarSync(timestamp: string): Promise<CalendarSyncResult> {
-  console.log(`[Cron Calendar Sync] Starting execution at ${timestamp}`);
+async function handleCalendarSync ( timestamp: string ): Promise<CalendarSyncResult>
+{
+  console.log( `[Cron Calendar Sync] Starting execution at ${ timestamp }` );
 
   const result: CalendarSyncResult = {
     success: true,
@@ -1309,44 +1456,50 @@ async function handleCalendarSync(timestamp: string): Promise<CalendarSyncResult
     errors: [],
   };
 
-  try {
+  try
+  {
     const kv = await getKv();
 
     // Get all processes with deadlines
-    const processes = ((await kv.get("processes")) as ProcessWithDeadlines[]) || [];
+    const processes = ( ( await kv.get( "processes" ) ) as ProcessWithDeadlines[] ) || [];
 
-    console.log(`[Cron Calendar Sync] Found ${processes.length} processes`);
+    console.log( `[Cron Calendar Sync] Found ${ processes.length } processes` );
 
     // Get calendar sync settings
-    const calendarSettings = await kv.get<CalendarSettings | null>("calendar-settings");
+    const calendarSettings = await kv.get<CalendarSettings | null>( "calendar-settings" );
 
-    if (!calendarSettings?.enabled || !calendarSettings?.accessToken) {
-      console.log(`[Cron Calendar Sync] Calendar sync not configured or disabled`);
+    if ( !calendarSettings?.enabled || !calendarSettings?.accessToken )
+    {
+      console.log( `[Cron Calendar Sync] Calendar sync not configured or disabled` );
       return result;
     }
 
     // Process deadlines not yet synced
-    for (const processo of processes) {
-      if (!processo.prazos) continue;
+    for ( const processo of processes )
+    {
+      if ( !processo.prazos ) continue;
 
-      for (const prazo of processo.prazos) {
-        if (prazo.syncedToCalendar) continue;
-        await syncDeadlineToCalendar(prazo, processo, calendarSettings, result);
+      for ( const prazo of processo.prazos )
+      {
+        if ( prazo.syncedToCalendar ) continue;
+        await syncDeadlineToCalendar( prazo, processo, calendarSettings, result );
       }
     }
 
     // Save updated processes
-    if (result.eventsCreated > 0) {
-      await kv.set("processes", processes);
+    if ( result.eventsCreated > 0 )
+    {
+      await kv.set( "processes", processes );
     }
 
     // Update last sync time
-    await kv.set("calendar-last-sync", timestamp);
+    await kv.set( "calendar-last-sync", timestamp );
 
-    console.log(`[Cron Calendar Sync] Completed: ${result.eventsCreated} events created`);
-  } catch (error) {
+    console.log( `[Cron Calendar Sync] Completed: ${ result.eventsCreated } events created` );
+  } catch ( error )
+  {
     result.success = false;
-    result.errors.push(error instanceof Error ? error.message : "Unknown error");
+    result.errors.push( error instanceof Error ? error.message : "Unknown error" );
   }
 
   return result;
@@ -1355,33 +1508,34 @@ async function handleCalendarSync(timestamp: string): Promise<CalendarSyncResult
 /**
  * Sync a single deadline to Google Calendar
  */
-async function syncDeadlineToCalendar(
+async function syncDeadlineToCalendar (
   prazo: ProcessDeadline,
   processo: ProcessWithDeadlines,
   calendarSettings: CalendarSettings,
   result: CalendarSyncResult
-): Promise<void> {
-  try {
+): Promise<void>
+{
+  try
+  {
     // Create calendar event via Google Calendar API
     const eventResponse = await fetch(
-      `https://www.googleapis.com/calendar/v3/calendars/${
-        calendarSettings.calendarId || "primary"
+      `https://www.googleapis.com/calendar/v3/calendars/${ calendarSettings.calendarId || "primary"
       }/events`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${calendarSettings.accessToken}`,
+          Authorization: `Bearer ${ calendarSettings.accessToken }`,
         },
-        body: JSON.stringify({
-          summary: `⚖️ PRAZO: ${prazo.descricao}`,
-          description: `Processo: ${processo.numeroCNJ}\n${processo.titulo}\n\nPrazo cadastrado automaticamente pelo Assistente Jurídico.`,
+        body: JSON.stringify( {
+          summary: `⚖️ PRAZO: ${ prazo.descricao }`,
+          description: `Processo: ${ processo.numeroCNJ }\n${ processo.titulo }\n\nPrazo cadastrado automaticamente pelo Assistente Jurídico.`,
           start: {
-            date: prazo.dataFinal.split("T")[0],
+            date: prazo.dataFinal.split( "T" )[ 0 ],
             timeZone: "America/Sao_Paulo",
           },
           end: {
-            date: prazo.dataFinal.split("T")[0],
+            date: prazo.dataFinal.split( "T" )[ 0 ],
             timeZone: "America/Sao_Paulo",
           },
           reminders: {
@@ -1393,24 +1547,26 @@ async function syncDeadlineToCalendar(
             ],
           },
           colorId: prazo.urgente ? "11" : "9", // Red for urgent, Blue for normal
-        }),
+        } ),
       }
     );
 
-    if (eventResponse.ok) {
-      const eventData = (await eventResponse.json()) as { id: string };
+    if ( eventResponse.ok )
+    {
+      const eventData = ( await eventResponse.json() ) as { id: string };
       prazo.syncedToCalendar = true;
       prazo.calendarEventId = eventData.id;
       result.eventsCreated++;
       result.deadlinesSynced++;
-    } else {
+    } else
+    {
       const errorText = await eventResponse.text();
-      result.errors.push(`Failed to create event for prazo ${prazo.id}: ${errorText}`);
+      result.errors.push( `Failed to create event for prazo ${ prazo.id }: ${ errorText }` );
     }
-  } catch (calError) {
+  } catch ( calError )
+  {
     result.errors.push(
-      `Calendar error for prazo ${prazo.id}: ${
-        calError instanceof Error ? calError.message : "Unknown"
+      `Calendar error for prazo ${ prazo.id }: ${ calError instanceof Error ? calError.message : "Unknown"
       }`
     );
   }
@@ -1419,22 +1575,26 @@ async function syncDeadlineToCalendar(
 /**
  * Backup a single KV key
  */
-async function backupSingleKey(
+async function backupSingleKey (
   kv: Redis,
   key: string,
   backupData: Record<string, unknown>,
   result: BackupResult
-): Promise<number> {
-  try {
-    const data = await kv.get(key);
-    if (data) {
-      backupData[key] = data;
+): Promise<number>
+{
+  try
+  {
+    const data = await kv.get( key );
+    if ( data )
+    {
+      backupData[ key ] = data;
       result.keysBackedUp++;
-      return JSON.stringify(data).length;
+      return JSON.stringify( data ).length;
     }
-  } catch (keyError) {
+  } catch ( keyError )
+  {
     result.errors.push(
-      `Failed to backup ${key}: ${keyError instanceof Error ? keyError.message : "Unknown"}`
+      `Failed to backup ${ key }: ${ keyError instanceof Error ? keyError.message : "Unknown" }`
     );
   }
   return 0;
@@ -1443,24 +1603,29 @@ async function backupSingleKey(
 /**
  * Backup lawyer-specific publications
  */
-async function backupLawyerPublications(
+async function backupLawyerPublications (
   kv: Redis,
   backupData: Record<string, unknown>,
   result: BackupResult
-): Promise<number> {
+): Promise<number>
+{
   let totalBytes = 0;
-  const lawyers = ((await kv.get(KV_KEYS.MONITORED_LAWYERS)) as MonitoredLawyer[]) || [];
+  const lawyers = ( ( await kv.get( KV_KEYS.MONITORED_LAWYERS ) ) as MonitoredLawyer[] ) || [];
 
-  for (const lawyer of lawyers) {
-    const pubKey = `${KV_KEYS.PUBLICATIONS}:${lawyer.id}`;
-    try {
-      const pubs = await kv.get(pubKey);
-      if (pubs) {
-        backupData[pubKey] = pubs;
+  for ( const lawyer of lawyers )
+  {
+    const pubKey = `${ KV_KEYS.PUBLICATIONS }:${ lawyer.id }`;
+    try
+    {
+      const pubs = await kv.get( pubKey );
+      if ( pubs )
+      {
+        backupData[ pubKey ] = pubs;
         result.keysBackedUp++;
-        totalBytes += JSON.stringify(pubs).length;
+        totalBytes += JSON.stringify( pubs ).length;
       }
-    } catch {
+    } catch
+    {
       // Ignore errors for individual lawyer publications
     }
   }
@@ -1471,19 +1636,22 @@ async function backupLawyerPublications(
 /**
  * Format bytes to human readable size
  */
-function formatBytes(bytes: number): string {
-  if (bytes > 1024 * 1024) {
-    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+function formatBytes ( bytes: number ): string
+{
+  if ( bytes > 1024 * 1024 )
+  {
+    return `${ ( bytes / ( 1024 * 1024 ) ).toFixed( 2 ) } MB`;
   }
-  return `${(bytes / 1024).toFixed(2)} KB`;
+  return `${ ( bytes / 1024 ).toFixed( 2 ) } KB`;
 }
 
 /**
  * Handle backup action
  * Creates daily backup of KV data
  */
-async function handleBackup(timestamp: string): Promise<BackupResult> {
-  console.log(`[Cron Backup] Starting execution at ${timestamp}`);
+async function handleBackup ( timestamp: string ): Promise<BackupResult>
+{
+  console.log( `[Cron Backup] Starting execution at ${ timestamp }` );
 
   const result: BackupResult = {
     success: true,
@@ -1493,7 +1661,8 @@ async function handleBackup(timestamp: string): Promise<BackupResult> {
     errors: [],
   };
 
-  try {
+  try
+  {
     const kv = await getKv();
     const backupData: Record<string, unknown> = {};
     let totalBytes = 0;
@@ -1512,29 +1681,31 @@ async function handleBackup(timestamp: string): Promise<BackupResult> {
     ];
 
     // Backup main keys
-    for (const key of keysToBackup) {
-      totalBytes += await backupSingleKey(kv, key, backupData, result);
+    for ( const key of keysToBackup )
+    {
+      totalBytes += await backupSingleKey( kv, key, backupData, result );
     }
 
     // Backup lawyer publications
-    totalBytes += await backupLawyerPublications(kv, backupData, result);
+    totalBytes += await backupLawyerPublications( kv, backupData, result );
 
     // Calculate and store
-    result.totalSize = formatBytes(totalBytes);
-    const backupKey = `backup:${new Date().toISOString().split("T")[0]}`;
+    result.totalSize = formatBytes( totalBytes );
+    const backupKey = `backup:${ new Date().toISOString().split( "T" )[ 0 ] }`;
 
-    await kv.set(backupKey, {
+    await kv.set( backupKey, {
       timestamp,
       data: backupData,
       keysCount: result.keysBackedUp,
       sizeBytes: totalBytes,
-    });
+    } );
 
-    await cleanOldBackups(kv, backupKey);
-    console.log(`[Cron Backup] Completed: ${result.keysBackedUp} keys, ${result.totalSize}`);
-  } catch (error) {
+    await cleanOldBackups( kv, backupKey );
+    console.log( `[Cron Backup] Completed: ${ result.keysBackedUp } keys, ${ result.totalSize }` );
+  } catch ( error )
+  {
     result.success = false;
-    result.errors.push(error instanceof Error ? error.message : "Unknown error");
+    result.errors.push( error instanceof Error ? error.message : "Unknown error" );
   }
 
   return result;
@@ -1543,29 +1714,34 @@ async function handleBackup(timestamp: string): Promise<BackupResult> {
 /**
  * Clean old backups, keeping only last 7
  */
-async function cleanOldBackups(kv: Redis, currentBackupKey: string): Promise<void> {
-  const backupList = ((await kv.get("backup-list")) as string[]) || [];
-  backupList.unshift(currentBackupKey);
-  const keysToKeep = backupList.slice(0, 7);
-  const keysToDelete = backupList.slice(7);
+async function cleanOldBackups ( kv: Redis, currentBackupKey: string ): Promise<void>
+{
+  const backupList = ( ( await kv.get( "backup-list" ) ) as string[] ) || [];
+  backupList.unshift( currentBackupKey );
+  const keysToKeep = backupList.slice( 0, 7 );
+  const keysToDelete = backupList.slice( 7 );
 
-  for (const oldKey of keysToDelete) {
-    try {
-      await kv.del(oldKey);
-    } catch {
+  for ( const oldKey of keysToDelete )
+  {
+    try
+    {
+      await kv.del( oldKey );
+    } catch
+    {
       // Ignore delete errors
     }
   }
 
-  await kv.set("backup-list", keysToKeep);
+  await kv.set( "backup-list", keysToKeep );
 }
 
 /**
  * Handle datajud-monitor action
  * Monitors processes for new movements in DataJud
  */
-async function handleDataJudMonitor(timestamp: string): Promise<DataJudResult> {
-  console.log(`[Cron DataJud Monitor] Starting execution at ${timestamp}`);
+async function handleDataJudMonitor ( timestamp: string ): Promise<DataJudResult>
+{
+  console.log( `[Cron DataJud Monitor] Starting execution at ${ timestamp }` );
 
   const result: DataJudResult = {
     success: true,
@@ -1575,41 +1751,45 @@ async function handleDataJudMonitor(timestamp: string): Promise<DataJudResult> {
     errors: [],
   };
 
-  try {
+  try
+  {
     const kv = await getKv();
 
     // Get all active processes
-    const processes = ((await kv.get("processes")) as ProcessWithMovements[]) || [];
+    const processes = ( ( await kv.get( "processes" ) ) as ProcessWithMovements[] ) || [];
 
     const activeProcesses = processes.filter(
-      (p) => p.status === "ativo" || p.status === "em_andamento"
+      ( p ) => p.status === "ativo" || p.status === "em_andamento"
     );
-    console.log(`[Cron DataJud Monitor] Found ${activeProcesses.length} active processes`);
+    console.log( `[Cron DataJud Monitor] Found ${ activeProcesses.length } active processes` );
 
     // DataJud API key (optional - public API has rate limits)
     const datajudApiKey = process.env.DATAJUD_API_KEY;
 
-    for (const processo of activeProcesses.slice(0, 20)) {
+    for ( const processo of activeProcesses.slice( 0, 20 ) )
+    {
       // Limit to 20 per execution
-      await checkProcessInDataJud(processo, datajudApiKey, result);
+      await checkProcessInDataJud( processo, datajudApiKey, result );
       // Rate limit - wait 500ms between requests
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await new Promise( ( resolve ) => setTimeout( resolve, 500 ) );
     }
 
     // Save updated processes
-    if (result.updatesFound > 0) {
-      await kv.set("processes", processes);
+    if ( result.updatesFound > 0 )
+    {
+      await kv.set( "processes", processes );
     }
 
     // Update last check
-    await kv.set("datajud-last-check", timestamp);
+    await kv.set( "datajud-last-check", timestamp );
 
     console.log(
-      `[Cron DataJud Monitor] Completed: ${result.processesChecked} checked, ${result.updatesFound} updates`
+      `[Cron DataJud Monitor] Completed: ${ result.processesChecked } checked, ${ result.updatesFound } updates`
     );
-  } catch (error) {
+  } catch ( error )
+  {
     result.success = false;
-    result.errors.push(error instanceof Error ? error.message : "Unknown error");
+    result.errors.push( error instanceof Error ? error.message : "Unknown error" );
   }
 
   return result;
@@ -1618,12 +1798,14 @@ async function handleDataJudMonitor(timestamp: string): Promise<DataJudResult> {
 /**
  * Check a single process in DataJud for updates
  */
-async function checkProcessInDataJud(
+async function checkProcessInDataJud (
   processo: ProcessWithMovements,
   datajudApiKey: string | undefined,
   result: DataJudResult
-): Promise<void> {
-  try {
+): Promise<void>
+{
+  try
+  {
     result.processesChecked++;
 
     // Query DataJud API
@@ -1631,7 +1813,7 @@ async function checkProcessInDataJud(
     const query = {
       query: {
         match: {
-          numeroProcesso: processo.numeroCNJ.replaceAll(/\D/g, ""),
+          numeroProcesso: processo.numeroCNJ.replaceAll( /\D/g, "" ),
         },
       },
       size: 1,
@@ -1640,33 +1822,36 @@ async function checkProcessInDataJud(
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
-    if (datajudApiKey) {
-      headers["Authorization"] = `ApiKey ${datajudApiKey}`;
+    if ( datajudApiKey )
+    {
+      headers[ "Authorization" ] = `ApiKey ${ datajudApiKey }`;
     }
 
-    const response = await fetch(datajudUrl, {
+    const response = await fetch( datajudUrl, {
       method: "POST",
       headers,
-      body: JSON.stringify(query),
-    });
+      body: JSON.stringify( query ),
+    } );
 
-    if (!response.ok) {
+    if ( !response.ok )
+    {
       console.warn(
-        `[Cron DataJud Monitor] API returned ${response.status} for ${processo.numeroCNJ}`
+        `[Cron DataJud Monitor] API returned ${ response.status } for ${ processo.numeroCNJ }`
       );
       return;
     }
 
-    const data = (await response.json()) as DataJudResponse;
+    const data = ( await response.json() ) as DataJudResponse;
 
     const hits = data.hits?.hits || [];
-    if (hits.length > 0) {
-      await processDataJudHits(processo, hits, result);
+    if ( hits.length > 0 )
+    {
+      await processDataJudHits( processo, hits, result );
     }
-  } catch (processError) {
+  } catch ( processError )
+  {
     result.errors.push(
-      `Process ${processo.numeroCNJ}: ${
-        processError instanceof Error ? processError.message : "Unknown"
+      `Process ${ processo.numeroCNJ }: ${ processError instanceof Error ? processError.message : "Unknown"
       }`
     );
   }
@@ -1675,19 +1860,21 @@ async function checkProcessInDataJud(
 /**
  * Process DataJud search hits for a process
  */
-async function processDataJudHits(
+async function processDataJudHits (
   processo: ProcessWithMovements,
   hits: DataJudHit[],
   result: DataJudResult
-): Promise<void> {
-  const source = hits[0]._source;
+): Promise<void>
+{
+  const source = hits[ 0 ]._source;
   const movimentos = source?.movimentos || [];
 
   // Check for new movements
-  const lastCheck = processo.ultimaAtualizacao ? new Date(processo.ultimaAtualizacao) : new Date(0);
-  const newMovimentos = movimentos.filter((m) => new Date(m.dataHora) > lastCheck);
+  const lastCheck = processo.ultimaAtualizacao ? new Date( processo.ultimaAtualizacao ) : new Date( 0 );
+  const newMovimentos = movimentos.filter( ( m ) => new Date( m.dataHora ) > lastCheck );
 
-  if (newMovimentos.length === 0) {
+  if ( newMovimentos.length === 0 )
+  {
     return;
   }
 
@@ -1696,15 +1883,15 @@ async function processDataJudHits(
   // Update process
   processo.ultimaAtualizacao = new Date().toISOString();
   processo.movimentos = [
-    ...newMovimentos.map((m) => ({
+    ...newMovimentos.map( ( m ) => ( {
       data: m.dataHora,
-      descricao: `${m.nome}${m.complemento ? ": " + m.complemento : ""}`,
-    })),
-    ...(processo.movimentos || []),
-  ].slice(0, 100);
+      descricao: `${ m.nome }${ m.complemento ? ": " + m.complemento : "" }`,
+    } ) ),
+    ...( processo.movimentos || [] ),
+  ].slice( 0, 100 );
 
   // Create task for analysis
-  await addTaskToQueue({
+  await addTaskToQueue( {
     id: crypto.randomUUID(),
     agentId: "analise-documental",
     type: "analyze_movement",
@@ -1717,29 +1904,29 @@ async function processDataJudHits(
       newMovements: newMovimentos,
       source: "DataJud Monitor",
     },
-  });
+  } );
 
   // Send notification
-  await sendRealTimeNotification({
+  await sendRealTimeNotification( {
     type: "new_movement",
-    title: `📋 Nova Movimentação - ${processo.numeroCNJ}`,
-    message: `${newMovimentos.length} nova(s) movimentação(ões) detectada(s)\n${
-      newMovimentos[0]?.nome || ""
-    }`,
+    title: `📋 Nova Movimentação - ${ processo.numeroCNJ }`,
+    message: `${ newMovimentos.length } nova(s) movimentação(ões) detectada(s)\n${ newMovimentos[ 0 ]?.nome || ""
+      }`,
     priority: "normal",
     metadata: {
       processCNJ: processo.numeroCNJ,
       movementsCount: newMovimentos.length,
     },
-  });
+  } );
 }
 
 /**
  * Handle deadline-alerts action
  * Sends alerts for upcoming and urgent deadlines
  */
-async function handleDeadlineAlerts(timestamp: string): Promise<DeadlineAlertResult> {
-  console.log(`[Cron Deadline Alerts] Starting execution at ${timestamp}`);
+async function handleDeadlineAlerts ( timestamp: string ): Promise<DeadlineAlertResult>
+{
+  console.log( `[Cron Deadline Alerts] Starting execution at ${ timestamp }` );
 
   const result: DeadlineAlertResult = {
     success: true,
@@ -1750,40 +1937,45 @@ async function handleDeadlineAlerts(timestamp: string): Promise<DeadlineAlertRes
     errors: [],
   };
 
-  try {
+  try
+  {
     const kv = await getKv();
 
     // Get all processes
-    const processes = ((await kv.get("processes")) as ProcessWithAlertDeadlines[]) || [];
+    const processes = ( ( await kv.get( "processes" ) ) as ProcessWithAlertDeadlines[] ) || [];
 
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    today.setHours( 0, 0, 0, 0 );
 
     const urgentDeadlines: DeadlineInfo[] = [];
     const upcomingDeadlines: DeadlineInfo[] = [];
 
     // Collect deadlines
-    for (const processo of processes) {
-      if (!processo.prazos) continue;
-      collectProcessDeadlines(processo, today, urgentDeadlines, upcomingDeadlines, result);
+    for ( const processo of processes )
+    {
+      if ( !processo.prazos ) continue;
+      collectProcessDeadlines( processo, today, urgentDeadlines, upcomingDeadlines, result );
     }
 
     // Send urgent alerts
-    if (urgentDeadlines.length > 0) {
-      await sendUrgentDeadlineAlert(urgentDeadlines, result);
+    if ( urgentDeadlines.length > 0 )
+    {
+      await sendUrgentDeadlineAlert( urgentDeadlines, result );
     }
 
     // Send daily summary if there are upcoming deadlines
-    if (upcomingDeadlines.length > 0) {
-      await sendUpcomingDeadlineSummary(upcomingDeadlines, result);
+    if ( upcomingDeadlines.length > 0 )
+    {
+      await sendUpcomingDeadlineSummary( upcomingDeadlines, result );
     }
 
     console.log(
-      `[Cron Deadline Alerts] Completed: ${result.urgentDeadlines} urgent, ${result.upcomingDeadlines} upcoming`
+      `[Cron Deadline Alerts] Completed: ${ result.urgentDeadlines } urgent, ${ result.upcomingDeadlines } upcoming`
     );
-  } catch (error) {
+  } catch ( error )
+  {
     result.success = false;
-    result.errors.push(error instanceof Error ? error.message : "Unknown error");
+    result.errors.push( error instanceof Error ? error.message : "Unknown error" );
   }
 
   return result;
@@ -1792,20 +1984,22 @@ async function handleDeadlineAlerts(timestamp: string): Promise<DeadlineAlertRes
 /**
  * Collect deadlines from a process
  */
-function collectProcessDeadlines(
+function collectProcessDeadlines (
   processo: ProcessWithAlertDeadlines,
   today: Date,
   urgentDeadlines: DeadlineInfo[],
   upcomingDeadlines: DeadlineInfo[],
   result: DeadlineAlertResult
-): void {
-  for (const prazo of processo.prazos!) {
-    const deadline = new Date(prazo.dataFinal);
-    deadline.setHours(0, 0, 0, 0);
+): void
+{
+  for ( const prazo of processo.prazos! )
+  {
+    const deadline = new Date( prazo.dataFinal );
+    deadline.setHours( 0, 0, 0, 0 );
 
-    const diasRestantes = Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    const diasRestantes = Math.ceil( ( deadline.getTime() - today.getTime() ) / ( 1000 * 60 * 60 * 24 ) );
 
-    if (diasRestantes < 0) continue; // Skip past deadlines
+    if ( diasRestantes < 0 ) continue; // Skip past deadlines
 
     const deadlineInfo: DeadlineInfo = {
       processo: processo.numeroCNJ,
@@ -1814,14 +2008,16 @@ function collectProcessDeadlines(
       diasRestantes,
     };
 
-    if (diasRestantes <= 1) {
+    if ( diasRestantes <= 1 )
+    {
       // URGENT: Today or tomorrow
       result.urgentDeadlines++;
-      urgentDeadlines.push(deadlineInfo);
-    } else if (diasRestantes <= 7) {
+      urgentDeadlines.push( deadlineInfo );
+    } else if ( diasRestantes <= 7 )
+    {
       // Upcoming: within 7 days
       result.upcomingDeadlines++;
-      upcomingDeadlines.push(deadlineInfo);
+      upcomingDeadlines.push( deadlineInfo );
     }
   }
 }
@@ -1829,36 +2025,38 @@ function collectProcessDeadlines(
 /**
  * Send urgent deadline alert
  */
-async function sendUrgentDeadlineAlert(
+async function sendUrgentDeadlineAlert (
   urgentDeadlines: DeadlineInfo[],
   result: DeadlineAlertResult
-): Promise<void> {
+): Promise<void>
+{
   const urgentMessage = urgentDeadlines
     .map(
-      (d) => `🚨 ${d.processo}\n   ${d.prazo}\n   ${d.diasRestantes === 0 ? "HOJE!" : "AMANHÃ!"}`
+      ( d ) => `🚨 ${ d.processo }\n   ${ d.prazo }\n   ${ d.diasRestantes === 0 ? "HOJE!" : "AMANHÃ!" }`
     )
-    .join("\n\n");
+    .join( "\n\n" );
 
-  await sendRealTimeNotification({
+  await sendRealTimeNotification( {
     type: "deadline_alert",
-    title: `🚨 URGENTE: ${urgentDeadlines.length} prazo(s) vencendo!`,
+    title: `🚨 URGENTE: ${ urgentDeadlines.length } prazo(s) vencendo!`,
     message: urgentMessage,
     priority: "urgent",
     metadata: {
       count: urgentDeadlines.length,
       deadlines: urgentDeadlines,
     },
-  });
+  } );
 
   // Queue email
   const notificationEmail = process.env.NOTIFICATION_EMAIL;
-  if (notificationEmail) {
-    await queueNotification({
+  if ( notificationEmail )
+  {
+    await queueNotification( {
       type: "system",
-      title: `🚨 URGENTE: ${urgentDeadlines.length} prazo(s) vencendo hoje/amanhã!`,
+      title: `🚨 URGENTE: ${ urgentDeadlines.length } prazo(s) vencendo hoje/amanhã!`,
       message: urgentMessage,
       recipientEmail: notificationEmail,
-    });
+    } );
   }
 
   result.alertsSent++;
@@ -1867,24 +2065,25 @@ async function sendUrgentDeadlineAlert(
 /**
  * Send upcoming deadline summary
  */
-async function sendUpcomingDeadlineSummary(
+async function sendUpcomingDeadlineSummary (
   upcomingDeadlines: DeadlineInfo[],
   result: DeadlineAlertResult
-): Promise<void> {
+): Promise<void>
+{
   const summaryMessage = upcomingDeadlines
-    .slice(0, 10)
-    .map((d) => `📅 ${d.processo}\n   ${d.prazo}\n   Em ${d.diasRestantes} dia(s)`)
-    .join("\n\n");
+    .slice( 0, 10 )
+    .map( ( d ) => `📅 ${ d.processo }\n   ${ d.prazo }\n   Em ${ d.diasRestantes } dia(s)` )
+    .join( "\n\n" );
 
-  await sendRealTimeNotification({
+  await sendRealTimeNotification( {
     type: "deadline_summary",
-    title: `📅 Resumo: ${upcomingDeadlines.length} prazo(s) nos próximos 7 dias`,
+    title: `📅 Resumo: ${ upcomingDeadlines.length } prazo(s) nos próximos 7 dias`,
     message: summaryMessage,
     priority: "normal",
     metadata: {
       count: upcomingDeadlines.length,
     },
-  });
+  } );
 
   result.alertsSent++;
 }
@@ -1893,8 +2092,9 @@ async function sendUpcomingDeadlineSummary(
  * Handle watchdog action
  * Monitors and resets stuck agents and tasks
  */
-async function handleWatchdog(timestamp: string): Promise<WatchdogResult> {
-  console.log(`[Cron Watchdog] Starting execution at ${timestamp}`);
+async function handleWatchdog ( timestamp: string ): Promise<WatchdogResult>
+{
+  console.log( `[Cron Watchdog] Starting execution at ${ timestamp }` );
 
   const result: WatchdogResult = {
     success: true,
@@ -1904,29 +2104,33 @@ async function handleWatchdog(timestamp: string): Promise<WatchdogResult> {
     errors: [],
   };
 
-  try {
+  try
+  {
     const kv = await getKv();
     const agents = await getAgents();
-    const taskQueue = ((await kv.get("agent-task-queue")) as AgentTask[]) || [];
+    const taskQueue = ( ( await kv.get( "agent-task-queue" ) ) as AgentTask[] ) || [];
 
     // 1. Check stuck agents
-    await checkAndResetStuckAgents(agents, result);
+    await checkAndResetStuckAgents( agents, result );
 
     // 2. Check stuck tasks
-    await checkAndTimeoutStuckTasks(kv, taskQueue, result);
+    await checkAndTimeoutStuckTasks( kv, taskQueue, result );
 
     console.log(
-      `[Cron Watchdog] Completed: ${result.agentsReset} agents reset, ${result.tasksTimedOut} tasks timed out`
+      `[Cron Watchdog] Completed: ${ result.agentsReset } agents reset, ${ result.tasksTimedOut } tasks timed out`
     );
     // Persistir resultado para painel
-    try {
-      await kv.set(KV_KEYS.WATCHDOG_LAST_RESULT, result);
-    } catch (error_) {
-      console.warn("[Cron Watchdog] Falha persistir resultado:", error_);
+    try
+    {
+      await kv.set( KV_KEYS.WATCHDOG_LAST_RESULT, result );
+    } catch ( error_ )
+    {
+      console.warn( "[Cron Watchdog] Falha persistir resultado:", error_ );
     }
-  } catch (error) {
+  } catch ( error )
+  {
     result.success = false;
-    result.errors.push(error instanceof Error ? error.message : "Unknown error");
+    result.errors.push( error instanceof Error ? error.message : "Unknown error" );
   }
 
   return result;
@@ -1935,15 +2139,19 @@ async function handleWatchdog(timestamp: string): Promise<WatchdogResult> {
 /**
  * Check and reset stuck agents
  */
-async function checkAndResetStuckAgents(agents: Agent[], result: WatchdogResult): Promise<void> {
+async function checkAndResetStuckAgents ( agents: Agent[], result: WatchdogResult ): Promise<void>
+{
   const STUCK_THRESHOLD_MS = 30 * 60 * 1000; // 30 minutes
   const now = Date.now();
 
-  const updatedAgents = agents.map((agent) => {
-    if (agent.status === "processing" && agent.lastActivity) {
-      const lastActivityTime = new Date(agent.lastActivity).getTime();
-      if (now - lastActivityTime > STUCK_THRESHOLD_MS) {
-        console.warn(`[Watchdog] Resetting stuck agent: ${agent.name} (${agent.id})`);
+  const updatedAgents = agents.map( ( agent ) =>
+  {
+    if ( agent.status === "processing" && agent.lastActivity )
+    {
+      const lastActivityTime = new Date( agent.lastActivity ).getTime();
+      if ( now - lastActivityTime > STUCK_THRESHOLD_MS )
+      {
+        console.warn( `[Watchdog] Resetting stuck agent: ${ agent.name } (${ agent.id })` );
         result.agentsReset++;
         return {
           ...agent,
@@ -1953,30 +2161,35 @@ async function checkAndResetStuckAgents(agents: Agent[], result: WatchdogResult)
       }
     }
     return agent;
-  });
+  } );
 
-  if (result.agentsReset > 0) {
-    await updateAgents(updatedAgents);
+  if ( result.agentsReset > 0 )
+  {
+    await updateAgents( updatedAgents );
   }
 }
 
 /**
  * Check and timeout stuck tasks
  */
-async function checkAndTimeoutStuckTasks(
+async function checkAndTimeoutStuckTasks (
   kv: Redis,
   taskQueue: AgentTask[],
   result: WatchdogResult
-): Promise<void> {
+): Promise<void>
+{
   const now = Date.now();
   let tasksUpdated = false;
 
-  const updatedQueue = taskQueue.map((task) => {
-    if (task.status === "in_progress" && task.createdAt) {
-      const startTime = new Date(task.createdAt).getTime();
+  const updatedQueue = taskQueue.map( ( task ) =>
+  {
+    if ( task.status === "in_progress" && task.createdAt )
+    {
+      const startTime = new Date( task.createdAt ).getTime();
       // Timeout de 1 hora para tarefas travadas
-      if (now - startTime > 60 * 60 * 1000) {
-        console.warn(`[Watchdog] Timing out stuck task: ${task.id}`);
+      if ( now - startTime > 60 * 60 * 1000 )
+      {
+        console.warn( `[Watchdog] Timing out stuck task: ${ task.id }` );
         result.tasksTimedOut++;
         tasksUpdated = true;
         return {
@@ -1988,33 +2201,37 @@ async function checkAndTimeoutStuckTasks(
       }
     }
     return task;
-  });
+  } );
 
-  if (tasksUpdated) {
-    await moveTimedOutTasksToHistory(kv, updatedQueue);
+  if ( tasksUpdated )
+  {
+    await moveTimedOutTasksToHistory( kv, updatedQueue );
   }
 }
 
 /**
  * Move timed out tasks to history
  */
-async function moveTimedOutTasksToHistory(kv: Redis, updatedQueue: AgentTask[]): Promise<void> {
+async function moveTimedOutTasksToHistory ( kv: Redis, updatedQueue: AgentTask[] ): Promise<void>
+{
   const failedTasks = updatedQueue.filter(
-    (t) => t.status === "failed" && t.result === "Watchdog: Task timed out (stuck in progress)"
+    ( t ) => t.status === "failed" && t.result === "Watchdog: Task timed out (stuck in progress)"
   );
 
-  if (failedTasks.length > 0) {
-    const existingCompleted = ((await kv.get(KV_KEYS.COMPLETED_TASKS)) as AgentTask[]) || [];
-    existingCompleted.unshift(...failedTasks);
-    await kv.set(KV_KEYS.COMPLETED_TASKS, existingCompleted.slice(0, 1000));
+  if ( failedTasks.length > 0 )
+  {
+    const existingCompleted = ( ( await kv.get( KV_KEYS.COMPLETED_TASKS ) ) as AgentTask[] ) || [];
+    existingCompleted.unshift( ...failedTasks );
+    await kv.set( KV_KEYS.COMPLETED_TASKS, existingCompleted.slice( 0, 1000 ) );
 
     // Remove from queue
     const remainingQueue = updatedQueue.filter(
-      (t) => !(t.status === "failed" && t.result === "Watchdog: Task timed out (stuck in progress)")
+      ( t ) => !( t.status === "failed" && t.result === "Watchdog: Task timed out (stuck in progress)" )
     );
-    await kv.set("agent-task-queue", remainingQueue);
-  } else {
-    await kv.set("agent-task-queue", updatedQueue);
+    await kv.set( "agent-task-queue", remainingQueue );
+  } else
+  {
+    await kv.set( "agent-task-queue", updatedQueue );
   }
 }
 
@@ -2022,10 +2239,11 @@ async function moveTimedOutTasksToHistory(kv: Redis, updatedQueue: AgentTask[]):
  * Handle DJEN monitor action
  * Monitors DJEN for new legal publications
  */
-async function handleDJENMonitor(timestamp: string): Promise<DJENMonitorResult> {
-  console.log(`[Cron DJEN Monitor] Starting execution at ${timestamp}`);
+async function handleDJENMonitor ( timestamp: string ): Promise<DJENMonitorResult>
+{
+  console.log( `[Cron DJEN Monitor] Starting execution at ${ timestamp }` );
 
-  const defaultTribunais = process.env.DJEN_TRIBUNAIS?.split(",") || [
+  const defaultTribunais = process.env.DJEN_TRIBUNAIS?.split( "," ) || [
     "TJMG",
     "TRT3",
     "TST",
@@ -2039,7 +2257,7 @@ async function handleDJENMonitor(timestamp: string): Promise<DJENMonitorResult> 
     oab: "MG184404",
     email: "thiagobodevanadvocacia@gmail.com",
     enabled: true,
-    tribunals: ["TJMG", "TRT3", "TST", "STJ", "TRF1"],
+    tribunals: [ "TJMG", "TRT3", "TST", "STJ", "TRF1" ],
   };
 
   const result: DJENMonitorResult = {
@@ -2053,36 +2271,40 @@ async function handleDJENMonitor(timestamp: string): Promise<DJENMonitorResult> 
   };
 
   let lawyers = await getMonitoredLawyers();
-  console.log(`[Cron DJEN Monitor] Found ${lawyers.length} monitored lawyers`);
+  console.log( `[Cron DJEN Monitor] Found ${ lawyers.length } monitored lawyers` );
 
-  if (lawyers.length === 0) {
-    console.log(`[Cron DJEN Monitor] Using default lawyer: ${defaultLawyer.name}`);
-    lawyers = [defaultLawyer];
+  if ( lawyers.length === 0 )
+  {
+    console.log( `[Cron DJEN Monitor] Using default lawyer: ${ defaultLawyer.name }` );
+    lawyers = [ defaultLawyer ];
   }
 
-  for (const lawyer of lawyers) {
-    if (!lawyer.enabled) {
-      console.log(`[Cron DJEN Monitor] Skipping disabled lawyer: ${lawyer.name}`);
+  for ( const lawyer of lawyers )
+  {
+    if ( !lawyer.enabled )
+    {
+      console.log( `[Cron DJEN Monitor] Skipping disabled lawyer: ${ lawyer.name }` );
       continue;
     }
 
     result.lawyersChecked++;
     const tribunais = lawyer.tribunals?.length > 0 ? lawyer.tribunals : defaultTribunais;
 
-    await checkDJENForLawyer(lawyer, tribunais, timestamp, result);
+    await checkDJENForLawyer( lawyer, tribunais, timestamp, result );
   }
 
   await updateLastDJENCheck();
-  console.log(`[Cron DJEN Monitor] Completed: ${result.publicationsFound} communications found`);
+  console.log( `[Cron DJEN Monitor] Completed: ${ result.publicationsFound } communications found` );
 
-  if (result.rateLimitWarning) {
+  if ( result.rateLimitWarning )
+  {
     result.errors.push(
       "ATENÇÃO: Rate limit da API DJEN atingido. Algumas consultas foram adiadas."
     );
   }
 
   // Send daily report
-  await sendDJENDailyReport(result);
+  await sendDJENDailyReport( result );
 
   return result;
 }
@@ -2090,15 +2312,17 @@ async function handleDJENMonitor(timestamp: string): Promise<DJENMonitorResult> 
 /**
  * Check DJEN for a specific lawyer
  */
-async function checkDJENForLawyer(
+async function checkDJENForLawyer (
   lawyer: MonitoredLawyer,
   tribunais: string[],
   timestamp: string,
   result: DJENMonitorResult
-): Promise<void> {
-  try {
+): Promise<void>
+{
+  try
+  {
     console.log(
-      `[Cron DJEN Monitor] Checking ${lawyer.name} (${lawyer.oab}) in ${tribunais.length} tribunais`
+      `[Cron DJEN Monitor] Checking ${ lawyer.name } (${ lawyer.oab }) in ${ tribunais.length } tribunais`
     );
 
     const { resultados, erros, rateLimitWarning } = await consultarDJENForLawyer(
@@ -2110,47 +2334,52 @@ async function checkDJENForLawyer(
       "D"
     );
 
-    if (rateLimitWarning) {
+    if ( rateLimitWarning )
+    {
       result.rateLimitWarning = true;
-      console.warn(`[Cron DJEN Monitor] Rate limit warning for ${lawyer.name}`);
+      console.warn( `[Cron DJEN Monitor] Rate limit warning for ${ lawyer.name }` );
     }
 
-    console.log(`[Cron DJEN Monitor] Found ${resultados.length} communications for ${lawyer.name}`);
+    console.log( `[Cron DJEN Monitor] Found ${ resultados.length } communications for ${ lawyer.name }` );
 
-    for (const comunicacao of resultados) {
-      await processDJENPublication(comunicacao, lawyer, timestamp, result);
+    for ( const comunicacao of resultados )
+    {
+      await processDJENPublication( comunicacao, lawyer, timestamp, result );
     }
 
-    for (const erro of erros) {
-      const errorMsg = `DJEN ${erro.tribunal}: ${erro.erro}`;
-      result.errors.push(errorMsg);
-      console.warn(`[Cron DJEN Monitor] ${errorMsg}`);
+    for ( const erro of erros )
+    {
+      const errorMsg = `DJEN ${ erro.tribunal }: ${ erro.erro }`;
+      result.errors.push( errorMsg );
+      console.warn( `[Cron DJEN Monitor] ${ errorMsg }` );
     }
-  } catch (error) {
-    const errorMsg = `Error checking ${lawyer.name}: ${
-      error instanceof Error ? error.message : "Unknown error"
-    }`;
-    result.errors.push(errorMsg);
-    console.error(`[Cron DJEN Monitor] ${errorMsg}`);
+  } catch ( error )
+  {
+    const errorMsg = `Error checking ${ lawyer.name }: ${ error instanceof Error ? error.message : "Unknown error"
+      }`;
+    result.errors.push( errorMsg );
+    console.error( `[Cron DJEN Monitor] ${ errorMsg }` );
   }
 }
 
 /**
  * Process a single DJEN publication
  */
-async function processDJENPublication(
+async function processDJENPublication (
   comunicacao: LocalDJENFilteredResult,
   lawyer: MonitoredLawyer,
   timestamp: string,
   result: DJENMonitorResult
-): Promise<void> {
+): Promise<void>
+{
   const pubHash =
     comunicacao.hash ||
-    `${comunicacao.tribunal}-${comunicacao.data}-${comunicacao.numeroProcesso}-${comunicacao.id}`;
+    `${ comunicacao.tribunal }-${ comunicacao.data }-${ comunicacao.numeroProcesso }-${ comunicacao.id }`;
 
-  const exists = await publicationExists(lawyer.id, pubHash);
-  if (exists) {
-    console.log(`[Cron DJEN Monitor] Skipping duplicate: ${pubHash}`);
+  const exists = await publicationExists( lawyer.id, pubHash );
+  if ( exists )
+  {
+    console.log( `[Cron DJEN Monitor] Skipping duplicate: ${ pubHash }` );
     return;
   }
 
@@ -2176,10 +2405,10 @@ async function processDJENPublication(
     createdAt: timestamp,
   };
 
-  await storePublication(storedPub);
+  await storePublication( storedPub );
   result.publicationsFound++;
 
-  await addTaskToQueue({
+  await addTaskToQueue( {
     id: crypto.randomUUID(),
     agentId: "justine",
     type: "analyze_intimation",
@@ -2194,14 +2423,13 @@ async function processDJENPublication(
       type: storedPub.tipo,
       source: "DJEN Monitor",
     },
-  });
+  } );
 
-  await sendRealTimeNotification({
+  await sendRealTimeNotification( {
     type: "new_publication",
-    title: `📋 Nova Publicação DJEN - ${comunicacao.tribunal}`,
-    message: `${comunicacao.tipo} encontrada para ${lawyer.name}\nProcesso: ${
-      comunicacao.numeroProcesso || "N/A"
-    }\nÓrgão: ${comunicacao.orgao || "N/A"}`,
+    title: `📋 Nova Publicação DJEN - ${ comunicacao.tribunal }`,
+    message: `${ comunicacao.tipo } encontrada para ${ lawyer.name }\nProcesso: ${ comunicacao.numeroProcesso || "N/A"
+      }\nÓrgão: ${ comunicacao.orgao || "N/A" }`,
     priority: "high",
     metadata: {
       tribunal: comunicacao.tribunal,
@@ -2212,14 +2440,15 @@ async function processDJENPublication(
       oab: lawyer.oab,
       link: comunicacao.link,
     },
-  });
+  } );
 
   const emailToNotify = lawyer.email || process.env.NOTIFICATION_EMAIL;
-  if (emailToNotify) {
-    await queueNotification({
+  if ( emailToNotify )
+  {
+    await queueNotification( {
       type: "publication",
-      title: `Nova Comunicação DJEN - ${comunicacao.tribunal}`,
-      message: `${comunicacao.tipo} encontrada no processo ${comunicacao.numeroProcesso || "N/A"}`,
+      title: `Nova Comunicação DJEN - ${ comunicacao.tribunal }`,
+      message: `${ comunicacao.tipo } encontrada no processo ${ comunicacao.numeroProcesso || "N/A" }`,
       data: {
         tribunal: comunicacao.tribunal,
         tipo: comunicacao.tipo,
@@ -2230,54 +2459,57 @@ async function processDJENPublication(
         oab: lawyer.oab,
       },
       recipientEmail: emailToNotify,
-    });
+    } );
   }
 }
 
 /**
  * Send DJEN daily report email
  */
-async function sendDJENDailyReport(result: DJENMonitorResult): Promise<void> {
+async function sendDJENDailyReport ( result: DJENMonitorResult ): Promise<void>
+{
   const notificationEmail = process.env.NOTIFICATION_EMAIL;
-  if (!notificationEmail) return;
+  if ( !notificationEmail ) return;
 
-  const dataHoje = new Date().toLocaleDateString("pt-BR", {
+  const dataHoje = new Date().toLocaleDateString( "pt-BR", {
     weekday: "long",
     year: "numeric",
     month: "long",
     day: "numeric",
     timeZone: "America/Sao_Paulo",
-  });
+  } );
 
-  if (result.publicationsFound === 0) {
-    await queueNotification({
+  if ( result.publicationsFound === 0 )
+  {
+    await queueNotification( {
       type: "system",
       title: `📭 DJEN - Nenhuma publicação encontrada`,
       message:
-        `Relatório diário de ${dataHoje}:\n\n` +
+        `Relatório diário de ${ dataHoje }:\n\n` +
         `✅ Monitoramento executado com sucesso\n` +
-        `👤 Advogados verificados: ${result.lawyersChecked}\n` +
+        `👤 Advogados verificados: ${ result.lawyersChecked }\n` +
         `📋 Publicações encontradas: 0\n` +
-        `🏛️ Tribunais consultados: ${result.tribunaisChecked.join(", ")}\n\n` +
-        (result.errors.length > 0 ? `⚠️ Erros: ${result.errors.join(", ")}\n\n` : "") +
+        `🏛️ Tribunais consultados: ${ result.tribunaisChecked.join( ", " ) }\n\n` +
+        ( result.errors.length > 0 ? `⚠️ Erros: ${ result.errors.join( ", " ) }\n\n` : "" ) +
         `Próxima verificação: amanhã às 11:00 BRT`,
       recipientEmail: notificationEmail,
-    });
-  } else {
-    await queueNotification({
+    } );
+  } else
+  {
+    await queueNotification( {
       type: "system",
-      title: `📬 DJEN - ${result.publicationsFound} publicação(ões) encontrada(s)`,
+      title: `📬 DJEN - ${ result.publicationsFound } publicação(ões) encontrada(s)`,
       message:
-        `Relatório diário de ${dataHoje}:\n\n` +
+        `Relatório diário de ${ dataHoje }:\n\n` +
         `✅ Monitoramento executado com sucesso\n` +
-        `👤 Advogados verificados: ${result.lawyersChecked}\n` +
-        `📋 Publicações encontradas: ${result.publicationsFound}\n\n` +
+        `👤 Advogados verificados: ${ result.lawyersChecked }\n` +
+        `📋 Publicações encontradas: ${ result.publicationsFound }\n\n` +
         `Acesse o sistema para ver os detalhes.`,
       recipientEmail: notificationEmail,
-    });
+    } );
   }
 
-  console.log(`[Cron DJEN Monitor] Email de relatório enviado para ${notificationEmail}`);
+  console.log( `[Cron DJEN Monitor] Email de relatório enviado para ${ notificationEmail }` );
 }
 
 // ===== Action Handlers Registry (reduces cognitive complexity S3776) =====
@@ -2294,9 +2526,10 @@ type CronActionResult =
   | DeadlineAlertResult
   | WatchdogResult;
 
-interface ActionConfig {
-  handler: (timestamp: string) => Promise<CronActionResult>;
-  getMessage: (result: CronActionResult) => string;
+interface ActionConfig
+{
+  handler: ( timestamp: string ) => Promise<CronActionResult>;
+  getMessage: ( result: CronActionResult ) => string;
   successMessage: string;
 }
 
@@ -2313,7 +2546,8 @@ const ACTION_HANDLERS: Record<string, ActionConfig> = {
   },
   "process-agent-queue": {
     handler: handleProcessAgentQueue,
-    getMessage: (result) => {
+    getMessage: ( result ) =>
+    {
       const r = result as AgentQueueResult;
       return r.tasksProcessed === 0 && r.tasksFailed === 0
         ? "No pending tasks in queue"
@@ -2323,7 +2557,8 @@ const ACTION_HANDLERS: Record<string, ActionConfig> = {
   },
   "process-notifications": {
     handler: handleProcessNotifications,
-    getMessage: (result) => {
+    getMessage: ( result ) =>
+    {
       const r = result as NotificationResult;
       return r.emailsSent === 0 && r.webhooksSent === 0
         ? "No pending notifications"
@@ -2333,7 +2568,8 @@ const ACTION_HANDLERS: Record<string, ActionConfig> = {
   },
   "calendar-sync": {
     handler: handleCalendarSync,
-    getMessage: (result) => {
+    getMessage: ( result ) =>
+    {
       const r = result as CalendarSyncResult;
       return r.eventsCreated === 0
         ? "Calendar sync skipped - no deadlines to sync or not configured"
@@ -2363,26 +2599,27 @@ const ACTION_HANDLERS: Record<string, ActionConfig> = {
   },
 };
 
-const VALID_ACTIONS = Object.keys(ACTION_HANDLERS).join(", ");
+const VALID_ACTIONS = Object.keys( ACTION_HANDLERS ).join( ", " );
 
 /**
  * Valida se a requisição está autorizada
  */
 // Autorização simplificada: removido uso de CRON_SECRET conforme solicitação.
 // Mantemos apenas execução via Vercel Cron (header Bearer gerado) ou ambiente local.
-function isAuthorized(req: VercelRequest): boolean {
+function isAuthorized ( req: VercelRequest ): boolean
+{
   // Vercel Cron adiciona o header "x-vercel-cron" automaticamente nas execuções agendadas.
   // Suporte legado a Bearer e ambiente local.
   const authHeader = req.headers.authorization;
-  const hasVercelCronHeader = !!req.headers["x-vercel-cron"]; // verdadeiro quando disparado por agendamento Vercel
-  const isBearerAuth = authHeader?.startsWith("Bearer ");
+  const hasVercelCronHeader = !!req.headers[ "x-vercel-cron" ]; // verdadeiro quando disparado por agendamento Vercel
+  const isBearerAuth = authHeader?.startsWith( "Bearer " );
   const isLocalTest = process.env.NODE_ENV === "development";
   // Modo leitura: permitir GET watchdog com mode=read (sem executar ações destrutivas extras)
   const action = req.query.action;
   const mode = req.query.mode;
   const isReadOnlyWatchdog =
     req.method === "GET" &&
-    (action === "watchdog" || (Array.isArray(action) && action[0] === "watchdog")) &&
+    ( action === "watchdog" || ( Array.isArray( action ) && action[ 0 ] === "watchdog" ) ) &&
     mode === "read";
   return hasVercelCronHeader || isBearerAuth || isLocalTest || isReadOnlyWatchdog;
 }
@@ -2390,65 +2627,73 @@ function isAuthorized(req: VercelRequest): boolean {
 /**
  * Valida e obtém a configuração da ação
  */
-function getActionConfig(action: string | string[] | undefined): ActionConfig | null {
+function getActionConfig ( action: string | string[] | undefined ): ActionConfig | null
+{
   const actionStr = typeof action === "string" ? action : "";
-  return ACTION_HANDLERS[actionStr] || null;
+  return ACTION_HANDLERS[ actionStr ] || null;
 }
 
 /**
  * Processa a resposta de sucesso
  */
-function handleSuccessResponse(
+function handleSuccessResponse (
   res: VercelResponse,
   result: CronActionResult,
   actionConfig: ActionConfig
-): VercelResponse {
-  const message = actionConfig.getMessage(result);
+): VercelResponse
+{
+  const message = actionConfig.getMessage( result );
   const ok = result.success !== false;
 
-  return res.status(200).json({ ok, message, result });
+  return res.status( 200 ).json( { ok, message, result } );
 }
 
 /**
  * Processa resposta de erro
  */
-function handleErrorResponse(
+function handleErrorResponse (
   res: VercelResponse,
   error: unknown,
   timestamp: string
-): VercelResponse {
-  console.error("[Cron API] Fatal error:", error);
+): VercelResponse
+{
+  console.error( "[Cron API] Fatal error:", error );
 
-  return res.status(500).json({
+  return res.status( 500 ).json( {
     ok: false,
     error: "Internal server error",
     message: error instanceof Error ? error.message : "Unknown error",
     timestamp,
-  });
+  } );
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler ( req: VercelRequest, res: VercelResponse )
+{
   const { action } = req.query;
 
-  if (!isAuthorized(req)) {
-    return res.status(401).json({
+  if ( !isAuthorized( req ) )
+  {
+    return res.status( 401 ).json( {
       error: "Unauthorized - This endpoint is restricted to Vercel Cron or local development",
-    });
+    } );
   }
 
   const timestamp = new Date().toISOString();
-  const actionConfig = getActionConfig(action);
+  const actionConfig = getActionConfig( action );
 
-  if (!actionConfig) {
-    return res.status(400).json({
-      error: `Invalid action. Use: ${VALID_ACTIONS}`,
-    });
+  if ( !actionConfig )
+  {
+    return res.status( 400 ).json( {
+      error: `Invalid action. Use: ${ VALID_ACTIONS }`,
+    } );
   }
 
-  try {
-    const result = await actionConfig.handler(timestamp);
-    return handleSuccessResponse(res, result, actionConfig);
-  } catch (error) {
-    return handleErrorResponse(res, error, timestamp);
+  try
+  {
+    const result = await actionConfig.handler( timestamp );
+    return handleSuccessResponse( res, result, actionConfig );
+  } catch ( error )
+  {
+    return handleErrorResponse( res, error, timestamp );
   }
 }

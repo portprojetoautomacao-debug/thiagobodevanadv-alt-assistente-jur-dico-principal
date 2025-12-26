@@ -64,7 +64,7 @@ export SONARQUBE_TOKEN=seu_token_aqui
 
 #### ✅ Connected Mode
 - **Organização**: `thiagobodevan-a11y-assistente-juridico-p`
-- **Projeto**: `thiagobodevan-a11y_assistente-juridico-p`
+- **Projeto**: `portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal`
 - **Sincronização**: Regras do SonarCloud aplicadas localmente
 
 #### ✅ Regras Personalizadas

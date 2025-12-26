@@ -20,9 +20,9 @@ NC='\033[0m' # No Color
 
 alias branch-protect="echo '🔐 Aplicando proteção de branch...'; ./scripts/configure-branch-protection.sh"
 
-alias branch-status="echo '📊 Status da proteção de branch:'; gh api /repos/thiagobodevanadv-alt/assistente-jur-dico-principal/branches/main/protection | jq '.required_status_checks, .required_pull_request_reviews'"
+alias branch-status="echo '📊 Status da proteção de branch:'; gh api /repos/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/branches/main/protection | jq '.required_status_checks, .required_pull_request_reviews'"
 
-alias branch-rules="echo '📜 Regras de proteção:'; gh api /repos/thiagobodevanadv-alt/assistente-jur-dico-principal/branches/main/protection | jq"
+alias branch-rules="echo '📜 Regras de proteção:'; gh api /repos/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/branches/main/protection | jq"
 
 # ============================================================================
 # WORKFLOWS
@@ -88,19 +88,19 @@ alias pr-merge="gh pr merge --squash"
 # CACHE
 # ============================================================================
 
-alias cache-list="echo '💾 Caches disponíveis:'; gh api /repos/thiagobodevanadv-alt/assistente-jur-dico-principal/actions/caches | jq '.actions_caches[] | {id, key, size_in_bytes}'"
+alias cache-list="echo '💾 Caches disponíveis:'; gh api /repos/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/actions/caches | jq '.actions_caches[] | {id, key, size_in_bytes}'"
 
-alias cache-delete="echo '🗑️  Deletando cache...'; gh api --method DELETE /repos/thiagobodevanadv-alt/assistente-jur-dico-principal/actions/caches"
+alias cache-delete="echo '🗑️  Deletando cache...'; gh api --method DELETE /repos/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/actions/caches"
 
-alias cache-clear-all="echo '🗑️  Limpando todos os caches...'; gh api /repos/thiagobodevanadv-alt/assistente-jur-dico-principal/actions/caches | jq -r '.actions_caches[].id' | xargs -I {} gh api --method DELETE /repos/thiagobodevanadv-alt/assistente-jur-dico-principal/actions/caches/{}"
+alias cache-clear-all="echo '🗑️  Limpando todos os caches...'; gh api /repos/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/actions/caches | jq -r '.actions_caches[].id' | xargs -I {} gh api --method DELETE /repos/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/actions/caches/{}"
 
 # ============================================================================
 # AMBIENTES
 # ============================================================================
 
-alias env-list="echo '🌍 Ambientes configurados:'; gh api /repos/thiagobodevanadv-alt/assistente-jur-dico-principal/environments | jq '.environments[] | {name, protection_rules}'"
+alias env-list="echo '🌍 Ambientes configurados:'; gh api /repos/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/environments | jq '.environments[] | {name, protection_rules}'"
 
-alias env-secrets="echo '🔐 Secrets do ambiente:'; gh api /repos/thiagobodevanadv-alt/assistente-jur-dico-principal/environments/production/secrets | jq"
+alias env-secrets="echo '🔐 Secrets do ambiente:'; gh api /repos/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/environments/production/secrets | jq"
 
 # ============================================================================
 # TESTES
@@ -137,7 +137,7 @@ function repo-status() {
     echo ""
     
     echo -e "${YELLOW}🔐 Branch Protection:${NC}"
-    gh api /repos/thiagobodevanadv-alt/assistente-jur-dico-principal/branches/main/protection --silent && echo "✅ Configurado" || echo "❌ Não configurado"
+    gh api /repos/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/branches/main/protection --silent && echo "✅ Configurado" || echo "❌ Não configurado"
     echo ""
     
     echo -e "${YELLOW}🤖 Dependabot PRs:${NC}"
@@ -153,7 +153,7 @@ function repo-status() {
     echo ""
     
     echo -e "${YELLOW}💾 Cache:${NC}"
-    CACHE_COUNT=$(gh api /repos/thiagobodevanadv-alt/assistente-jur-dico-principal/actions/caches | jq '.total_count')
+    CACHE_COUNT=$(gh api /repos/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/actions/caches | jq '.total_count')
     echo "  Total de caches: $CACHE_COUNT"
     echo ""
     
@@ -165,7 +165,7 @@ function ci-passed() {
     local sha=${1:-$(git rev-parse HEAD)}
     echo "🔍 Verificando CI para commit $sha..."
     
-    gh api /repos/thiagobodevanadv-alt/assistente-jur-dico-principal/commits/$sha/check-runs \
+    gh api /repos/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/commits/$sha/check-runs \
         | jq -r '.check_runs[] | select(.name == "Build and Test") | .conclusion' \
         | grep -q "success" \
         && echo "✅ CI passou!" \
@@ -196,7 +196,7 @@ function validate-setup() {
     
     # Branch protection
     echo -n "🔐 Branch protection... "
-    if gh api /repos/thiagobodevanadv-alt/assistente-jur-dico-principal/branches/main/protection --silent 2>/dev/null; then
+    if gh api /repos/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/branches/main/protection --silent 2>/dev/null; then
         echo -e "${GREEN}✅${NC}"
     else
         echo -e "${RED}❌ Execute: ./scripts/configure-branch-protection.sh${NC}"
@@ -252,7 +252,7 @@ function cleanup-failed-runs() {
     echo "🧹 Limpando workflows falhos..."
     
     gh run list --status failure --json databaseId --jq '.[].databaseId' \
-        | xargs -I {} gh api --method DELETE /repos/thiagobodevanadv-alt/assistente-jur-dico-principal/actions/runs/{}
+        | xargs -I {} gh api --method DELETE /repos/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/actions/runs/{}
     
     echo "✅ Workflows falhos removidos!"
 }

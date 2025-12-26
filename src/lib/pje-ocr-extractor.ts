@@ -71,7 +71,7 @@ function parseNumeroProcesso(text: string): string | null {
  */
 function parseCPF(text: string): string[] {
   const cpfs = text.match(/(\d{3}\.?\d{3}\.?\d{3}-?\d{2})/g) || [];
-  return cpfs.map((cpf) => cpf.replace(/[^\d]/g, ""));
+  return cpfs.map((cpf) => cpf.replaceAll(/[^\d]/g, ""));
 }
 
 /**

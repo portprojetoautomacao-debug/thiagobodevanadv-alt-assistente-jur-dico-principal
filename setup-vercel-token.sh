@@ -47,5 +47,5 @@ gh secret list --json name | jq -r '.[].name' 2>/dev/null || echo "Não foi poss
 echo ""
 echo "🔗 Links úteis:"
 echo "- Vercel Tokens: https://vercel.com/account/tokens"
-echo "- GitHub Secrets: https://github.com/thiagobodevan-a11y/assistente-juridico-p/settings/secrets/actions"
+echo "- GitHub Secrets: https://github.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/settings/secrets/actions"
 echo "- Vercel Login CLI: vercel login (se quiser usar CLI localmente)"

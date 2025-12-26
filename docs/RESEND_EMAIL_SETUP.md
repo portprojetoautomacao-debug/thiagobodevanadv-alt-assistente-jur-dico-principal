@@ -72,7 +72,7 @@ MX   @             feedback-smtp.resend.com (priority 10)
 
 ### Método 1: Via Dashboard (Recomendado)
 
-1. Acesse https://vercel.com/thiagobodevan-a11y/assistente-juridico-p/settings/environment-variables
+1. Acesse https://vercel.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/settings/environment-variables
 
 2. Adicione as variáveis:
 

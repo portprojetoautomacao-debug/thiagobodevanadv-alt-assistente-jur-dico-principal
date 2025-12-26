@@ -280,7 +280,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           : (req.body as StreamRequest)
         : {
             prompt: String(req.query.prompt || ""),
-            temperature: parseFloat(String(req.query.temperature || "0.7")),
+            temperature: Number.parseFloat(String(req.query.temperature || "0.7")),
             model: String(req.query.model || ""),
             provider: (req.query.provider as AIProvider | undefined) || undefined,
           };

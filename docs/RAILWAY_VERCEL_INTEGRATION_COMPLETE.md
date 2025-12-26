@@ -265,7 +265,7 @@ railway logs --num 1000
 vercel logs assistente-juridico-p --follow
 
 # Ou via Dashboard
-https://vercel.com/thiagobodevan-a11y/assistente-juridico-p/logs
+https://vercel.com/portprojetoautomacao-debug/thiagobodevanadv-alt-assistente-jur-dico-principal/logs
 ```
 
 ### Health Checks
