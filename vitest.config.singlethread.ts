@@ -1,9 +1,9 @@
 import react from "@vitejs/plugin-react";
-import { resolve } from "path";
+import { resolve } from "node:path";
 import { defineConfig } from "vitest/config";
 
-export default defineConfig({
-  plugins: [react()],
+export default defineConfig( {
+  plugins: [ react() ],
   test: {
     globals: true,
     environment: "jsdom",
@@ -15,7 +15,7 @@ export default defineConfig({
       forks: {
         minForks: 1,
         maxForks: 1,
-        execArgv: ["--max-old-space-size=8192", "--expose-gc"],
+        execArgv: [ "--max-old-space-size=8192", "--expose-gc" ],
       },
     },
     maxConcurrency: 1,
@@ -25,10 +25,10 @@ export default defineConfig({
       "api/**/*.{test,spec}.{ts,tsx}",
       "tests/integration/**/*.test.ts",
     ],
-    exclude: ["**/node_modules/**", "**/dist/**"],
+    exclude: [ "**/node_modules/**", "**/dist/**" ],
     coverage: {
       provider: "v8",
-      reporter: ["text", "json", "html"],
+      reporter: [ "text", "json", "html" ],
     },
     env: {
       NODE_ENV: "test",
@@ -37,7 +37,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@": resolve(__dirname, "./src"),
+      "@": resolve( __dirname, "./src" ),
     },
   },
-});
+} );

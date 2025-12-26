@@ -1,4 +1,4 @@
-import { execSync, spawn } from "child_process";
+import { execSync, spawn } from "node:child_process";
 import { afterAll, beforeAll, expect, test, vi } from "vitest";
 
 // Mock fetch globally
@@ -6,9 +6,11 @@ const mockFetch = vi.fn();
 global.fetch = mockFetch as typeof fetch;
 
 let fastapiAvailable = true;
-try {
-  execSync('python3 -c "import fastapi"', { stdio: "ignore" });
-} catch {
+try
+{
+  execSync( 'python3 -c "import fastapi"', { stdio: "ignore" } );
+} catch
+{
   fastapiAvailable = false;
 }
 
@@ -28,82 +30,93 @@ const mockOptimizeResponse = {
   },
 };
 
-beforeAll(() => {
+beforeAll( () =>
+{
   // Setup mocks
-  mockFetch.mockImplementation((url: string, _options?: RequestInit) => {
-    if (url.includes("/health")) {
-      return Promise.resolve({
+  mockFetch.mockImplementation( ( url: string, _options?: RequestInit ) =>
+  {
+    if ( url.includes( "/health" ) )
+    {
+      return Promise.resolve( {
         status: 200,
         ok: true,
-        json: () => Promise.resolve(mockHealthResponse),
-      });
+        json: () => Promise.resolve( mockHealthResponse ),
+      } );
     }
-    if (url.includes("/optimize")) {
-      return Promise.resolve({
+    if ( url.includes( "/optimize" ) )
+    {
+      return Promise.resolve( {
         status: 200,
         ok: true,
-        json: () => Promise.resolve(mockOptimizeResponse),
-      });
+        json: () => Promise.resolve( mockOptimizeResponse ),
+      } );
     }
-    return Promise.reject(new Error("Unknown endpoint"));
-  });
-});
+    return Promise.reject( new Error( "Unknown endpoint" ) );
+  } );
+} );
 
-afterAll(() => {
+afterAll( () =>
+{
   vi.restoreAllMocks();
-});
+} );
 
 // Skip real test if fastapi not installed, use mock instead
-if (!fastapiAvailable || process.env.DSPY_BRIDGE_ENABLED === "false") {
-  test("DSPy Bridge - health and optimize (mocked)", async () => {
+if ( !fastapiAvailable || process.env.DSPY_BRIDGE_ENABLED === "false" )
+{
+  test( "DSPy Bridge - health and optimize (mocked)", async () =>
+  {
     const token = "test-token-123";
     const port = 8765;
 
     // Test health endpoint
-    const health = await fetch(`http://127.0.0.1:${port}/health`);
-    expect(health.status).toBe(200);
+    const health = await fetch( `http://127.0.0.1:${ port }/health` );
+    expect( health.status ).toBe( 200 );
     const json = await health.json();
-    expect(json.service).toBe("dspy-bridge");
+    expect( json.service ).toBe( "dspy-bridge" );
 
     // Test optimize endpoint
-    const res = await fetch(`http://127.0.0.1:${port}/optimize`, {
+    const res = await fetch( `http://127.0.0.1:${ port }/optimize`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt: "Hello please optimize me" }),
-    });
-    expect(res.status).toBe(200);
+      headers: { Authorization: `Bearer ${ token }`, "Content-Type": "application/json" },
+      body: JSON.stringify( { prompt: "Hello please optimize me" } ),
+    } );
+    expect( res.status ).toBe( 200 );
     const body = await res.json();
-    expect(body.optimized_prompt).toBeDefined();
-    expect(body.metadata).toBeDefined();
-  });
-} else {
-  test("DSPy Bridge - health and optimize (real)", async () => {
+    expect( body.optimized_prompt ).toBeDefined();
+    expect( body.metadata ).toBeDefined();
+  } );
+} else
+{
+  test( "DSPy Bridge - health and optimize (real)", async () =>
+  {
     const token = "test-token-123";
     const port = 8765;
     process.env.DSPY_API_TOKEN = token;
-    process.env.DSPY_PORT = String(port);
+    process.env.DSPY_PORT = String( port );
 
-    const proc = spawn("python3", ["scripts/dspy_bridge.py"], { stdio: "inherit" });
+    const proc = spawn( "python3", [ "scripts/dspy_bridge.py" ], { stdio: "inherit" } );
     // Wait for server to start
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    await new Promise( ( resolve ) => setTimeout( resolve, 800 ) );
 
-    try {
-      const health = await fetch(`http://127.0.0.1:${port}/health`);
-      expect(health.status).toBe(200);
+    try
+    {
+      const health = await fetch( `http://127.0.0.1:${ port }/health` );
+      expect( health.status ).toBe( 200 );
       const json = await health.json();
-      expect(json.service).toBe("dspy-bridge");
+      expect( json.service ).toBe( "dspy-bridge" );
 
-      const res = await fetch(`http://127.0.0.1:${port}/optimize`, {
+      const res = await fetch( `http://127.0.0.1:${ port }/optimize`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: "Hello please optimize me" }),
-      });
-      expect(res.status).toBe(200);
+        headers: { Authorization: `Bearer ${ token }`, "Content-Type": "application/json" },
+        body: JSON.stringify( { prompt: "Hello please optimize me" } ),
+      } );
+      expect( res.status ).toBe( 200 );
       const body = await res.json();
-      expect(body.optimized_prompt).toBeDefined();
-      expect(body.metadata).toBeDefined();
-    } finally {
+      expect( body.optimized_prompt ).toBeDefined();
+      expect( body.metadata ).toBeDefined();
+    } finally
+    {
       proc.kill();
     }
-  });
+  } );
 }

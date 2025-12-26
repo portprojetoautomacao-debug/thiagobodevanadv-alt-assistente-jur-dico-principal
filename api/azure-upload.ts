@@ -8,7 +8,7 @@
 import { BlobServiceClient } from "@azure/storage-blob";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import formidable from "formidable";
-import { readFileSync, unlinkSync } from "fs";
+import { readFileSync, unlinkSync } from "node:fs";
 
 interface UploadResponse
 {
