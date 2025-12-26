@@ -116,7 +116,6 @@ export async function executeWithCheckpointing<T>(
 
     // Executar função geradora
     const generator = fn(resumeState);
-    let result: T | undefined;
 
     // Usar while com .next() ao invés de for await of para capturar o return
     let iteration = await generator.next();
@@ -146,7 +145,7 @@ export async function executeWithCheckpointing<T>(
     }
 
     // Capturar o valor retornado (return) do generator
-    result = iteration.value as T;
+    const result = iteration.value as T;
 
     // Sucesso! Limpar checkpoints
     await clearCheckpoints(executionId);
