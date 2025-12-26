@@ -60,7 +60,7 @@ export function LegalMemoryViewer({ memory, isLoading, onRefresh }: LegalMemoryV
           ) : (
             <div className="space-y-2">
               {memory.map((item) => {
-                const IconComponent = typeIcons[item.type] || typeIcons["default"];
+                const IconComponent = typeIcons[item.type || "default"] || typeIcons["default"];
 
                 return (
                   <div

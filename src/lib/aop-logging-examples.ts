@@ -48,9 +48,9 @@ class JustineAgent {
 
     const task: AgentTask = {
       id: crypto.randomUUID(),
-      type: "analisar_intimacao",
-      status: "pending",
-      priority: analysis.urgencia === "alta" ? "high" : "normal",
+      type: "ANALYZE_INTIMATION",
+      status: "queued",
+      priority: analysis.urgencia === "alta" ? "high" : "medium",
       createdAt: new Date().toISOString(),
       agentId: "justine",
       data: {}, // Required property

@@ -36,7 +36,7 @@ interface UseAutonomousAgentsReturn {
   taskQueue: AgentTask[];
   completedTasks: AgentTask[];
   activityLog: ActivityLog[];
-  streamingContent: string;
+  streamingContent: Record<string, string>;
   isStreamingEnabled: boolean;
   serverLogs: AgentActionLog[];
   legalMemory: MemoryItem[];
@@ -64,7 +64,7 @@ export function useAutonomousAgents(): UseAutonomousAgentsReturn {
 
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [streamingContent, setStreamingContent] = useState("");
+  const [streamingContent, setStreamingContent] = useState<Record<string, string>>({});
   const [isStreamingEnabled, setIsStreamingEnabled] = useState(false);
   const [serverLogs, setServerLogs] = useState<AgentActionLog[]>([]);
   const [legalMemory, setLegalMemory] = useState<MemoryItem[]>([]);
@@ -216,7 +216,7 @@ export function useAutonomousAgents(): UseAutonomousAgentsReturn {
   const toggleStreaming = useCallback((enabled: boolean) => {
     setIsStreamingEnabled(enabled);
     if (!enabled) {
-      setStreamingContent("");
+      setStreamingContent({});
     }
   }, []);
 
