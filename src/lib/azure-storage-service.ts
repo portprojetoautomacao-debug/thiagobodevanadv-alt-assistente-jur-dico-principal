@@ -97,8 +97,12 @@ export class AzureBlobStorageService
         access: "private",
       } );
 
+      const isAzurite = this.config.connectionString?.includes( '127.0.0.1' ) ||
+        this.config.connectionString?.includes( 'localhost' );
+
       console.log(
-        `[Azure Storage] ✅ Conectado ao container: ${ this.config.containerName }`
+        `[Azure Storage] ✅ Conectado ao container: ${ this.config.containerName }`,
+        isAzurite ? '(Azurite - Emulador Local)' : '(Azure Cloud)'
       );
       return true;
     } catch ( error )
