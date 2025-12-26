@@ -104,7 +104,7 @@ jobs:
 
           if [ "${#files[@]}" -gt 0 ]; then
             echo "Found integration tests: ${files[*]}"
-            npx vitest run "${files[@]}" --reporter=verbose
+            npx vitest run --config vitest.config.node.ts "${files[@]}" --reporter=verbose
           else
             echo "⚠️ No integration tests found in tests/integration, skipping"
             exit 0
@@ -133,7 +133,7 @@ jobs:
 
           if [ -n "$TEST_FILES" ]; then
             echo "Running tests:$TEST_FILES"
-            npx vitest run $TEST_FILES --reporter=verbose
+            npx vitest run --config vitest.config.node.ts $TEST_FILES --reporter=verbose
           else
             echo "⚠️ No Todoist test files found, skipping"
           fi
