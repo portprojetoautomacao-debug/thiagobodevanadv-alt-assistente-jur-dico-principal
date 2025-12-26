@@ -7,7 +7,8 @@
 
 import { BlobServiceClient } from "@azure/storage-blob";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import * as formidable from "formidable";
+import formidable from "formidable";
+import { readFileSync, unlinkSync } from "fs";
 
 interface UploadResponse
 {
@@ -68,17 +69,16 @@ export default async function handler (
       maxFileSize: 50 * 1024 * 1024, // 50MB max
       filter: ( part: any ) =>
       {
-        {
-          // Aceitar apenas PDFs, DOC, DOCX, TXT
-          const allowedTypes = [
-            "application/pdf",
-            "application/msword",
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            "text/plain",
-          ];
-          return part.mimetype ? allowedTypes.includes( part.mimetype ) : false;
-        },
-      } );
+        // Aceitar apenas PDFs, DOC, DOCX, TXT
+        const allowedTypes = [
+          "application/pdf",
+          "application/msword",
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "text/plain",
+        ];
+        return part.mimetype ? allowedTypes.includes( part.mimetype ) : false;
+      },
+    } );
 
     const [ fields, files ] = await form.parse( req );
 
