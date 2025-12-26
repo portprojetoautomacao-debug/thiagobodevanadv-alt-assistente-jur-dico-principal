@@ -140,13 +140,26 @@ export function useAutonomousAgents(): UseAutonomousAgentsReturn {
 
   // Adicionar nova tarefa
   const addTask = useCallback(
-    async (taskData: Omit<AgentTask, "id" | "createdAt" | "status">) => {
+    async (
+      taskData: AgentTask | Omit<AgentTask, "id" | "createdAt" | "status">
+    ) => {
       try {
+        const generatedId = `task-${Date.now()}-${Math.random()
+          .toString(36)
+          .substring(2, 9)}`;
+        const now = new Date().toISOString();
+
         const newTask: AgentTask = {
-          ...taskData,
-          id: `task-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-          createdAt: new Date().toISOString(),
-          status: "queued",
+          ...(taskData as AgentTask),
+          id: "id" in taskData && taskData.id ? taskData.id : generatedId,
+          createdAt:
+            "createdAt" in taskData && taskData.createdAt
+              ? taskData.createdAt
+              : now,
+          status:
+            "status" in taskData && taskData.status
+              ? taskData.status
+              : "queued",
         };
 
         const updatedTasks = [...allTasks, newTask];
