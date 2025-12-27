@@ -49,11 +49,6 @@
       "memory": 256,
       "includeFiles": "api/lib/**"
     },
-    "api/v1/traces.ts": {
-      "maxDuration": 15,
-      "memory": 256,
-      "includeFiles": "api/lib/**"
-    },
     "api/legal-services.ts": {
       "maxDuration": 30,
       "memory": 512,
