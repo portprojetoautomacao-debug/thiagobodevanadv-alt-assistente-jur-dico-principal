@@ -100,23 +100,23 @@ jobs:
 
           # Wait for Blob service usando SDK (mais robusto que curl)
           npm install --no-save @azure/storage-blob
-          
+
           node -e "
           const { BlobServiceClient } = require('@azure/storage-blob');
           const connStr = 'DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCRA7bhD4tgYBqh7tQAp3Ku3vMjMQsZQqqyRLwDdoezSEQ9fLeA==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;';
-          
+
           (async () => {
             for (let i = 0; i < 30; i++) {
               try {
                 const client = BlobServiceClient.fromConnectionString(connStr);
                 const props = await client.getProperties();
                 console.log('✅ Azurite is ready!');
-                
+
                 // Criar container de teste
                 const container = client.getContainerClient('test-container');
                 await container.createIfNotExists();
                 console.log('✅ Container criado');
-                
+
                 process.exit(0);
               } catch (e) {
                 console.log('Waiting... (' + (i+1) + '/30)');
