@@ -64,3 +64,4 @@ def texto_sentenca_improcedente():
     SENTENÇA. Julgo IMPROCEDENTE o pedido por falta de provas suficientes.
     Nego provimento ao recurso e condeno o autor ao pagamento de custas.
     """
+# trigger python test
