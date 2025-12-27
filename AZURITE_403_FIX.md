@@ -1,7 +1,7 @@
 # ✅ Correção do Azurite HTTP 403 (Forbidden) nos Workflows
 
-**Data**: 27/12/2025  
-**Prioridade**: 🔴 CRÍTICA (Bug em CI/CD - Job failing)  
+**Data**: 27/12/2025
+**Prioridade**: 🔴 CRÍTICA (Bug em CI/CD - Job failing)
 **Status**: ✅ CORRIGIDO
 
 ## 🐛 Problema Identificado
