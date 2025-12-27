@@ -213,7 +213,7 @@ export function initErrorTracking(): void {
       // ✅ LGPD: Before send hook com PII filtering
       beforeSend(event, hint) {
         // 1. Aplica PII filtering
-        event = piiFilteredBeforeSend(event) as any;
+        event = piiFilteredBeforeSend(event) as Sentry.Event;
 
         // 2. Filtra erros de extensões do navegador
         if (
