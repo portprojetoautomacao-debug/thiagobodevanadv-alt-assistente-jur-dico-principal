@@ -1,0 +1,34 @@
+# Build outputs
+dist/
+dist
+build/
+*.min.js
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Chrome extension dist (specific path)
+chrome-extension-pje/dist/
+chrome-extension-pje/dist
+chrome-extension-pje/build/
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Cache
+.cache/
+.vite/
+.eslintcache
+
+# Vercel
+.vercel/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db

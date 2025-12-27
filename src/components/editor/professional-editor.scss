@@ -1,0 +1,325 @@
+/**
+ * Professional Editor - Estilo de Documento A4 Profissional
+ * 
+ * Características:
+ * - Página A4 (794px × 1123px @ 96 DPI)
+ * - Margens printable (2.54cm = 96px)
+ * - Sombra de documento físico
+ * - Fontes profissionais
+ * - CSS de impressão
+ */
+
+/* ===========================
+ * Container Principal
+ * =========================== */
+
+.professional-editor-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: hsl(var(--muted) / 0.2);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+/* ===========================
+ * AI Toolbar
+ * =========================== */
+
+.ai-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid hsl(var(--border));
+  background: hsl(var(--background));
+  min-height: 56px;
+}
+
+/* ===========================
+ * Página A4
+ * =========================== */
+
+.professional-editor-page {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem;
+  background: hsl(var(--muted) / 0.1);
+}
+
+/* Container da página A4 */
+.professional-editor-page .ck-editor {
+  width: 794px; /* A4 width @ 96 DPI */
+  min-height: 1123px; /* A4 height @ 96 DPI */
+  margin: 0 auto;
+  background: white;
+  box-shadow: 
+    0 0 0 1px rgba(0, 0, 0, 0.05),
+    0 2px 4px rgba(0, 0, 0, 0.05),
+    0 4px 8px rgba(0, 0, 0, 0.05),
+    0 8px 16px rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+  transition: box-shadow 0.2s ease;
+}
+
+.professional-editor-page .ck-editor:hover {
+  box-shadow: 
+    0 0 0 1px rgba(0, 0, 0, 0.08),
+    0 4px 8px rgba(0, 0, 0, 0.08),
+    0 8px 16px rgba(0, 0, 0, 0.08),
+    0 16px 32px rgba(0, 0, 0, 0.08);
+}
+
+/* Conteúdo editável com margens A4 */
+.professional-editor-page .ck-editor__editable {
+  padding: 96px; /* 2.54cm @ 96 DPI */
+  min-height: 1123px;
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 12pt;
+  line-height: 1.5;
+  color: #000;
+}
+
+/* ===========================
+ * Toolbar do CKEditor
+ * =========================== */
+
+.professional-editor-page .ck-toolbar {
+  background: hsl(var(--background));
+  border-bottom: 1px solid hsl(var(--border));
+  border-radius: 4px 4px 0 0;
+  padding: 0.5rem;
+}
+
+.professional-editor-page .ck-toolbar__items {
+  gap: 0.25rem;
+}
+
+.professional-editor-page .ck-button {
+  border-radius: var(--radius);
+}
+
+.professional-editor-page .ck-button:hover {
+  background: hsl(var(--muted));
+}
+
+.professional-editor-page .ck-button.ck-on {
+  background: hsl(var(--primary) / 0.1);
+  color: hsl(var(--primary));
+}
+
+/* ===========================
+ * Tipografia
+ * =========================== */
+
+.professional-editor-page .ck-content h1 {
+  font-size: 24pt;
+  font-weight: bold;
+  margin: 24pt 0 12pt 0;
+  line-height: 1.2;
+}
+
+.professional-editor-page .ck-content h2 {
+  font-size: 18pt;
+  font-weight: bold;
+  margin: 18pt 0 9pt 0;
+  line-height: 1.3;
+}
+
+.professional-editor-page .ck-content h3 {
+  font-size: 14pt;
+  font-weight: bold;
+  margin: 14pt 0 7pt 0;
+  line-height: 1.3;
+}
+
+.professional-editor-page .ck-content h4 {
+  font-size: 12pt;
+  font-weight: bold;
+  margin: 12pt 0 6pt 0;
+  line-height: 1.3;
+}
+
+.professional-editor-page .ck-content p {
+  margin: 0 0 12pt 0;
+  text-align: justify;
+}
+
+.professional-editor-page .ck-content ul,
+.professional-editor-page .ck-content ol {
+  margin: 12pt 0;
+  padding-left: 40pt;
+}
+
+.professional-editor-page .ck-content li {
+  margin: 6pt 0;
+}
+
+.professional-editor-page .ck-content blockquote {
+  border-left: 4px solid hsl(var(--primary));
+  padding-left: 16pt;
+  margin: 12pt 0;
+  font-style: italic;
+  color: hsl(var(--muted-foreground));
+}
+
+.professional-editor-page .ck-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 12pt 0;
+}
+
+.professional-editor-page .ck-content table td,
+.professional-editor-page .ck-content table th {
+  border: 1px solid hsl(var(--border));
+  padding: 8pt;
+}
+
+.professional-editor-page .ck-content table th {
+  background: hsl(var(--muted));
+  font-weight: bold;
+}
+
+/* ===========================
+ * Footer
+ * =========================== */
+
+.professional-editor-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  border-top: 1px solid hsl(var(--border));
+  background: hsl(var(--background));
+  min-height: 40px;
+}
+
+/* ===========================
+ * Dark Mode
+ * =========================== */
+
+.dark .professional-editor-page .ck-editor {
+  background: hsl(var(--card));
+}
+
+.dark .professional-editor-page .ck-editor__editable {
+  background: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+}
+
+.dark .professional-editor-page .ck-toolbar {
+  background: hsl(var(--card));
+  border-bottom-color: hsl(var(--border));
+}
+
+/* ===========================
+ * Print Styles
+ * =========================== */
+
+@media print {
+  .professional-editor-wrapper {
+    background: white;
+  }
+
+  .ai-toolbar,
+  .professional-editor-footer {
+    display: none;
+  }
+
+  .professional-editor-page {
+    padding: 0;
+    overflow: visible;
+    background: white;
+  }
+
+  .professional-editor-page .ck-editor {
+    width: 100%;
+    box-shadow: none;
+    border-radius: 0;
+  }
+
+  .professional-editor-page .ck-toolbar {
+    display: none;
+  }
+
+  .professional-editor-page .ck-editor__editable {
+    padding: 2.54cm;
+    page-break-inside: avoid;
+  }
+
+  /* Quebra de página */
+  .professional-editor-page .ck-content h1,
+  .professional-editor-page .ck-content h2 {
+    page-break-after: avoid;
+  }
+
+  .professional-editor-page .ck-content table {
+    page-break-inside: avoid;
+  }
+}
+
+/* ===========================
+ * Responsividade
+ * =========================== */
+
+@media (max-width: 900px) {
+  .professional-editor-page .ck-editor {
+    width: 100%;
+    max-width: 794px;
+  }
+
+  .professional-editor-page .ck-editor__editable {
+    padding: 48px;
+  }
+}
+
+@media (max-width: 640px) {
+  .professional-editor-page {
+    padding: 1rem;
+  }
+
+  .professional-editor-page .ck-editor__editable {
+    padding: 24px;
+  }
+}
+
+/* ===========================
+ * Animações
+ * =========================== */
+
+.professional-editor-page .ck-editor {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===========================
+ * Scroll Personalizado
+ * =========================== */
+
+.professional-editor-page::-webkit-scrollbar {
+  width: 8px;
+}
+
+.professional-editor-page::-webkit-scrollbar-track {
+  background: hsl(var(--muted) / 0.3);
+  border-radius: 4px;
+}
+
+.professional-editor-page::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 4px;
+}
+
+.professional-editor-page::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}

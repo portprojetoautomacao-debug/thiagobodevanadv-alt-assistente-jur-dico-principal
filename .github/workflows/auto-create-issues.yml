@@ -1,0 +1,75 @@
+name: 🤖 Auto Create Issues from Code Comments
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  # Removido pull_request para evitar erros de diff em PRs
+  schedule:
+    # Executa a cada 6 horas (00:00, 06:00, 12:00, 18:00 UTC)
+    - cron: "0 */6 * * *"
+  workflow_dispatch: # Permite executar manualmente
+
+permissions:
+  issues: write
+  contents: read
+  pull-requests: read
+
+jobs:
+  auto-create-issues:
+    name: Scan and Create Issues
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🔍 Scan for TODO/FIXME/etc
+        id: scan
+        uses: alstr/todo-to-issue-action@v4
+        with:
+          # Criar issues automaticamente
+          AUTO_ASSIGN: true
+
+          # Labels automáticas - INCLUI auto-copilot para delegação automática!
+          LABEL: "auto-created,needs-triage,auto-copilot"
+
+          # Fechar issues quando TODO é removido
+          CLOSE_ISSUES: true
+
+          # Idioma português
+          ISSUE_TEMPLATE: |
+            **Detectado automaticamente no código**
+
+            📁 **Arquivo**: `{{ FILE_PATH }}`
+            📍 **Linha**: {{ LINE_NUMBER }}
+            🏷️ **Tipo**: {{ TODO_TYPE }}
+
+            ---
+
+            ### 📝 Comentário Original
+
+            ```{{ LANGUAGE }}
+            {{ COMMENT }}
+            ```
+
+            ---
+
+            ### 🔗 Links Úteis
+
+            - [Ver no código]({{ PERMALINK }})
+            - [Ver diff]({{ DIFF_URL }})
+
+            ---
+
+            🤖 *Issue criado automaticamente pelo workflow Auto Create Issues*
+
+      - name: 📊 Summary
+        if: steps.scan.outputs.issues_created > 0
+        run: |
+          echo "✅ ${{ steps.scan.outputs.issues_created }} issue(s) criado(s) automaticamente!"
+          echo "🔗 Veja em: https://github.com/${{ github.repository }}/issues"

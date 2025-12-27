@@ -1,0 +1,230 @@
+name: Dependabot Auto-Merge
+
+# Este workflow automatiza o processo de aprovação e merge de PRs do Dependabot
+#
+# Fluxo:
+# 1. Verifica se é um PR do Dependabot
+# 2. Aprova automaticamente updates minor/patch
+# 3. Aguarda CI passar (workflow_run)
+# 4. Faz merge automático se CI passou
+# 5. Adiciona comentário em major updates para revisão manual
+#
+# Otimizações:
+# - Job de verificação inicial para evitar execuções desnecessárias
+# - Concurrency group unificado para PR e workflow_run
+# - Reutilização do check entre jobs
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  # Aguarda CI passar antes de fazer merge
+  workflow_run:
+    workflows: ["CI", "Playwright E2E Tests"]
+    types: [completed]
+    branches: [main, develop]
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: read
+  issues: write
+
+concurrency:
+  group: dependabot-auto-merge-${{ github.event.pull_request.number || github.event.workflow_run.pull_requests[0].number }}
+  cancel-in-progress: false
+
+jobs:
+  # Job de verificação inicial
+  check-dependabot:
+    name: Check if Dependabot PR
+    runs-on: ubuntu-latest
+    outputs:
+      is-dependabot: ${{ steps.check.outputs.is-dependabot }}
+    steps:
+      - name: Check Dependabot
+        id: check
+        run: |
+          if [[ "${{ github.actor }}" == "dependabot[bot]" ]]; then
+            echo "is-dependabot=true" >> $GITHUB_OUTPUT
+            echo "✅ Dependabot PR detected"
+          else
+            echo "is-dependabot=false" >> $GITHUB_OUTPUT
+            echo "⏭️ Not a Dependabot PR, skipping"
+          fi
+
+  # Primeiro job: Aprovar PR automaticamente
+  auto-approve:
+    name: Auto-Approve Dependabot PR
+    runs-on: ubuntu-latest
+    needs: check-dependabot
+    if: |
+      needs.check-dependabot.outputs.is-dependabot == 'true' &&
+      github.event_name == 'pull_request'
+    permissions:
+      pull-requests: write
+
+    steps:
+      - name: Check if Dependabot PR
+        id: check
+        run: |
+          echo "✅ Dependabot PR detectado"
+          echo "Event: ${{ github.event_name }}"
+          echo "Actor: ${{ github.actor }}"
+
+      - name: Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Auto-approve for minor and patch updates
+        if: |
+          steps.metadata.outputs.update-type == 'version-update:semver-minor' ||
+          steps.metadata.outputs.update-type == 'version-update:semver-patch'
+        run: gh pr review --approve "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Segundo job: Fazer merge SOMENTE após CI passar
+  dependabot-auto-merge:
+    name: Dependabot Auto-Merge (After CI)
+    runs-on: ubuntu-latest
+    needs: check-dependabot
+    # Executa apenas quando CI termina com sucesso
+    if: |
+      needs.check-dependabot.outputs.is-dependabot == 'true' &&
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.pull_requests[0] != null
+    steps:
+      - name: Get PR information
+        id: pr
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.workflow_run.pull_requests[0];
+            return pr;
+
+      - name: Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Wait for all checks to pass
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = context.payload.workflow_run.pull_requests[0].number;
+            const maxAttempts = 30;
+            const delayMs = 10000; // 10 segundos
+
+            for (let i = 0; i < maxAttempts; i++) {
+              const { data: pr } = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber
+              });
+
+              const { data: checks } = await github.rest.checks.listForRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: pr.head.sha
+              });
+
+              const allPassed = checks.check_runs.every(
+                check => check.status === 'completed' && check.conclusion === 'success'
+              );
+
+              if (allPassed) {
+                console.log('✅ Todos os checks passaram!');
+                return;
+              }
+
+              console.log(`⏳ Aguardando checks... Tentativa ${i + 1}/${maxAttempts}`);
+              await new Promise(resolve => setTimeout(resolve, delayMs));
+            }
+
+            throw new Error('❌ Timeout aguardando checks passarem');
+
+      - name: Auto-merge for minor and patch updates
+        if: |
+          steps.metadata.outputs.update-type == 'version-update:semver-minor' ||
+          steps.metadata.outputs.update-type == 'version-update:semver-patch'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = context.payload.workflow_run.pull_requests[0].number;
+
+            // Ativar auto-merge
+            await github.rest.pulls.merge({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+              merge_method: 'squash'
+            });
+
+            console.log(`✅ PR #${prNumber} merged successfully!`);
+
+      - name: Comment on major updates
+        if: |
+          steps.metadata.outputs.update-type == 'version-update:semver-major' &&
+          github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.BOT_GH_TOKEN || secrets.GITHUB_TOKEN }}
+          script: |
+            const issue_number = context.issue?.number;
+            if (!issue_number) {
+              core.info('No issue number in context - skipping comment');
+              return;
+            }
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue_number,
+              body: `⚠️ **Major version update detected`
+
+              This PR updates **${{ steps.metadata.outputs.dependency-names }}** to a major version.
+
+              **Action Required:**
+              - Review the changelog for breaking changes
+              - Test the application thoroughly
+              - CI/E2E tests must pass before merge
+              - Manually approve and merge when ready
+
+              **Update Type:** \`${{ steps.metadata.outputs.update-type }}\`
+
+              This PR will NOT be auto-merged. Please review and merge manually.`
+            });
+
+      - name: Add summary
+        if: always()
+        run: |
+          echo "## 🤖 Dependabot Auto-Merge" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [[ "${{ github.event_name }}" == "workflow_run" ]]; then
+            PR_NUM="${{ github.event.workflow_run.pull_requests[0].number }}"
+            echo "**PR Number:** #$PR_NUM" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "**PR Number:** #${{ github.event.pull_request.number }}" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "**Dependency:** ${{ steps.metadata.outputs.dependency-names }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Update Type:** ${{ steps.metadata.outputs.update-type }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [[ "${{ steps.metadata.outputs.update-type }}" == "version-update:semver-minor" ]] || \
+             [[ "${{ steps.metadata.outputs.update-type }}" == "version-update:semver-patch" ]]; then
+            if [[ "${{ github.event_name }}" == "workflow_run" ]]; then
+              echo "✅ **Status:** Auto-merged after CI passed successfully" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "⏳ **Status:** Awaiting CI to pass before auto-merge" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "⚠️ **Status:** Manual review required for major version update" >> $GITHUB_STEP_SUMMARY
+          fi

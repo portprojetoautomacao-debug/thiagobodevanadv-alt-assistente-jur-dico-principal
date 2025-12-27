@@ -1,0 +1,179 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vscode/main/src/vs/workbench/services/configuration/common/configurationDefaultsSchema.json",
+  "description": "Configurações automáticas do GitHub Copilot para Codespaces - Máxima Autonomia",
+
+  // ========================================
+  // 🤖 GITHUB COPILOT - AUTONOMIA MÁXIMA
+  // ========================================
+
+  "github.copilot.enable": {
+    "*": true,
+    "yaml": true,
+    "plaintext": true,
+    "markdown": true,
+    "typescript": true,
+    "typescriptreact": true,
+    "javascript": true,
+    "javascriptreact": true,
+    "json": true,
+    "jsonc": true
+  },
+
+  "github.copilot.chat.enable": true,
+  "github.copilot.chat.useInstructionFiles": true,
+  "github.copilot.editor.enableAutoCompletions": true,
+  "github.copilot.inlineSuggest.enable": true,
+
+  // 🚀 FERRAMENTAS DE EDIÇÃO - Habilitar edição sem confirmação
+  "chat.editing.enabled": true,
+  "chat.editing.confirmEditRequestRemoval": false,
+  "chat.extensionTools.enabled": true,
+  "chat.tools.terminal.autoApprove": { "enabled": true },
+  "chat.tools.terminal.autoReplyToPrompts": true,
+
+  // 🔧 TOOL SETS - Conjunto completo de ferramentas
+  "github.copilot.chat.defaultToolset": "fullEditingTools",
+
+  // 🤖 AGENTE DE CODIFICAÇÃO - Automação total
+  "githubPullRequests.codingAgent.enabled": true,
+  "githubPullRequests.codingAgent.autoDelegate": true,
+  "githubPullRequests.codingAgent.uiIntegration": true,
+  "githubPullRequests.pullRequestCardEnabled": true,
+  "chat.agentSessionsViewLocation": "view",
+
+  // 📝 INSTRUÇÕES DE GERAÇÃO DE CÓDIGO
+  "github.copilot.chat.codeGeneration.instructions": [
+    {
+      "text": "Sempre siga as instruções em .github/copilot-instructions.md"
+    },
+    {
+      "text": "Modo MANUTENÇÃO: Apenas corrigir bugs críticos, não adicionar features novas"
+    },
+    {
+      "text": "Antes de qualquer mudança, execute verificação diária do sistema automático"
+    },
+    {
+      "text": "Use TypeScript strict mode e valide todos os tipos"
+    },
+    {
+      "text": "Siga padrões React 19 com componentes funcionais apenas"
+    },
+    {
+      "text": "Mantenha compatibilidade com Vercel serverless (Node.js 22.x obrigatório)"
+    }
+  ],
+
+  // ========================================
+  // 🔒 SEGURANÇA E WORKSPACE TRUST
+  // ========================================
+
+  // Confiar automaticamente no workspace (necessário para automação)
+  "security.workspace.trust.enabled": true,
+  "security.workspace.trust.untrustedFiles": "open",
+  "security.workspace.trust.emptyWindow": true,
+
+  // ========================================
+  // 📦 GIT E GITHUB
+  // ========================================
+
+  "git.enableSmartCommit": true,
+  "git.autofetch": true,
+  "git.confirmSync": false,
+  "git.fetchOnPull": true,
+  "git.pruneOnFetch": true,
+  "git.pullBeforeCheckout": true,
+  "git.rebaseWhenSync": false,
+
+  "github.gitProtocol": "https",
+  "github.branchProtection": true,
+  "github.codespaces.defaultExtensions": [
+    "GitHub.copilot",
+    "GitHub.copilot-chat",
+    "GitHub.vscode-pull-request-github",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode"
+  ],
+
+  // ========================================
+  // 🛠️ AUTOMAÇÃO DE TASKS
+  // ========================================
+
+  "task.allowAutomaticTasks": "on",
+  "task.autoDetect": "on",
+  "task.problemMatchers.neverPrompt": true,
+  "task.saveBeforeRun": "always",
+
+  // ========================================
+  // ✏️ EDITOR - FORMATAÇÃO AUTOMÁTICA
+  // ========================================
+
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": true,
+  "editor.formatOnType": false,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "explicit"
+  },
+
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 1000,
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+
+  // ========================================
+  // 🧪 TESTES AUTOMÁTICOS
+  // ========================================
+
+  "testing.automaticallyOpenPeekView": "never",
+  "testing.autoRun.mode": "onNewCode",
+
+  // ========================================
+  // 🔧 TERMINAL INTEGRADO
+  // ========================================
+
+  "terminal.integrated.shellIntegration.enabled": true,
+  "terminal.integrated.shellIntegration.decorationsEnabled": "both",
+  "terminal.integrated.defaultProfile.linux": "bash",
+
+  // ========================================
+  // 📊 TELEMETRIA E PRIVACIDADE
+  // ========================================
+
+  "telemetry.telemetryLevel": "off",
+  "redhat.telemetry.enabled": false,
+
+  // ========================================
+  // 🎨 UI E EXPERIÊNCIA
+  // ========================================
+
+  "workbench.startupEditor": "none",
+  "workbench.editor.enablePreview": false,
+  "workbench.editor.revealIfOpen": true,
+  "explorer.confirmDragAndDrop": false,
+  "explorer.confirmDelete": false,
+
+  // ========================================
+  // 🔍 TYPESCRIPT E LINGUAGENS
+  // ========================================
+
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "typescript.suggest.autoImports": true,
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "javascript.updateImportsOnFileMove.enabled": "always",
+
+  // ========================================
+  // 🧹 SONARLINT E QUALIDADE
+  // ========================================
+
+  "sonarlint.connectedMode.connections.sonarcloud": [
+    {
+      "organizationKey": "thiagobodevan-a11y-assistente-juridico-p",
+      "connectionId": "thiagobodevan-a11y-assistente-juridico-p"
+    }
+  ],
+  "sonarlint.connectedMode.project": {
+    "connectionId": "thiagobodevan-a11y-assistente-juridico-p",
+    "projectKey": "portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal"
+  }
+}

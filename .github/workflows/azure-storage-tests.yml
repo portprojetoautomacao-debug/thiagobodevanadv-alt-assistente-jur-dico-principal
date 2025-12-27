@@ -1,0 +1,167 @@
+name: Azure Storage Tests
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "src/lib/azure-storage-service.ts"
+      - "api/azure-upload.ts"
+      - "tests/azure-storage-service.test.ts"
+      - "tests/api/azure-upload.test.ts"
+      - ".github/workflows/azure-storage-tests.yml"
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  pull-requests: write
+
+concurrency:
+  group: azure-storage-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  azure-storage-unit-tests:
+    name: Azure Storage Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Azure Storage unit tests
+        run: npm run test:run tests/azure-storage-service.test.ts
+        env:
+          VITE_USE_AZURITE: true
+          VITE_AZURE_STORAGE_CONNECTION_STRING: AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtVQGXEOyHu1Z6L2iZBz3Yfj8AzuriteDefaultKey==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: azure-storage-test-results
+          path: coverage/
+          retention-days: 7
+
+  azure-storage-integration-tests:
+    name: Azure Storage Integration Tests (with Azurite)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+          cache: "npm"
+
+      - name: Free up Azurite ports
+        run: |
+          echo "🔍 Checking for processes on Azurite ports..."
+          sudo lsof -ti:10000 | xargs kill -9 || true
+          sudo lsof -ti:10001 | xargs kill -9 || true
+          sudo lsof -ti:10002 | xargs kill -9 || true
+          echo "✅ Ports freed"
+
+      - name: Start Azurite
+        run: |
+          # Use pinned stable version with loose mode for compatibility
+          docker run -d \
+            --name azurite \
+            -p 10000:10000 \
+            -p 10001:10001 \
+            -p 10002:10002 \
+            mcr.microsoft.com/azure-storage/azurite:3.28.0 \
+            azurite-blob --blobHost 0.0.0.0 --loose --skipApiVersionCheck
+
+          echo "⏳ Waiting for Azurite to be ready..."
+          sleep 5
+
+          # Wait for Blob service to respond
+          for i in {1..30}; do
+            if curl -f http://localhost:10000/devstoreaccount1?comp=list &>/dev/null; then
+              echo "✅ Azurite is ready!"
+              exit 0
+            fi
+            echo "Waiting... ($i/30)"
+            sleep 2
+          done
+
+          echo "❌ Azurite failed to start"
+          docker logs azurite
+          exit 1
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Start dev server in background
+        run: |
+          npm run dev &
+          sleep 10
+        env:
+          AZURE_STORAGE_CONNECTION_STRING: AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtVQGXEOyHu1Z6L2iZBz3Yfj8AzuriteDefaultKey==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;
+          VITE_AZURE_STORAGE_CONNECTION_STRING: AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtVQGXEOyHu1Z6L2iZBz3Yfj8AzuriteDefaultKey==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;
+          AZURE_STORAGE_CONTAINER_NAME: process-documents
+          VITE_USE_AZURITE: true
+
+      - name: Run Azure Upload API tests
+        run: npm run test:run tests/api/azure-upload.test.ts
+        env:
+          AZURE_STORAGE_CONNECTION_STRING: AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtVQGXEOyHu1Z6L2iZBz3Yfj8AzuriteDefaultKey==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;
+          AZURE_STORAGE_CONTAINER_NAME: process-documents
+
+      - name: Show Azurite logs on failure
+        if: failure()
+        run: |
+          echo "📋 Azurite container logs:"
+          docker logs azurite 2>&1 | tail -100
+
+      - name: Cleanup Azurite
+        if: always()
+        run: docker rm -f azurite || true
+
+      - name: Upload integration test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: azure-storage-integration-test-results
+          path: coverage/
+          retention-days: 7
+
+  azure-storage-health-check:
+    name: Azure Storage Service Health Check
+    runs-on: ubuntu-latest
+    needs: [azure-storage-unit-tests, azure-storage-integration-tests]
+    if: always()
+
+    steps:
+      - name: Check test results
+        run: |
+          if [ "${{ needs.azure-storage-unit-tests.result }}" != "success" ] || [ "${{ needs.azure-storage-integration-tests.result }}" != "success" ]; then
+            echo "❌ Azure Storage tests failed!"
+            echo "Unit Tests: ${{ needs.azure-storage-unit-tests.result }}"
+            echo "Integration Tests: ${{ needs.azure-storage-integration-tests.result }}"
+            exit 1
+          fi
+          echo "✅ All Azure Storage tests passed!"

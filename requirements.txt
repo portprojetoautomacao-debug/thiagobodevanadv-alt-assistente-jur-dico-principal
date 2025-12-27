@@ -1,0 +1,21 @@
+# Python Dependencies for DSPy Bridge Service
+# Deploy: Railway (NIXPACKS auto-install)
+# Python: 3.11
+
+# FastAPI framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# CORS
+python-multipart==0.0.6
+
+# Utilities
+python-dotenv==1.0.0
+
+# DSPy (quando implementado)
+# dspy-ai==2.4.0
+
+# NOTA: Railway instala estas dependências automaticamente via NIXPACKS
+# NÃO instalar node_modules - Railway usa apenas Python para DSPy Bridge
