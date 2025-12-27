@@ -22,7 +22,6 @@
     "sonarsource.sonarlint-vscode",
     // AI & Productivity
     "teamsdevapp.vscode-ai-foundry",
-    "google.geminicodeassist",
     "Continue.continue",
     "trailofbits.sarif-explorer",
     "ms-sarifvscode.sarif-viewer"

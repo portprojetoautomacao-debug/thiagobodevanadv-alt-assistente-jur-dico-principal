@@ -5,13 +5,25 @@ headless = true
 enableCORS = true
 enableXsrfProtection = true
 enableWebsocketCompression = true
+runOnSave = true
+allowRunOnSave = true
 
 [browser]
 gatherUsageStats = false
+serverAddress = "localhost"
+serverPort = 8501
 
 [client]
 showErrorDetails = true
 toolbarMode = "minimal"
+
+[logger]
+level = "warning"
+messageFormat = "%(asctime)s %(message)s"
+
+[runner]
+magicEnabled = true
+fastReruns = true
 
 # Security (opcional - para produção)
 # [server.security]

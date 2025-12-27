@@ -40,7 +40,8 @@
 /** Mensagens em formato OpenAI-style */
 export type AIChatRole = "system" | "user" | "assistant";
 
-export interface AIChatMessage {
+export interface AIChatMessage
+{
   role: AIChatRole;
   content: string;
 }
@@ -49,7 +50,8 @@ export interface AIChatMessage {
 export type AIProvider = "gemini" | "azure" | "huggingface" | "github";
 
 /** Configuração de modelo de IA */
-export interface AIModelConfig {
+export interface AIModelConfig
+{
   /** Provedor de IA a ser utilizado */
   provider: AIProvider;
   /** Nome/ID do modelo */
@@ -61,7 +63,8 @@ export interface AIModelConfig {
 }
 
 /** Configuração de retry para chamadas de API */
-export interface RetryConfig {
+export interface RetryConfig
+{
   /** Número máximo de tentativas (default: 3) */
   maxRetries: number;
   /** Delay inicial em ms (default: 1000) */
@@ -92,17 +95,11 @@ export const AZURE_AI_CONFIG = {
   },
 };
 
-// Hugging Face Configuration (free tier)
-export const HUGGINGFACE_CONFIG = {
-  baseUrl: "https://api-inference.huggingface.co/models",
-  models: {
-    "qwen-7b": "Qwen/Qwen2.5-7B-Instruct",
-    "qwen-1.5b": "Qwen/Qwen2.5-1.5B-Instruct",
-    "phi-3": "microsoft/Phi-3-mini-4k-instruct",
-    "mistral-7b": "mistralai/Mistral-7B-Instruct-v0.3",
-    "llama-8b": "meta-llama/Llama-3.1-8B-Instruct",
-  },
-};
+// Hugging Face Configuration (free tier) - DESABILITADO
+// export const HUGGINGFACE_CONFIG = {
+//   baseUrl: "https://api-inference.huggingface.co/models",
+//   models: {},
+// };
 
 // GitHub Models Configuration (free com GitHub)
 export const GITHUB_MODELS_CONFIG = {
@@ -123,10 +120,11 @@ export const GITHUB_MODELS_CONFIG = {
  * Executa uma função com retry e exponential backoff.
  * Útil para lidar com falhas temporárias de API.
  */
-export async function withRetry<T>(
+export async function withRetry<T> (
   fn: () => Promise<T>,
   config: Partial<RetryConfig> = {}
-): Promise<T> {
+): Promise<T>
+{
   const { maxRetries, initialDelay, backoffFactor, maxDelay } = {
     ...DEFAULT_RETRY_CONFIG,
     ...config,
@@ -135,58 +133,65 @@ export async function withRetry<T>(
   let lastError: Error | null = null;
   let delay = initialDelay;
 
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
+  for ( let attempt = 1; attempt <= maxRetries; attempt++ )
+  {
+    try
+    {
       return await fn();
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
+    } catch ( error )
+    {
+      lastError = error instanceof Error ? error : new Error( String( error ) );
 
       // Não faz retry se for erro de autenticação ou configuração
       const msg = lastError.message || "";
       if (
-        msg.includes("API key") ||
-        msg.includes("não configurada") ||
-        msg.includes("401") ||
-        msg.includes("403")
-      ) {
+        msg.includes( "API key" ) ||
+        msg.includes( "não configurada" ) ||
+        msg.includes( "401" ) ||
+        msg.includes( "403" )
+      )
+      {
         throw lastError;
       }
 
-      if (attempt < maxRetries) {
+      if ( attempt < maxRetries )
+      {
         console.warn(
-          `[AI Provider] Tentativa ${attempt}/${maxRetries} falhou. ` +
-            `Retry em ${delay}ms. Erro: ${msg}`
+          `[AI Provider] Tentativa ${ attempt }/${ maxRetries } falhou. ` +
+          `Retry em ${ delay }ms. Erro: ${ msg }`
         );
-        await new Promise((resolve) => setTimeout(resolve, delay));
-        delay = Math.min(delay * backoffFactor, maxDelay);
+        await new Promise( ( resolve ) => setTimeout( resolve, delay ) );
+        delay = Math.min( delay * backoffFactor, maxDelay );
       }
     }
   }
 
-  throw lastError || new Error("Todas as tentativas falharam");
+  throw lastError || new Error( "Todas as tentativas falharam" );
 }
 
 /**
  * Valida se uma string parece ser uma API key válida.
  * Verifica padrões comuns de chaves de API.
  */
-export function isValidApiKey(key: string | null | undefined, provider?: string): boolean {
-  if (!key || key.length < 10) return false;
+export function isValidApiKey ( key: string | null | undefined, provider?: string ): boolean
+{
+  if ( !key || key.length < 10 ) return false;
 
   // Validações específicas por provedor
-  switch (provider) {
+  switch ( provider )
+  {
     case "gemini":
       // Chaves Gemini: AIza... ou GEM-...
-      return /^(AIza[\w-]{20,}|GEM-[\w-]{16,}|[\w-]{32,})$/.test(key);
+      return /^(AIza[\w-]{20,}|GEM-[\w-]{16,}|[\w-]{32,})$/.test( key );
     case "github":
       // Tokens GitHub: ghp_... ou gho_...
-      return /^(ghp_|gho_|github_pat_)\w{20,}$/.test(key) || key.length >= 20;
+      return /^(ghp_|gho_|github_pat_)\w{20,}$/.test( key ) || key.length >= 20;
     case "huggingface":
       // Tokens HuggingFace: hf_...
-      return /^hf_\w{20,}$/.test(key) || key.length >= 20;
+      return /^hf_\w{20,}$/.test( key ) || key.length >= 20;
     case "azure":
       // Chaves Azure: 32 caracteres hex
-      return /^[\da-f]{32}$/i.test(key) || key.length >= 20;
+      return /^[\da-f]{32}$/i.test( key ) || key.length >= 20;
     default:
       // Validação genérica: pelo menos 20 caracteres alfanuméricos
       return key.length >= 20;
@@ -203,7 +208,8 @@ export function isValidApiKey(key: string | null | undefined, provider?: string)
  * Responsável por toda comunicação com a API Generative Language do Google.
  * Implementa retry automático e validação de API key.
  */
-export class GeminiClient {
+export class GeminiClient
+{
   private readonly apiKey: string | null;
   private readonly baseUrl = "https://generativelanguage.googleapis.com/v1/models";
   private readonly retryConfig: RetryConfig;
@@ -214,45 +220,53 @@ export class GeminiClient {
    * @param apiKey - Chave de API (opcional, usa env vars por padrão)
    * @param retryConfig - Configuração de retry (opcional)
    */
-  constructor(apiKey?: string, retryConfig?: Partial<RetryConfig>) {
+  constructor ( apiKey?: string, retryConfig?: Partial<RetryConfig> )
+  {
     // Tenta pegar API key de forma flexível
-    if (apiKey) {
-      this.apiKey = String(apiKey);
-    } else if (import.meta === undefined) {
+    if ( apiKey )
+    {
+      this.apiKey = String( apiKey );
+    } else if ( import.meta === undefined )
+    {
       this.apiKey = null;
-    } else {
+    } else
+    {
       const env = import.meta.env;
       const envKey = env.VITE_GEMINI_API_KEY ?? env.VITE_GEMINI_API_KEY_BACKEND;
-      this.apiKey = envKey ? String(envKey) : null;
+      this.apiKey = envKey ? String( envKey ) : null;
     }
 
     this.retryConfig = { ...DEFAULT_RETRY_CONFIG, ...retryConfig };
 
     // Valida a chave no construtor (apenas warning, não bloqueia)
-    if (this.apiKey && !isValidApiKey(this.apiKey, "gemini")) {
-      console.warn("[GeminiClient] API key pode estar em formato inválido");
+    if ( this.apiKey && !isValidApiKey( this.apiKey, "gemini" ) )
+    {
+      console.warn( "[GeminiClient] API key pode estar em formato inválido" );
     }
   }
 
   /**
    * Verifica se o cliente está configurado com uma API key.
    */
-  isConfigured(): boolean {
-    return !!this.apiKey && isValidApiKey(this.apiKey, "gemini");
+  isConfigured (): boolean
+  {
+    return !!this.apiKey && isValidApiKey( this.apiKey, "gemini" );
   }
 
   /**
    * Converte mensagens OpenAI-style em um texto único com rótulos.
    * Mantém o contexto sistema/usuário/assistente.
    */
-  private buildPromptFromMessages(messages: AIChatMessage[]): string {
+  private buildPromptFromMessages ( messages: AIChatMessage[] ): string
+  {
     return messages
-      .map((m) => {
-        if (m.role === "system") return `# Sistema\n${m.content}`;
-        if (m.role === "user") return `# Usuário\n${m.content}`;
-        return `# Assistente\n${m.content}`;
-      })
-      .join("\n\n");
+      .map( ( m ) =>
+      {
+        if ( m.role === "system" ) return `# Sistema\n${ m.content }`;
+        if ( m.role === "user" ) return `# Usuário\n${ m.content }`;
+        return `# Assistente\n${ m.content }`;
+      } )
+      .join( "\n\n" );
   }
 
   /**
@@ -262,191 +276,126 @@ export class GeminiClient {
    * - Usa endpoint oficial: v1/models/gemini-2.5-pro:generateContent
    * - Extrai texto de candidates[0].content.parts[].text
    */
-  async chat(
+  async chat (
     model: string,
     messages: AIChatMessage[],
     options: { maxTokens?: number; temperature?: number } = {}
-  ): Promise<string> {
-    if (!this.apiKey) {
+  ): Promise<string>
+  {
+    if ( !this.apiKey )
+    {
       throw new Error(
         "Gemini API key não configurada. " +
-          "Configure uma das variáveis: VITE_GEMINI_API_KEY, VITE_GEMINI_API_KEY_BACKEND ou VITE_GOOGLE_API_KEY (deprecated)"
+        "Configure uma das variáveis: VITE_GEMINI_API_KEY, VITE_GEMINI_API_KEY_BACKEND ou VITE_GOOGLE_API_KEY (deprecated)"
       );
     }
 
     const modelId = model || "gemini-2.5-pro";
-    const prompt = this.buildPromptFromMessages(messages);
+    const prompt = this.buildPromptFromMessages( messages );
 
-    const url = `${this.baseUrl}/${modelId}:generateContent?key=${encodeURIComponent(this.apiKey)}`;
+    const url = `${ this.baseUrl }/${ modelId }:generateContent?key=${ encodeURIComponent( this.apiKey ) }`;
 
-    const doRequest = async () => {
-      const response = await fetch(url, {
+    const doRequest = async () =>
+    {
+      const response = await fetch( url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
+        body: JSON.stringify( {
           contents: [
             {
               role: "user",
-              parts: [{ text: prompt }],
+              parts: [ { text: prompt } ],
             },
           ],
           generationConfig: {
             maxOutputTokens: options.maxTokens || 1024,
             temperature: options.temperature ?? 0.7,
           },
-        }),
-      });
+        } ),
+      } );
 
-      if (!response.ok) {
-        const errorText = await response.text().catch(() => "");
-        throw new Error(`Gemini API error: ${response.status} ${response.statusText} ${errorText}`);
+      if ( !response.ok )
+      {
+        const errorText = await response.text().catch( () => "" );
+        throw new Error( `Gemini API error: ${ response.status } ${ response.statusText } ${ errorText }` );
       }
 
-      const data = (await response.json()) as {
+      const data = ( await response.json() ) as {
         candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
       };
 
-      const parts = data.candidates?.[0]?.content?.parts || [];
+      const parts = data.candidates?.[ 0 ]?.content?.parts || [];
       const text = parts
-        .map((p) => p.text || "")
-        .join("\n")
+        .map( ( p ) => p.text || "" )
+        .join( "\n" )
         .trim();
 
-      if (!text) {
-        throw new Error("Gemini retornou resposta vazia");
+      if ( !text )
+      {
+        throw new Error( "Gemini retornou resposta vazia" );
       }
 
       return text;
     };
 
-    return withRetry(doRequest, this.retryConfig);
+    return withRetry( doRequest, this.retryConfig );
   }
 
   /**
    * Verifica disponibilidade básica do modelo gemini-2.5-pro
    * com uma chamada "ping" barata.
    */
-  async isAvailable(): Promise<boolean> {
-    if (!this.apiKey) return false;
+  async isAvailable (): Promise<boolean>
+  {
+    if ( !this.apiKey ) return false;
 
-    const url = `${
-      this.baseUrl
-    }/gemini-2.5-pro:generateContent?key=${encodeURIComponent(this.apiKey)}`;
+    const url = `${ this.baseUrl
+      }/gemini-2.5-pro:generateContent?key=${ encodeURIComponent( this.apiKey ) }`;
 
-    try {
+    try
+    {
       const ok = await withRetry(
-        async () => {
-          const resp = await fetch(url, {
+        async () =>
+        {
+          const resp = await fetch( url, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              contents: [{ role: "user", parts: [{ text: "ping" }] }],
+            body: JSON.stringify( {
+              contents: [ { role: "user", parts: [ { text: "ping" } ] } ],
               generationConfig: { maxOutputTokens: 1, temperature: 0 },
-            }),
-          });
+            } ),
+          } );
           return resp.ok;
         },
         { maxRetries: 2, initialDelay: 500, maxDelay: 1500 }
       );
 
       return ok;
-    } catch {
+    } catch
+    {
       return false;
     }
   }
 }
 
 // ============================================================================
-// HUGGING FACE CLIENT
+// HUGGING FACE CLIENT - DESABILITADO
 // ============================================================================
 
-/**
- * Hugging Face Inference Client
- * Free tier: ~30k tokens/mês
- */
-export class HuggingFaceClient {
-  private readonly apiKey: string | null;
-  private readonly baseUrl = HUGGINGFACE_CONFIG.baseUrl;
-
-  constructor(apiKey?: string) {
-    this.apiKey = apiKey || (import.meta?.env?.VITE_HUGGINGFACE_API_KEY ?? "") || null;
-  }
-
-  async chat(
-    model: string,
-    messages: AIChatMessage[],
-    options: { maxTokens?: number; temperature?: number } = {}
-  ): Promise<string> {
-    const modelId =
-      HUGGINGFACE_CONFIG.models[model as keyof typeof HUGGINGFACE_CONFIG.models] || model;
-
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-    };
-
-    if (this.apiKey) {
-      headers.Authorization = `Bearer ${this.apiKey}`;
-    }
-
-    const prompt =
-      messages
-        .map((m) => {
-          if (m.role === "system") return `<|system|>\n${m.content}`;
-          if (m.role === "user") return `<|user|>\n${m.content}`;
-          return `<|assistant|>\n${m.content}`;
-        })
-        .join("\n") + "\n<|assistant|>\n";
-
-    const doRequest = async () => {
-      const response = await fetch(`${this.baseUrl}/${modelId}`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          inputs: prompt,
-          parameters: {
-            max_new_tokens: options.maxTokens || 1024,
-            temperature: options.temperature ?? 0.7,
-            return_full_text: false,
-          },
-        }),
-      });
-
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(`HuggingFace API error: ${error}`);
-      }
-
-      const result = await response.json();
-
-      if (Array.isArray(result)) {
-        return result[0]?.generated_text || "";
-      }
-
-      return result.generated_text || "";
-    };
-
-    return withRetry(doRequest, { maxRetries: 2, initialDelay: 1000 });
-  }
-
-  async isAvailable(): Promise<boolean> {
-    try {
-      const response = await fetch(`${this.baseUrl}/microsoft/Phi-3-mini-4k-instruct`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          inputs: "Hi",
-          parameters: { max_new_tokens: 1 },
-        }),
-      });
-      // 503 = modelo carregando, mas endpoint existe
-      return response.ok || response.status === 503;
-    } catch {
-      return false;
-    }
-  }
-}
+// /**
+//  * Hugging Face Inference Client - DESABILITADO
+//  * Modelos Phi-3, Mistral-7B e Llama-8B removidos
+//  */
+// export class HuggingFaceClient {
+//   async chat(): Promise<string> {
+//     throw new Error('HuggingFace client desabilitado');
+//   }
+//   async isAvailable(): Promise<boolean> {
+//     return false;
+//   }
+// }
 
 // ============================================================================
 // GITHUB MODELS CLIENT
@@ -456,52 +405,58 @@ export class HuggingFaceClient {
  * GitHub Models Client
  * Free com conta GitHub
  */
-export class GitHubModelsClient {
+export class GitHubModelsClient
+{
   private readonly apiKey: string;
   private readonly baseUrl = GITHUB_MODELS_CONFIG.baseUrl;
 
-  constructor(apiKey?: string) {
+  constructor ( apiKey?: string )
+  {
     this.apiKey =
-      apiKey || (import.meta === undefined ? "" : import.meta.env.VITE_GITHUB_TOKEN || "") || "";
+      apiKey || ( import.meta === undefined ? "" : import.meta.env.VITE_GITHUB_TOKEN || "" ) || "";
   }
 
-  async chat(
+  async chat (
     model: string,
     messages: AIChatMessage[],
     options: { maxTokens?: number; temperature?: number } = {}
-  ): Promise<string> {
-    if (!this.apiKey) {
-      throw new Error("GitHub Models token ausente (VITE_GITHUB_TOKEN)");
+  ): Promise<string>
+  {
+    if ( !this.apiKey )
+    {
+      throw new Error( "GitHub Models token ausente (VITE_GITHUB_TOKEN)" );
     }
 
     const modelId =
-      GITHUB_MODELS_CONFIG.models[model as keyof typeof GITHUB_MODELS_CONFIG.models] || model;
+      GITHUB_MODELS_CONFIG.models[ model as keyof typeof GITHUB_MODELS_CONFIG.models ] || model;
 
-    const doRequest = async () => {
-      const response = await fetch(`${this.baseUrl}/chat/completions`, {
+    const doRequest = async () =>
+    {
+      const response = await fetch( `${ this.baseUrl }/chat/completions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${this.apiKey}`,
+          Authorization: `Bearer ${ this.apiKey }`,
         },
-        body: JSON.stringify({
+        body: JSON.stringify( {
           model: modelId,
           messages,
           max_tokens: options.maxTokens || 1024,
           temperature: options.temperature ?? 0.7,
-        }),
-      });
+        } ),
+      } );
 
-      if (!response.ok) {
+      if ( !response.ok )
+      {
         const error = await response.text();
-        throw new Error(`GitHub Models API error: ${error}`);
+        throw new Error( `GitHub Models API error: ${ error }` );
       }
 
       const result = await response.json();
-      return result.choices?.[0]?.message?.content || "";
+      return result.choices?.[ 0 ]?.message?.content || "";
     };
 
-    return withRetry(doRequest, { maxRetries: 2, initialDelay: 1000 });
+    return withRetry( doRequest, { maxRetries: 2, initialDelay: 1000 } );
   }
 }
 
@@ -513,16 +468,18 @@ export class GitHubModelsClient {
  * Azure OpenAI Client
  * Requer assinatura Azure ativa
  */
-export class AzureOpenAIClient {
+export class AzureOpenAIClient
+{
   private readonly endpoint: string;
   private readonly apiKey: string;
   private readonly apiVersion = "2024-02-15-preview";
 
-  constructor(endpoint?: string, apiKey?: string) {
+  constructor ( endpoint?: string, apiKey?: string )
+  {
     this.endpoint = endpoint || AZURE_AI_CONFIG.endpoint;
     this.apiKey =
       apiKey ||
-      (import.meta === undefined ? "" : import.meta.env.VITE_AZURE_OPENAI_KEY || "") ||
+      ( import.meta === undefined ? "" : import.meta.env.VITE_AZURE_OPENAI_KEY || "" ) ||
       "";
   }
 
@@ -531,56 +488,63 @@ export class AzureOpenAIClient {
    * - 'gpt-4', 'embedding', etc. → mapeia via AZURE_AI_CONFIG.deployments
    * - se não houver alias, usa valor bruto como nome do deployment
    */
-  async chat(
+  async chat (
     deploymentOrAlias: string,
     messages: AIChatMessage[],
     options: { maxTokens?: number; temperature?: number } = {}
-  ): Promise<string> {
-    if (!this.apiKey) {
-      throw new Error("Azure OpenAI API key não configurada (VITE_AZURE_OPENAI_KEY)");
+  ): Promise<string>
+  {
+    if ( !this.apiKey )
+    {
+      throw new Error( "Azure OpenAI API key não configurada (VITE_AZURE_OPENAI_KEY)" );
     }
 
     const deployments = AZURE_AI_CONFIG.deployments;
     const deployment =
-      deployments[deploymentOrAlias as keyof typeof deployments] || deploymentOrAlias;
+      deployments[ deploymentOrAlias as keyof typeof deployments ] || deploymentOrAlias;
 
-    const url = `${this.endpoint}openai/deployments/${deployment}/chat/completions?api-version=${this.apiVersion}`;
+    const url = `${ this.endpoint }openai/deployments/${ deployment }/chat/completions?api-version=${ this.apiVersion }`;
 
-    const doRequest = async () => {
-      const response = await fetch(url, {
+    const doRequest = async () =>
+    {
+      const response = await fetch( url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "api-key": this.apiKey,
         },
-        body: JSON.stringify({
+        body: JSON.stringify( {
           messages,
           max_tokens: options.maxTokens || 1024,
           temperature: options.temperature ?? 0.7,
-        }),
-      });
+        } ),
+      } );
 
-      if (!response.ok) {
+      if ( !response.ok )
+      {
         const error = await response.text();
-        throw new Error(`Azure OpenAI API error: ${error}`);
+        throw new Error( `Azure OpenAI API error: ${ error }` );
       }
 
       const result = await response.json();
-      return result.choices?.[0]?.message?.content || "";
+      return result.choices?.[ 0 ]?.message?.content || "";
     };
 
-    return withRetry(doRequest, { maxRetries: 2, initialDelay: 1000 });
+    return withRetry( doRequest, { maxRetries: 2, initialDelay: 1000 } );
   }
 
-  async isAvailable(): Promise<boolean> {
-    if (!this.apiKey) return false;
+  async isAvailable (): Promise<boolean>
+  {
+    if ( !this.apiKey ) return false;
 
-    try {
-      const response = await fetch(`${this.endpoint}openai/models?api-version=${this.apiVersion}`, {
+    try
+    {
+      const response = await fetch( `${ this.endpoint }openai/models?api-version=${ this.apiVersion }`, {
         headers: { "api-key": this.apiKey },
-      });
+      } );
       return response.ok;
-    } catch {
+    } catch
+    {
       return false;
     }
   }
@@ -602,38 +566,42 @@ export class AzureOpenAIClient {
  *     model: 'gemini-2.5-pro' | 'gpt-4o' | ...
  *   })
  */
-export class UnifiedAIClient {
+export class UnifiedAIClient
+{
   private readonly gemini: GeminiClient;
   private readonly huggingface: HuggingFaceClient;
   private readonly github: GitHubModelsClient;
   private readonly azure: AzureOpenAIClient;
-  private preferredProvider: AIModelConfig["provider"] = "gemini";
+  private preferredProvider: AIModelConfig[ "provider" ] = "gemini";
 
-  constructor() {
+  constructor ()
+  {
     this.gemini = new GeminiClient();
     this.huggingface = new HuggingFaceClient();
     this.github = new GitHubModelsClient();
     this.azure = new AzureOpenAIClient();
   }
 
-  setPreferredProvider(provider: AIModelConfig["provider"]) {
+  setPreferredProvider ( provider: AIModelConfig[ "provider" ] )
+  {
     this.preferredProvider = provider;
   }
 
-  async chat(
+  async chat (
     messages: AIChatMessage[],
     options: {
       model?: string;
-      provider?: AIModelConfig["provider"];
+      provider?: AIModelConfig[ "provider" ];
       maxTokens?: number;
       temperature?: number;
     } = {}
-  ): Promise<{ content: string; provider: string; model: string }> {
+  ): Promise<{ content: string; provider: string; model: string }>
+  {
     const requested = options.provider || this.preferredProvider;
 
     // Monta lista de provedores, sem duplicatas, na ordem de preferência:
     // pedido → gemini → github → huggingface → azure
-    const rawOrder: AIModelConfig["provider"][] = [
+    const rawOrder: AIModelConfig[ "provider" ][] = [
       requested,
       "gemini",
       "github",
@@ -641,40 +609,45 @@ export class UnifiedAIClient {
       "azure",
     ];
 
-    const providers: AIModelConfig["provider"][] = [];
-    for (const p of rawOrder) {
-      if (!providers.includes(p)) providers.push(p);
+    const providers: AIModelConfig[ "provider" ][] = [];
+    for ( const p of rawOrder )
+    {
+      if ( !providers.includes( p ) ) providers.push( p );
     }
 
-    for (const p of providers) {
-      try {
+    for ( const p of providers )
+    {
+      try
+      {
         let content: string;
         let model: string;
 
-        switch (p) {
+        switch ( p )
+        {
           case "gemini": {
             model = options.model || "gemini-2.5-pro";
-            content = await this.gemini.chat(model, messages, options);
+            content = await this.gemini.chat( model, messages, options );
             return { content, provider: "gemini", model };
           }
 
           case "github": {
             model = options.model || "gpt-4o-mini";
-            content = await this.github.chat(model, messages, options);
+            content = await this.github.chat( model, messages, options );
             return { content, provider: "github", model };
           }
 
           case "huggingface": {
             model = options.model || "phi-3";
-            content = await this.huggingface.chat(model, messages, options);
+            content = await this.huggingface.chat( model, messages, options );
             return { content, provider: "huggingface", model };
           }
 
           case "azure": {
-            if (await this.azure.isAvailable()) {
+            if ( await this.azure.isAvailable() )
+            {
               // Usa alias lógico, mapeado dentro do AzureOpenAIClient
               model = options.model || "gpt-4";
-              content = await this.azure.chat(model, messages, options);
+              content = await this.azure.chat( model, messages, options );
               return { content, provider: "azure", model };
             }
             continue;
@@ -683,32 +656,38 @@ export class UnifiedAIClient {
           default:
             continue;
         }
-      } catch (error) {
-        console.warn(`Provider ${p} failed:`, error);
+      } catch ( error )
+      {
+        console.warn( `Provider ${ p } failed:`, error );
         continue;
       }
     }
 
-    throw new Error("All AI providers failed");
+    throw new Error( "All AI providers failed" );
   }
 
-  async getAvailableProviders(): Promise<string[]> {
+  async getAvailableProviders (): Promise<string[]>
+  {
     const available: string[] = [];
 
-    if (await this.gemini.isAvailable()) {
-      available.push("gemini");
+    if ( await this.gemini.isAvailable() )
+    {
+      available.push( "gemini" );
     }
 
-    if (await this.huggingface.isAvailable()) {
-      available.push("huggingface");
+    if ( await this.huggingface.isAvailable() )
+    {
+      available.push( "huggingface" );
     }
 
-    if (import.meta?.env?.VITE_GITHUB_TOKEN) {
-      available.push("github");
+    if ( import.meta?.env?.VITE_GITHUB_TOKEN )
+    {
+      available.push( "github" );
     }
 
-    if (await this.azure.isAvailable()) {
-      available.push("azure");
+    if ( await this.azure.isAvailable() )
+    {
+      available.push( "azure" );
     }
 
     return available;
