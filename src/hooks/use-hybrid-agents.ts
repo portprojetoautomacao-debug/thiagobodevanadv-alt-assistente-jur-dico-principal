@@ -138,7 +138,12 @@ export function useHybridAgents(options: UseHybridAgentsOptions = {}) {
     return hybridList.map((item) => ({
       agentId: item.agentId,
       hasHybridVersion: true,
-      type: item.hasLangGraph && item.hasTraditional ? "hybrid" : item.hasLangGraph ? "langgraph" : "traditional",
+      type:
+        item.hasLangGraph && item.hasTraditional
+          ? "hybrid"
+          : item.hasLangGraph
+            ? "langgraph"
+            : "traditional",
     }));
   }, []);
 

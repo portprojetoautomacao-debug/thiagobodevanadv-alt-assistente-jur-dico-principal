@@ -452,7 +452,10 @@ async function consultarComunicacoes(
     console.log(`[DJEN] Consultando: ${url}`);
     const response = await fetch(url, {
       method: "GET",
-      headers: { Accept: "application/json" },
+      headers: {
+        Accept: "application/json",
+        "User-Agent": "PJe-DataCollector/1.0",
+      },
       signal: controller.signal,
     });
     clearTimeout(timeoutId);

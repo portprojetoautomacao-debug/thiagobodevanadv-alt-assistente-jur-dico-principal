@@ -1,0 +1,24 @@
+[server]
+port = 8501
+address = "0.0.0.0"
+headless = true
+enableCORS = true
+enableXsrfProtection = true
+enableWebsocketCompression = true
+
+[browser]
+gatherUsageStats = false
+
+[client]
+showErrorDetails = true
+toolbarMode = "minimal"
+
+# Security (opcional - para produção)
+# [server.security]
+# enableXsrfProtection = true
+# enableWebsocketCompression = true
+
+# Para deploy público, considere adicionar:
+# [browser]
+# serverAddress = "seu-dominio.com"
+# serverPort = 443

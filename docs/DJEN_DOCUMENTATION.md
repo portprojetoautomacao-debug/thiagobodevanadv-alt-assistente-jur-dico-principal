@@ -116,7 +116,7 @@ Accept: application/json
 User-Agent: PJe-DataCollector/1.0
 ```
 
-⚠️ **CRÍTICO**: 
+⚠️ **CRÍTICO**:
 - Sem `Accept: application/json` a resposta pode vir em HTML/PDF
 - Sem `User-Agent` correto a API retorna `403 Forbidden`
 
@@ -448,7 +448,7 @@ Embora não documentado oficialmente, recomenda-se:
 ### Erro 400 Bad Request
 
 **Causa**: Parâmetros faltando ou inválidos
-**Solução**: 
+**Solução**:
 - Garantir que siglaTribunal, dataDisponibilizacaoInicio e dataDisponibilizacaoFim estão presentes
 - Fornecer pelo menos um dos parâmetros de busca (nomeAdvogado, numeroOab/ufOab, nomeParte, ou numeroProcesso)
 - Validar formato da data (YYYY-MM-DD)
@@ -462,7 +462,7 @@ Embora não documentado oficialmente, recomenda-se:
 ### Erro 404 Not Found
 
 **Causa**: Tribunal ou endpoint inválidos
-**Solução**: 
+**Solução**:
 - Verificar sigla do tribunal (case-sensitive)
 - Usar o endpoint correto: `/api/v1/comunicacao`
 - Confirmar que o tribunal está disponível na API
@@ -470,7 +470,7 @@ Embora não documentado oficialmente, recomenda-se:
 ### Timeout
 
 **Causa**: Tribunal com volume alto de publicações (ex: TJSP)
-**Solução**: 
+**Solução**:
 - Aumentar timeout para 90-120 segundos
 - Consultar dias úteis (menos volume)
 

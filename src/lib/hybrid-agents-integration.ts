@@ -330,7 +330,11 @@ export function getHybridStats(): HybridStats {
   return { ...statsData };
 }
 
-export function listHybridAgents(): Array<{ agentId: string; hasLangGraph: boolean; hasTraditional: boolean }> {
+export function listHybridAgents(): Array<{
+  agentId: string;
+  hasLangGraph: boolean;
+  hasTraditional: boolean;
+}> {
   warnDisabledOnce();
   return Array.from(HYBRID_AGENT_IDS).map((agentId) => ({
     agentId,

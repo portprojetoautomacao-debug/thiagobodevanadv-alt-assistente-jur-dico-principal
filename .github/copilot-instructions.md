@@ -3,57 +3,763 @@
 # This file is automatically loaded by GitHub Copilot
 ---
 
-# 🚨 OBJETIVO ATUAL: MODO MANUTENÇÃO - PRODUÇÃO ESTÁVEL
+# 🚨 OBJETIVO ATUAL: MIGRAÇÃO URGENTE PARA 100% PYTHON
 
 > **⚠️ ATENÇÃO MÁXIMA - LEIA ANTES DE QUALQUER AÇÃO**
 >
-> **O desenvolvimento de novas funcionalidades está ENCERRADO.**
+> **O sistema React/Node.js atual NÃO ESTÁ FUNCIONANDO CORRETAMENTE.**
 >
-> **Todas as features já foram implementadas e estão em produção.**
+> **MIGRAÇÃO IMEDIATA para 100% Python está EM ANDAMENTO.**
 >
-> **O objetivo agora é EXCLUSIVAMENTE manter o sistema funcionando de forma estável.**
+> **Prazo: 2-3 semanas | Sem coexistência - SUBSTITUIÇÃO DIRETA**
 
-## 🎯 Diretrizes de Manutenção
+## 🎯 Diretrizes de Migração
 
 ### ✅ O QUE FAZER:
 
-- **Corrigir bugs** que afetem funcionalidades existentes
-- **Manter compatibilidade** com todas as integrações (DJEN, DataJud, Google Calendar, etc.)
-- **Garantir que os testes passem** - não introduzir regressões
-- **Atualizar dependências** apenas quando necessário para segurança ou compatibilidade
-- **Monitorar e resolver** erros de produção (Sentry, logs)
-- **Manter a documentação** atualizada com correções
+- **Implementar em Python** - Todas as novas implementações em Python puro
+- **Usar Streamlit** - Frontend 100% Streamlit (sem React)
+- **Usar FastAPI** - Backend REST com FastAPI
+- **Usar LangChain** - Agentes reais (não stubs)
+- **Usar Pandas** - Manipulação de dados
+- **Usar scikit-learn** - Machine Learning integrado
+- **Usar Selenium + PyAutoGUI** - Automações GUI
+- **Seguir o PLANO_MIGRACAO_ACELERADA_PYTHON.md** - Guia completo
 
 ### ❌ O QUE NÃO FAZER:
 
-- **NÃO adicionar novas funcionalidades** - o escopo está fechado
-- **NÃO refatorar código** que está funcionando - "if it ain't broke, don't fix it"
-- **NÃO alterar arquitetura** ou estrutura de pastas
-- **NÃO adicionar novos agentes** ou modificar comportamento dos existentes
-- **NÃO alterar fluxos de automação** que estão operando corretamente
-- **NÃO introduzir novas dependências** sem necessidade crítica
-- **NÃO desabilitar funcionalidades** existentes sem autorização explícita do operador
-- **NÃO remover features** que estão em produção funcionando corretamente
-- **NÃO desabilitar Hybrid Agents Integration** - sistema obrigatório e deve estar sempre ativo
+- **NÃO manter compatibilidade com React/Node.js** - substituição total
+- **NÃO criar código TypeScript novo** - apenas Python
+- **NÃO usar stubs** - implementar com LangChain real
+- **NÃO perder tempo com coexistência** - sistema antigo não funciona
+- **NÃO adicionar dependências Node.js** - stack 100% Python
 
-### 🔧 Critérios para Alterações:
+### 🔧 Stack Tecnológica OBRIGATÓRIA:
 
-1. **Impacto em produção**: A mudança resolve um problema real em produção?
-2. **Risco mínimo**: A alteração é cirúrgica e não afeta outras partes do sistema?
-3. **Testes passando**: Todos os testes continuam funcionando após a mudança?
-4. **Rollback fácil**: Se der problema, podemos reverter rapidamente?
-5. **Manter funcionalidades**: NUNCA desabilite ou remova funcionalidades existentes sem autorização explícita
-6. **Compatibilidade Vercel**: Garantir que imports e caminhos funcionem no ambiente serverless do Vercel
-7. **Hybrid Agents sempre ativo**: Sistema de agentes híbridos é OBRIGATÓRIO em todos os ambientes
+| Camada | Tecnologia |
+|--------|------------|
+| **Frontend** | Streamlit |
+| **Backend** | FastAPI |
+| **Dados** | Pandas |
+| **ML** | scikit-learn |
+| **Agentes** | LangChain |
+| **Automação** | Selenium + PyAutoGUI |
+| **Scheduler** | APScheduler |
+| **Cache** | Redis (Upstash) |
+| **LLM** | Google Gemini via LangChain |
 
-### 📊 Prioridade de Correções:
+### 📅 Cronograma (2-3 semanas):
 
-| Prioridade     | Tipo                                | Ação                     |
+**SEMANA 1:** Backend FastAPI + Agentes LangChain
+**SEMANA 2:** Frontend Streamlit completo
+**SEMANA 3:** Automações + Deploy
+
+### 📊 Prioridade de Implementação:
+
+| Prioridade     | Componente                          | Ação                     |
 | -------------- | ----------------------------------- | ------------------------ |
-| 🔴 **Crítica** | Sistema fora do ar, perda de dados  | Corrigir IMEDIATAMENTE   |
-| 🟠 **Alta**    | Funcionalidade principal quebrada corrigir imediatamente    |
-| 🟡 **Média**   | Bug que afeta UX mas tem workaround | Corrigir imediatamente|
-| 🟢 **Baixa**   | Melhorias cosméticas, typos, analisar se melhorara o desempenho e assim corrigir |
+| 🔴 **Crítica** | Backend FastAPI + Routers           | Implementar IMEDIATAMENTE|
+| 🔴 **Crítica** | 16 Agentes LangChain reais          | Implementar IMEDIATAMENTE|
+| 🟠 **Alta**    | Dashboard Streamlit                 | Implementar semana 2     |
+| 🟠 **Alta**    | Selenium DJEN/PJe                   | Implementar semana 3     |
+| 🟡 **Média**   | ML Models (scikit-learn)            | Implementar semana 2-3   |
+| 🟢 **Baixa**   | Testes e otimizações                | Implementar final        |
+
+---
+
+## 🛠️ FERRAMENTAS PYTHON OBRIGATÓRIAS
+
+### 📦 Dependências Core (SEMPRE USE ESTAS)
+
+```python
+# requirements.txt - STACK COMPLETO
+
+# === FRONTEND ===
+streamlit==1.32.0              # Framework frontend web interativo
+plotly==5.18.0                 # Gráficos interativos (substitui Recharts)
+altair==5.2.0                  # Gráficos declarativos (alternativa)
+
+# === BACKEND ===
+fastapi==0.109.0               # Framework REST API (substitui Express.js)
+uvicorn[standard]==0.27.0      # Servidor ASGI
+pydantic==2.6.0                # Validação de dados (substitui Zod)
+
+# === DADOS ===
+pandas==2.2.0                  # Manipulação de dados (substitui lodash)
+numpy==1.26.3                  # Computação numérica
+
+# === AGENTES IA ===
+langchain==0.1.6               # Framework agentes (substitui stubs TypeScript)
+langchain-google-genai==0.0.9  # Integração Gemini
+google-generativeai==0.3.2     # SDK oficial Gemini
+
+# === AUTOMAÇÃO WEB ===
+selenium==4.17.0               # Web scraping (substitui Puppeteer)
+webdriver-manager==4.0.1       # Gestão de drivers Chrome/Firefox
+beautifulsoup4==4.12.3         # Parse HTML
+lxml==5.1.0                    # Parser XML/HTML rápido
+
+# === AUTOMAÇÃO GUI ===
+pyautogui==0.9.54              # Controle mouse/teclado (NOVO)
+pillow==10.2.0                 # Manipulação imagens
+opencv-python==4.9.0           # Visão computacional (opcional)
+
+# === MACHINE LEARNING ===
+scikit-learn==1.4.0            # ML models (NOVO - predição, clustering)
+nltk==3.8.1                    # NLP (análise sentimento)
+textblob==0.18.0               # Análise texto simplificada
+
+# === CACHE E STORAGE ===
+redis==5.0.1                   # Cliente Redis
+httpx==0.26.0                  # HTTP async client
+python-dotenv==1.0.0           # Variáveis ambiente
+
+# === SCHEDULER ===
+apscheduler==3.10.4            # Cron jobs (substitui Vercel Cron)
+
+# === INTEGRAÇÕES ===
+google-api-python-client==2.116.0  # Google Calendar
+google-auth==2.27.0                # OAuth Google
+qdrant-client==1.7.3               # Vector DB (opcional)
+sentence-transformers==2.3.1       # Embeddings (opcional)
+
+# === PDF E DOCUMENTOS ===
+pypdf2==3.0.1                  # Leitura PDFs
+python-docx==1.1.0             # Criação Word docs
+reportlab==4.0.9               # Criação PDFs
+
+# === UTILS ===
+python-dateutil==2.8.2         # Manipulação datas
+pytz==2024.1                   # Fusos horários
+requests==2.31.0               # HTTP requests
+pyyaml==6.0.1                  # Parse YAML
+```
+
+---
+
+## 🎯 MAPA DE SUBSTITUIÇÃO: Node.js → Python
+
+### Frontend: React → Streamlit
+
+| Funcionalidade React | Biblioteca Node.js | Substituto Python | Comando |
+|---------------------|-------------------|-------------------|---------|
+| **Componentes UI** | React, JSX | Streamlit | `st.button()`, `st.form()` |
+| **Estado global** | Zustand, Redux | st.session_state | `st.session_state.key = value` |
+| **Roteamento** | React Router | Streamlit pages | Arquivos em `pages/1_Nome.py` |
+| **Gráficos** | Recharts, Chart.js | Plotly, Altair | `px.line()`, `px.bar()` |
+| **Tabelas** | TanStack Table | st.dataframe(Pandas) | `st.dataframe(df)` |
+| **Formulários** | React Hook Form | st.form | `with st.form():` |
+| **Modais** | Radix UI Dialog | st.dialog | `@st.dialog def modal():` |
+| **Notificações** | react-hot-toast | st.toast | `st.success()`, `st.error()` |
+| **Loading** | Skeleton, Spinner | st.spinner | `with st.spinner():` |
+| **Validação** | Zod | Pydantic | `class Model(BaseModel):` |
+
+### Backend: Express/Vercel → FastAPI
+
+| Funcionalidade | Node.js | Python | Exemplo |
+|---------------|---------|--------|---------|
+| **Servidor** | Express.js, Vercel | FastAPI + Uvicorn | `app = FastAPI()` |
+| **Rotas** | app.get/post | @app.get/post | `@router.post("/api/agents")` |
+| **Middleware** | express middleware | FastAPI middleware | `app.add_middleware(CORSMiddleware)` |
+| **Validação** | Zod schemas | Pydantic models | `class Request(BaseModel):` |
+| **Async** | async/await | async/await | `async def endpoint():` |
+| **Error handling** | try/catch | try/except | `try: ... except Exception as e:` |
+| **Logging** | console.log | logging | `logger.info()`, `logger.error()` |
+
+### Dados: JavaScript → Pandas
+
+| Operação | JavaScript/lodash | Pandas | Exemplo |
+|----------|------------------|--------|---------|
+| **Filtrar array** | `.filter()` | `.query()` | `df.query("status == 'ativo'")` |
+| **Mapear** | `.map()` | `.apply()` | `df['nova'] = df['col'].apply(func)` |
+| **Agrupar** | `.groupBy()` | `.groupby()` | `df.groupby('status').count()` |
+| **Ordenar** | `.sort()` | `.sort_values()` | `df.sort_values('data', ascending=False)` |
+| **Reduzir** | `.reduce()` | `.agg()` | `df.groupby('x').agg({'y': 'sum'})` |
+| **Juntar** | `.concat()` | `pd.concat()` | `pd.concat([df1, df2])` |
+| **Mesclar** | `.merge()` | `.merge()` | `df1.merge(df2, on='id')` |
+
+### Agentes: TypeScript Stubs → LangChain
+
+| Funcionalidade | TypeScript (Atual) | LangChain Python | Exemplo |
+|---------------|-------------------|------------------|---------|
+| **Criar agente** | Função async | AgentExecutor | `AgentExecutor(agent=agent, tools=tools)` |
+| **Tools** | Funções manuais | LangChain Tools | `@tool def minha_tool():` |
+| **Prompts** | Template strings | PromptTemplate | `PromptTemplate(template=prompt)` |
+| **Memória** | Variável local | ConversationBufferMemory | `memory = ConversationBufferMemory()` |
+| **LLM** | Fetch Gemini API | ChatGoogleGenerativeAI | `llm = ChatGoogleGenerativeAI()` |
+| **Streaming** | Generator async | Async generator | `async for chunk in agent.stream():` |
+| **Chains** | Callbacks manuais | LangChain Chains | `chain = prompt \| llm \| parser` |
+
+### Automação: Puppeteer/Extension → Selenium + PyAutoGUI
+
+| Funcionalidade | Node.js/Extension | Python | Exemplo |
+|---------------|------------------|--------|---------|
+| **Navegador** | Puppeteer | Selenium WebDriver | `driver = webdriver.Chrome()` |
+| **Selecionar elemento** | `page.waitForSelector()` | `driver.find_element(By.ID)` | `el = driver.find_element(By.ID, "btn")` |
+| **Clicar** | `element.click()` | `element.click()` | `el.click()` |
+| **Digitar** | `element.type()` | `element.send_keys()` | `el.send_keys("texto")` |
+| **Screenshot** | `page.screenshot()` | `pyautogui.screenshot()` | `pyautogui.screenshot("img.png")` |
+| **Mouse** | Não tem | PyAutoGUI | `pyautogui.click(x=100, y=200)` |
+| **Teclado** | Não tem | PyAutoGUI | `pyautogui.press('enter')` |
+| **Esperar** | `page.waitFor()` | `WebDriverWait` | `wait.until(EC.element_located())` |
+
+### Machine Learning: NOVO (Não existia)
+
+| Funcionalidade | Biblioteca | Uso | Exemplo |
+|---------------|-----------|-----|---------|
+| **Predição sucesso** | RandomForestClassifier | Prever resultado | `model.predict_proba(X)` |
+| **Estimativa tempo** | GradientBoostingRegressor | Prever duração | `model.predict(X)` |
+| **Clustering** | KMeans | Agrupar casos | `kmeans.fit(X)` |
+| **Sentimento** | NLTK, TextBlob | Análise texto | `TextBlob(text).sentiment` |
+| **Feature engineering** | StandardScaler | Normalizar | `scaler.fit_transform(X)` |
+| **Validação** | train_test_split | Treino/teste | `X_train, X_test = train_test_split(X, y)` |
+| **Métricas** | accuracy_score, etc | Avaliar | `accuracy_score(y_true, y_pred)` |
+
+---
+
+## 📖 GUIA DE USO DAS FERRAMENTAS
+
+### 1️⃣ Streamlit - Frontend
+
+**Substituir React JSX por:**
+```python
+import streamlit as st
+
+# === LAYOUT ===
+st.set_page_config(layout="wide", page_title="Assistente Jurídico")
+st.title("⚖️ Dashboard")
+st.markdown("### Seção")
+
+# === COLUNAS (substituir CSS Grid) ===
+col1, col2, col3 = st.columns(3)
+with col1:
+    st.metric("Processos", "245", "+12")
+
+# === TABS (substituir React Tabs) ===
+tab1, tab2 = st.tabs(["Geral", "Detalhes"])
+with tab1:
+    st.write("Conteúdo tab 1")
+
+# === FORMS (substituir React Hook Form) ===
+with st.form("meu_form"):
+    nome = st.text_input("Nome")
+    email = st.text_input("Email")
+    submitted = st.form_submit_button("Enviar")
+    if submitted:
+        st.success(f"Enviado: {nome}")
+
+# === BOTÕES (substituir Button) ===
+if st.button("Executar"):
+    with st.spinner("Processando..."):
+        # Lógica
+        st.success("✅ Concluído!")
+
+# === TABELAS (substituir TanStack Table) ===
+import pandas as pd
+df = pd.DataFrame({"A": [1,2,3], "B": [4,5,6]})
+st.dataframe(df, use_container_width=True)
+
+# === GRÁFICOS (substituir Recharts) ===
+import plotly.express as px
+fig = px.line(df, x="data", y="valor")
+st.plotly_chart(fig, use_container_width=True)
+
+# === ESTADO (substituir Zustand) ===
+if "contador" not in st.session_state:
+    st.session_state.contador = 0
+
+if st.button("Incrementar"):
+    st.session_state.contador += 1
+st.write(f"Contador: {st.session_state.contador}")
+
+# === CACHE (otimização) ===
+@st.cache_data(ttl=600)  # Cache por 10min
+def buscar_processos():
+    return requests.get(API_URL).json()
+```
+
+### 2️⃣ FastAPI - Backend REST
+
+**Substituir Vercel Functions por:**
+```python
+from fastapi import FastAPI, HTTPException, Depends
+from pydantic import BaseModel
+import uvicorn
+
+app = FastAPI()
+
+# === MODELS (substituir Zod) ===
+class ProcessCreate(BaseModel):
+    numero_cnj: str
+    titulo: str
+    autor: str
+    reu: str
+
+# === ENDPOINTS (substituir export default handler) ===
+@app.get("/api/processes")
+async def get_processes():
+    """GET /api/processes - Lista processos"""
+    # Lógica
+    return {"processes": [...]}
+
+@app.post("/api/processes")
+async def create_process(data: ProcessCreate):
+    """POST /api/processes - Criar processo"""
+    # Lógica
+    return {"id": "123", "status": "created"}
+
+# === ERROR HANDLING ===
+@app.get("/api/process/{id}")
+async def get_process(id: str):
+    process = find_process(id)
+    if not process:
+        raise HTTPException(status_code=404, detail="Processo não encontrado")
+    return process
+
+# === MIDDLEWARE CORS ===
+from fastapi.middleware.cors import CORSMiddleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# === STARTUP ===
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+```
+
+### 3️⃣ LangChain - Agentes IA
+
+**Substituir stubs TypeScript por:**
+```python
+from langchain.agents import AgentExecutor, create_react_agent
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain.prompts import PromptTemplate
+from langchain.memory import ConversationBufferMemory
+from langchain.tools import tool
+
+# === LLM ===
+llm = ChatGoogleGenerativeAI(
+    model="gemini-2.0-flash-exp",
+    temperature=0.7,
+    google_api_key=os.getenv("GEMINI_API_KEY")
+)
+
+# === TOOLS (substituir funções manuais) ===
+@tool
+def buscar_processo(numero_cnj: str) -> str:
+    """Busca processo por número CNJ"""
+    # Lógica
+    return f"Processo {numero_cnj} encontrado"
+
+@tool
+def calcular_prazo(data_inicio: str, dias: int) -> str:
+    """Calcula prazo processual"""
+    # Lógica
+    return "15/01/2026"
+
+tools = [buscar_processo, calcular_prazo]
+
+# === PROMPT ===
+prompt = PromptTemplate(
+    template="""Você é {name}, {role}.
+
+    Tarefa: {input}
+
+    {agent_scratchpad}
+    """,
+    input_variables=["name", "role", "input", "agent_scratchpad"]
+)
+
+# === AGENT ===
+agent = create_react_agent(llm, tools, prompt)
+
+# === EXECUTOR ===
+executor = AgentExecutor(
+    agent=agent,
+    tools=tools,
+    memory=ConversationBufferMemory(),
+    verbose=True,
+    handle_parsing_errors=True,
+    max_iterations=5
+)
+
+# === EXECUÇÃO ===
+result = await executor.ainvoke({
+    "name": "Harvey Specter",
+    "role": "Estrategista-chefe",
+    "input": "Analisar viabilidade de ação trabalhista"
+})
+print(result["output"])
+
+# === STREAMING ===
+async for chunk in executor.astream({...}):
+    if "output" in chunk:
+        print(chunk["output"], end="")
+```
+
+### 4️⃣ Pandas - Manipulação de Dados
+
+**Substituir operações JavaScript por:**
+```python
+import pandas as pd
+
+# === CRIAR DATAFRAME (substituir arrays) ===
+df = pd.DataFrame({
+    'processo': ['001', '002', '003'],
+    'status': ['ativo', 'suspenso', 'ativo'],
+    'valor': [10000, 20000, 15000]
+})
+
+# === FILTRAR (substituir .filter()) ===
+ativos = df[df['status'] == 'ativo']
+altos_valores = df[df['valor'] > 15000]
+multiplos = df[(df['status'] == 'ativo') & (df['valor'] > 10000)]
+
+# === AGRUPAR (substituir .groupBy()) ===
+por_status = df.groupby('status').agg({
+    'valor': ['sum', 'mean', 'count']
+})
+
+# === ORDENAR (substituir .sort()) ===
+ordenado = df.sort_values('valor', ascending=False)
+
+# === ESTATÍSTICAS (NOVO) ===
+total = df['valor'].sum()
+media = df['valor'].mean()
+mediana = df['valor'].median()
+desvio = df['valor'].std()
+
+# === PIVOT TABLES (NOVO) ===
+pivot = df.pivot_table(
+    values='valor',
+    index='status',
+    aggfunc=['sum', 'count']
+)
+
+# === EXPORT (substituir CSV export) ===
+df.to_csv('processos.csv', index=False)
+df.to_excel('processos.xlsx', index=False)
+df.to_json('processos.json', orient='records')
+```
+
+### 5️⃣ Selenium - Web Scraping
+
+**Substituir Puppeteer/Chrome Extension por:**
+```python
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.service import Service
+
+# === SETUP DRIVER ===
+options = webdriver.ChromeOptions()
+options.add_argument('--headless')
+options.add_argument('--no-sandbox')
+options.add_argument('--disable-dev-shm-usage')
+
+service = Service(ChromeDriverManager().install())
+driver = webdriver.Chrome(service=service, options=options)
+
+# === NAVEGAR ===
+driver.get("https://example.com")
+
+# === ESPERAR ELEMENTO (substituir waitForSelector) ===
+wait = WebDriverWait(driver, 10)
+elemento = wait.until(
+    EC.presence_of_element_located((By.ID, "campo"))
+)
+
+# === SELECIONAR ELEMENTOS ===
+# Por ID
+el_id = driver.find_element(By.ID, "meu-id")
+# Por classe
+el_class = driver.find_element(By.CLASS_NAME, "minha-classe")
+# Por XPath
+el_xpath = driver.find_element(By.XPATH, "//div[@class='x']")
+# Por CSS
+el_css = driver.find_element(By.CSS_SELECTOR, "div.classe")
+# Múltiplos
+elementos = driver.find_elements(By.TAG_NAME, "a")
+
+# === INTERAGIR ===
+elemento.click()
+elemento.send_keys("texto")
+elemento.clear()
+texto = elemento.text
+atributo = elemento.get_attribute("href")
+
+# === JAVASCRIPT ===
+driver.execute_script("window.scrollTo(0, 500)")
+
+# === SCREENSHOT ===
+driver.save_screenshot("tela.png")
+
+# === FECHAR ===
+driver.quit()
+```
+
+### 6️⃣ PyAutoGUI - Automação GUI
+
+**NOVO - Não existia no sistema atual:**
+```python
+import pyautogui
+import time
+
+# === SEGURANÇA ===
+pyautogui.FAILSAFE = True  # Move mouse para canto = para tudo
+pyautogui.PAUSE = 0.5      # Pausa entre comandos
+
+# === MOUSE ===
+pyautogui.click(x=100, y=200)           # Clicar em coordenadas
+pyautogui.moveTo(x=500, y=300)          # Mover mouse
+pyautogui.drag(x=100, y=0, duration=1)  # Arrastar
+pyautogui.scroll(10)                    # Scroll up
+pyautogui.scroll(-10)                   # Scroll down
+
+# === TECLADO ===
+pyautogui.write("Texto para digitar")   # Digitar texto
+pyautogui.press('enter')                # Pressionar tecla
+pyautogui.hotkey('ctrl', 'c')           # Atalho (Ctrl+C)
+pyautogui.press(['tab', 'tab', 'enter']) # Múltiplas teclas
+
+# === SCREENSHOT ===
+screenshot = pyautogui.screenshot()
+screenshot.save("tela.png")
+
+# === LOCALIZAR IMAGEM ===
+posicao = pyautogui.locateCenterOnScreen('botao.png', confidence=0.8)
+if posicao:
+    pyautogui.click(posicao)
+
+# === OBTER INFO ===
+x, y = pyautogui.position()  # Posição mouse
+largura, altura = pyautogui.size()  # Tamanho tela
+
+# === AUTOMAÇÃO PJe (Exemplo) ===
+def protocolar_peticao(arquivo_pdf: str):
+    """Protocola petição no PJe"""
+    # 1. Selenium abre página
+    driver.find_element(By.ID, "btnUpload").click()
+    time.sleep(1)
+
+    # 2. PyAutoGUI preenche janela nativa de upload
+    pyautogui.write(arquivo_pdf)
+    pyautogui.press('enter')
+
+    # 3. Selenium clica em protocolar
+    driver.find_element(By.ID, "btnProtocolar").click()
+```
+
+### 7️⃣ scikit-learn - Machine Learning
+
+**NOVO - Não existia no sistema atual:**
+```python
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingRegressor
+from sklearn.cluster import KMeans
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.metrics import accuracy_score, mean_absolute_error
+import pickle
+
+# === PREDIÇÃO DE SUCESSO ===
+# Preparar dados
+X = df[['tipo_acao', 'valor_causa', 'tribunal']]
+y = df['sucesso']  # 1 = ganhou, 0 = perdeu
+
+# Encoding de categorias
+encoder = LabelEncoder()
+X['tipo_acao'] = encoder.fit_transform(X['tipo_acao'])
+
+# Split treino/teste
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+# Treinar modelo
+model = RandomForestClassifier(n_estimators=100)
+model.fit(X_train, y_train)
+
+# Validação cruzada
+scores = cross_val_score(model, X, y, cv=5)
+print(f"Acurácia: {scores.mean():.2%}")
+
+# Prever novo caso
+probabilidade = model.predict_proba([[features]])[0][1]
+print(f"Probabilidade de sucesso: {probabilidade:.1%}")
+
+# Salvar modelo
+with open('models/success_predictor.pkl', 'wb') as f:
+    pickle.dump(model, f)
+
+# === ESTIMATIVA DE DURAÇÃO ===
+model = GradientBoostingRegressor()
+model.fit(X_train, y_train_duracao)
+duracao_prevista = model.predict([[features]])
+
+# === CLUSTERING ===
+kmeans = KMeans(n_clusters=5)
+clusters = kmeans.fit_predict(X)
+df['cluster'] = clusters
+```
+
+### 8️⃣ APScheduler - Cron Jobs
+
+**Substituir Vercel Cron por:**
+```python
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
+
+scheduler = BackgroundScheduler(timezone='America/Sao_Paulo')
+
+# === CRON (horário fixo) ===
+scheduler.add_job(
+    minha_funcao,
+    CronTrigger(hour='12', minute='0'),  # 12:00 todo dia
+    id='job_diario'
+)
+
+# === INTERVAL (repetir) ===
+scheduler.add_job(
+    outra_funcao,
+    'interval',
+    minutes=15,  # A cada 15 minutos
+    id='job_periodico'
+)
+
+# === INICIAR ===
+scheduler.start()
+
+# === LISTAR JOBS ===
+jobs = scheduler.get_jobs()
+for job in jobs:
+    print(f"{job.id}: {job.next_run_time}")
+
+# === PARAR ===
+scheduler.shutdown()
+```
+
+### 9️⃣ Redis/Upstash - Persistência
+
+**Substituir KV store por:**
+```python
+import redis
+import json
+import os
+
+# === CONEXÃO ===
+redis_client = redis.from_url(
+    os.getenv("UPSTASH_REDIS_REST_URL"),
+    decode_responses=True
+)
+
+# === OPERAÇÕES ===
+# Set
+redis_client.set("key", json.dumps({"data": "value"}))
+
+# Get
+data = redis_client.get("key")
+if data:
+    data = json.loads(data)
+
+# Delete
+redis_client.delete("key")
+
+# Increment
+redis_client.incr("contador")
+
+# Expire
+redis_client.setex("temp", 3600, "value")  # 1 hora
+
+# === LISTAS ===
+redis_client.lpush("fila", "item1")
+redis_client.lpush("fila", "item2")
+item = redis_client.rpop("fila")
+
+# === HASHES ===
+redis_client.hset("processo:123", mapping={
+    "numero": "001",
+    "status": "ativo"
+})
+dados = redis_client.hgetall("processo:123")
+```
+
+### 🔟 Pydantic - Validação
+
+**Substituir Zod schemas por:**
+```python
+from pydantic import BaseModel, Field, validator
+from typing import Optional, List
+from datetime import datetime
+
+class ProcessCreate(BaseModel):
+    """Schema de criação de processo"""
+    numero_cnj: str = Field(..., min_length=20, max_length=25)
+    titulo: str = Field(..., min_length=3)
+    autor: str
+    reu: str
+    valor_causa: Optional[float] = Field(None, ge=0)
+
+    @validator('numero_cnj')
+    def validar_cnj(cls, v):
+        """Validar formato CNJ"""
+        if not v.count('-') == 2:
+            raise ValueError("Formato CNJ inválido")
+        return v
+
+    class Config:
+        # Converter campo JSON camelCase → snake_case
+        alias_generator = lambda s: s  # Sem conversão
+        populate_by_name = True
+
+# === VALIDAÇÃO ===
+try:
+    processo = ProcessCreate(
+        numero_cnj="0001234-56.2025.8.02.0001",
+        titulo="Ação Trabalhista",
+        autor="João Silva",
+        reu="Empresa XYZ"
+    )
+except ValidationError as e:
+    print(e.errors())
+```
+
+---
+
+## ⚠️ REGRAS CRÍTICAS DE USO
+
+### Para TODOS os componentes:
+
+1. **Sempre importe as ferramentas corretas:**
+   ```python
+   # Frontend
+   import streamlit as st
+   import pandas as pd
+   import plotly.express as px
+
+   # Backend
+   from fastapi import FastAPI, HTTPException
+   from pydantic import BaseModel
+
+   # Agentes
+   from langchain.agents import AgentExecutor
+   from langchain_google_genai import ChatGoogleGenerativeAI
+
+   # Automação
+   from selenium import webdriver
+   import pyautogui
+
+   # ML
+   from sklearn.ensemble import RandomForestClassifier
+   import pickle
+   ```
+
+2. **Nunca use bibliotecas TypeScript/Node.js**
+3. **Consulte MAPEAMENTO_FUNCIONALIDADES.md** antes de implementar
+4. **Preserve comportamento exato do sistema atual**
+5. **Teste cada componente localmente**
 
 ---
 
@@ -65,39 +771,74 @@ Este documento fornece instruções detalhadas para o GitHub Copilot trabalhar e
 
 ## 📋 Visão Geral do Projeto
 
-**Assistente Jurídico PJe** é um sistema inteligente e completo de gestão jurídica para escritórios de advocacia, construído com React, TypeScript e Vite.
+**Assistente Jurídico PJe** está em **MIGRAÇÃO URGENTE** de React/TypeScript para **100% Python**.
 
 ### 🆕 Resumo Operational para Copilot
 
-- **Arquitetura**: Frontend React 19 + TypeScript + Vite em `src/`, backend serverless em `api/` (Vercel Functions). Persistência principal via Upstash Redis/KV (`api/kv.ts`, `src/hooks/use-kv.ts`).
-- **Extensão Chrome PJe Sync**: Projeto separado em `chrome-extension-pje/` com Manifest v3, TypeScript, Webpack. Content Script extrai processos do PJe, Background Service Worker sincroniza com `/api/pje-sync`, Popup UI configura API Key. 31 testes, build em `dist/`. Documentação: `chrome-extension-pje/README.md` e `INSTALL.md`.
-- **Fluxo de agentes**: DJEN/DataJud/Chrome Extension alimenta `expedientes`, `use-autonomous-agents` cria tarefas para 16 agentes descritos em `src/lib/agents.ts`/`TODOS_OS_16_AGENTES.md`. `redacao-peticoes` usa Gemini 2.5 (`src/lib/gemini-service.ts`) e entrega minutas ao `MinutasManager` com campos `criadoPorAgente`, `confidence`, `templateId`, `status`.
-- **Hybrid Agents Integration**: Sistema OBRIGATÓRIO sempre ativo. Integra agentes LangGraph (`src/agents/*/`) com agentes tradicionais. Fornece fallback automático, métricas de performance e coordenação entre versões. **NUNCA desabilite** `HYBRID_AGENTS_DISABLED=false` - deve estar ativo em desenvolvimento, manutenção e produção. Arquivo: `src/lib/hybrid-agents-integration.ts`.
-- **Claude Skills System**: 10 skills especializadas em `.claude/skills/` (code formatter, code fix, code search, problem solver, test debugging, legal documents, webapp testing, skill creator, docx/pdf creation). Automaticamente carregadas quando `github.copilot.chat.useClaudeSkills: true` no VS Code settings. Use `@workspace` para acionar skills relevantes. Documentação: `.claude/skills/README.md`.
-- **Conectividade dos agentes**: Todos os agentes devem manter comunicação por streaming (tempo real) com os serviços centrais; qualquer novo agente precisa expor interface streaming compatível com `use-autonomous-agents`.
-- **Heavy Processor Microservice (Java 21) - OBRIGATÓRIO**: Microserviço em `microservices/heavy-processor/` com Virtual Threads (Project Loom) para processamento pesado (PDFs, lote >10 expedientes). Client TypeScript em `src/services/heavy-processor-client.ts`, integração via `src/lib/heavy-processor-helper.ts`. **50x mais rápido** que processamento local. Detecção automática com `shouldUseHeavyProcessor()`. **DEVE estar ativo em produção** com `VITE_HEAVY_PROCESSOR_ENABLED=true`. **NÃO use pool** - cada tarefa cria nova Virtual Thread. Docs: `microservices/heavy-processor/README.md` e `VIRTUAL_THREADS_VALIDATION.md`.
-  - **Integração Azure Storage**: Heavy Processor conecta diretamente ao Azure Blob Storage para processar PDFs grandes (centenas de páginas). Upload via Azure Storage Explorer → Processamento automático. Client: `src/services/azure-heavy-processor-client.ts`. Endpoints: `/api/v1/azure/extract-pdf`, `/api/v1/azure/process-all-pdfs` (paralelo). Performance: 5 PDFs (1.750 páginas) em ~5-10s vs timeout (30s) Node.js. Docs: `docs/AZURE_HEAVY_PROCESSOR_INTEGRATION.md`.
-- **Editor/Documentos**: `src/components/editor/ProfessionalEditor.tsx` (CKEditor 5) com streaming fluido de IA via `writer.insertText`, suporte a comandos `/ai`, variáveis `{{variavel}}` e HTML rico. Documentação completa em `docs/CKEDITOR5_AI_STREAMING.md` e exemplos em `docs/EXEMPLO_USO_EDITOR_IA.md`. `src/components/MinutasManager.tsx`, `src/lib/document-templates.ts` controlam templates. Alterou template? atualize `replaceTemplateVariables` + `docs/FLUXO_MINUTAS_AUTOMATICAS.md`.
- - **Integrações críticas**: Google OAuth/Calendar (`src/lib/google-calendar-service.ts`), DJEN/DataJud (`src/lib/djen-api.ts`, `src/lib/datajud-api.ts`), PJe via Chrome Extension (`chrome-extension-pje/`, endpoint `/api/pje-sync`), Heavy Processor Java 21 (`microservices/heavy-processor/` - optional, Railway/Cloud Run), Qdrant (`src/lib/qdrant-service.ts` - optional, cloud), DSPy Bridge (`scripts/dspy_bridge.py` - optional, Railway), Email API (`api/emails.ts`), Todoist apenas via stub `src/lib/todoist-stub.ts` no client (pacote official restrito a `/api`).
-- **Cron/automação**: Jobs descritos em `api/cron.ts` e `vercel.json` (DJEN monitor, filas de agentes, backup). Novos jobs exigem atualizar ambos + README.
-- **Build/Testes**: `npm run dev`, `npm run build`, `npm run lint`, `npm run test`, `npm run test:e2e`. Extensão Chrome: `cd chrome-extension-pje && npm run build`. Scripts novos precisam refletir em `.github/workflows/*`.
-- **Padrões React/UI**: Apenas components funcionais, props `Props`, hooks no topo, alias `@/`. `src/components/ui/` (shadcn) é imutável. Manter lazy-loading/código dividido alinhado com `App.tsx`, skeleton loaders e `aria-label` em botões.
-- **Tipos/estado**: `src/types.ts` centraliza `Process`, `Expediente`, `Minuta`. Extensão usa tipos em `chrome-extension-pje/src/shared/types.ts` (`ProcessoPJe`, `Expediente`, `SyncMessage`). Ao adicionar campos, sincronize hooks (`use-processes`, `use-auto-minuta`), APIs (`api/agents.ts`, `api/expedientes.ts`, `api/pje-sync.ts`) e contadores do dashboard.
-- **Segurança/Performance**: Nada de segredos no repo; use `src/lib/config.ts` + `.env.example`. Respeite `manualChunks` de `vite.config.ts`, CSP de `vercel.json` e monitoração Sentry (`src/services/error-tracking.ts`). Extensão Chrome: API Key armazenada em Chrome Storage, comunicação HTTPS apenas.
-- **AOP Logging System**: Sistema de logging automático inspirado em Spring Boot AOP usando decorators TypeScript. Decorators disponíveis: `@LogMethod()`, `@LogAgent(id)`, `@LogController()`, `@LogService()`. Request Context global via AsyncLocalStorage (similar ao RequestContextHolder do Spring). Features: auto-logging, CorrelationId único, performance monitoring, exception handling, PII filtering (LGPD), consolidated log no final. Arquivos: `src/lib/aop-logging.ts` (core), `src/lib/aop-logging-examples.ts` (exemplos), `src/lib/aop-logging.test.ts` (14 testes). Documentação completa: `docs/AOP_LOGGING_SYSTEM.md`. **Uso recomendado**: decorar novos métodos de agentes/services com `@LogAgent(id)` ou `@LogMethod()` para observabilidade automática.
-- **Workflow**: Antes de PR, rode lint+testes e reporte resultados; manter `main` verde garante deploy automático Vercel. Para extensão, rode `npm test` em `chrome-extension-pje/`.
+- **Arquitetura NOVA (Python)**: Frontend Streamlit em `streamlit-app/app.py` e `pages/`, backend FastAPI em `streamlit-app/backend/`, agentes LangChain em `streamlit-app/lib/agents/`. Persistência via Upstash Redis (`streamlit-app/backend/database.py`).
+- **Arquitetura ANTIGA (React/Node.js - DESCONTINUADA)**: Frontend React 19 + TypeScript + Vite em `src/`, backend serverless em `api/` (Vercel Functions). **⚠️ SISTEMA NÃO FUNCIONA - NÃO MODIFICAR**.
+- **Automação PJe**: Substituir Chrome Extension por Selenium Python em `streamlit-app/lib/integrations/pje.py`. Login automático, scraping de processos, protocolo de petições usando Selenium WebDriver + PyAutoGUI.
+- **Fluxo de agentes NOVO**: DJEN/DataJud/Selenium alimenta backend FastAPI → 16 agentes LangChain em `streamlit-app/lib/agents/` processam tarefas → Resultados salvos em Redis → UI Streamlit exibe em tempo real.
+- **16 Agentes LangChain (REAIS)**:
+  1. **Harvey Specter** (`harvey.py`) - Estrategista-chefe
+  2. **Mrs. Justin-e** (`justine.py`) - Análise de intimações e prazos
+  3. **Redação Petições** (`redacao.py`) - Geração de documentos jurídicos
+  4. **Pesquisa Juris** (`pesquisa.py`) - Busca de precedentes com Qdrant
+  5. **Análise Documental** (`analise_doc.py`) - Extração de dados de PDFs
+  6. **Monitor DJEN** (`monitor_djen.py`) - Scraping automatizado DJEN
+  7. **Gestão Prazos** (`prazos.py`) - Cálculo automático de deadlines
+  8. **Organização Arquivos** (`organizacao.py`) - Indexação de documentos
+  9. **Análise Risco** (`analise_risco.py`) - Predição de sucesso processual
+  10. **Revisão Contratual** (`revisao_contratual.py`) - Análise de contratos
+  11. **Comunicação Clientes** (`comunicacao.py`) - Geração de relatórios
+  12. **Análise Financeira** (`financeiro.py`) - Gestão de honorários
+  13. **Estratégia Processual** (`estrategia.py`) - Planejamento estratégico
+  14. **Tradução Jurídica** (`traducao.py`) - Explicação de termos técnicos
+  15. **Compliance** (`compliance.py`) - Verificação LGPD
+  16. **Análise Sentença** (`analise_sentenca.py`) - NLP em decisões judiciais
+- **Integrações críticas NOVAS**:
+  - DJEN: `streamlit-app/lib/integrations/djen.py` (Selenium)
+  - DataJud: `streamlit-app/lib/integrations/datajud.py` (requests + BS4)
+  - PJe: `streamlit-app/lib/integrations/pje.py` (Selenium + PyAutoGUI)
+  - Google Calendar: `google-calendar` package oficial
+  - Redis: `redis-py` + Upstash REST API
+  - Gemini: `langchain-google-genai`
+  - Qdrant: `qdrant-client`
+- **Cron/automação NOVO**: APScheduler em `streamlit-app/backend/cron_jobs.py` com 5 jobs principais (DJEN monitor 2x/dia, DataJud 1x/dia, fila agentes 15min, prazos 11:55, backup 03:00).
+- **Build/Testes NOVO**: `streamlit run app.py`, `pytest tests/`, `python -m lib.agents.test_all_agents`.
+- **Padrões Python**: PEP 8, type hints obrigatórios, docstrings Google Style, imports absolutos, black formatter, pylint/mypy.
 
-### 🔒 REGRA CRÍTICA: Variáveis de Ambiente
+### 🔒 REGRA CRÍTICA: Variáveis de Ambiente (Python)
 
-#### 📋 Arquivos .env - Política de Uso
+#### 📋 Arquivos .env - Política de Uso (NOVA)
 
 **ARQUIVO ÚNICO PARA DESENVOLVIMENTO:**
-- ✅ **USAR APENAS**: `/workspaces/thiagobodevanadv-alt-assistente-jur-dico-principal/.env.local`
-- ❌ **NÃO CRIAR** novos arquivos `.env`, `.env.development`, `.env.production`, etc.
-- ❌ **NÃO CRIAR** `.env` na raiz do projeto
-- ⚠️ **ÚNICA EXCEÇÃO**: `.env.example` (template de referência - SAGRADO)
+- ✅ **USAR APENAS**: `/workspaces/thiagobodevanadv-alt-assistente-jur-dico-principal/streamlit-app/.env`
+- ❌ **NÃO CRIAR** múltiplos arquivos `.env`
+- ⚠️ **ÚNICA EXCEÇÃO**: `streamlit-app/.env.example` (template de referência)
 
-**Razão:** O projeto usa exclusivamente `.env.local` para desenvolvimento local. Vite carrega automaticamente este arquivo. Múltiplos arquivos .env causam conflitos, duplicação e dificuldade de manutenção.
+**Variáveis obrigatórias:**
+```bash
+# LLM
+GEMINI_API_KEY=sua-chave-gemini
+
+# Redis
+UPSTASH_REDIS_REST_URL=https://...
+UPSTASH_REDIS_REST_TOKEN=...
+
+# Backend (opcional)
+REACT_API_URL=https://assistente-juridico-github.vercel.app/api
+
+# Qdrant (opcional)
+QDRANT_URL=https://...
+QDRANT_API_KEY=...
+
+# Google Calendar (opcional)
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+```
+
+**Razão:** Python usa `python-dotenv` para carregar `.env` automaticamente. Streamlit carrega variáveis de `streamlit-app/.env`.
 
 #### 🔒 Arquivo .env.example É SAGRADO
 
@@ -1033,60 +1774,69 @@ Para detalhes completos da arquitetura híbrida, incluindo:
 
 ## Making Changes
 
-### ⚡ Sistema Automático - Regras Específicas para Copilot
+### ⚡ Migração Python - Regras Específicas para Copilot
 
 **ANTES DE QUALQUER AÇÃO**, o Copilot deve:
 
-1. **Executar verificação diária** dos recursos automáticos
-2. **Gerar relatório interno** do status do sistema
-3. **Corrigir automaticamente** qualquer problema detectado
-4. **Informar ao usuário** sobre o status dos recursos automáticos
+1. **Implementar em Python puro** - Sem TypeScript/Node.js
+2. **Seguir estrutura em `streamlit-app/`** - Toda nova implementação vai aqui
+3. **Usar LangChain real** - Não criar stubs/simulações
+4. **Testar localmente** - `streamlit run app.py` antes de commitar
+5. **Documentar no plano** - Atualizar PLANO_MIGRACAO_ACELERADA_PYTHON.md
 
-#### 🔧 Regras para Modificações no Sistema Automático
+#### 🔧 Regras para Implementação Python
 
-- **Nunca desabilitar** recursos automáticos sem justificativa técnica
-- **Sempre testar** mudanças nos arquivos de configuração automática
-- **Atualizar documentação** quando modificar automação
-- **Manter compatibilidade** com tasks existentes
-- **Priorizar estabilidade** sobre novas features
+- **Sempre usar type hints** - `def funcao(arg: str) -> dict:`
+- **Sempre documentar** - Docstrings Google Style
+- **Seguir PEP 8** - black formatter obrigatório
+- **Imports absolutos** - `from streamlit_app.lib.agents import harvey`
+- **Async quando possível** - `async def` para I/O bound
 
-### 🔒 Regras específicas para novos serviços opcionais (Qdrant / DSPy / Email)
+### 🔒 Regras específicas para novos componentes Python
 
-- **Qdrant**: Não modifique collections/indices diretamente sem aprovação da equipe; prefira aplicar alterações via migrations e documente o impacto de scaling/retention.
-- **DSPy Bridge**: Qualquer atualização de imagem ou dependências deve ser testada com `dspy-bridge` em ambiente de staging; atualizações em produção requerem rollback plan e teste de latência.
-- **Email API / Email service**: Não altere os provedores de e-mail (resend) sem atualização dos testes e documentação; valide `RESEND_API_KEY` e monitore filas.
+- **Agentes LangChain**: Herdar de `BaseAgent` em `lib/agents/base_agent.py`, implementar `tools` e `prompt`, adicionar em `backend/routers/agents.py`
+- **Automações Selenium**: Usar `webdriver-manager` para drivers, sempre `--headless` em produção, timeout 10s padrão, implementar em `lib/automation/`
+- **ML Models**: Treinar com dados sintéticos primeiro, salvar em `models/*.pkl`, validar com `sklearn.metrics`, integrar em página Streamlit dedicada
+- **Páginas Streamlit**: Nomear com prefixo numérico `1_Nome.py`, usar `st.set_page_config()`, implementar cache com `@st.cache_data`, sempre responsivas
 
-#### 📊 Relatórios de Status Automáticos
+#### 📊 Relatórios de Status da Migração
 
-Quando solicitado ou detectando problemas, o Copilot deve fornecer relatórios como:
+Quando solicitado, o Copilot deve fornecer relatórios como:
 
 ```
-🚀 STATUS DO SISTEMA AUTOMÁTICO
+🚀 STATUS DA MIGRAÇÃO PYTHON
 
-✅ OPERACIONAL
-- Tasks automáticas: 25/25 funcionando
-- Auto-save: Ativado (1s delay)
-- Format on save: Ativado
-- ESLint auto-fix: Ativado
-- TypeScript check: OK
-- Testes automáticos: OK
+✅ COMPLETO (Semana 1)
+- Backend FastAPI: 8 routers implementados
+- Agentes LangChain: 16/16 funcionando
+- Redis client: Conectado
+- Testes: 45/50 passando
 
-⚠️ ATENÇÃO NECESSÁRIA
-- [Item específico que precisa atenção]
+⏳ EM ANDAMENTO (Semana 2)
+- Dashboard Streamlit: 70% completo
+- Páginas secundárias: 4/6 implementadas
+- Gráficos Plotly: Funcionando
 
-🔧 CORREÇÕES APLICADAS
-- [Correções realizadas automaticamente]
+⏱️ PENDENTE (Semana 3)
+- Selenium DJEN: Não iniciado
+- Selenium PJe: Não iniciado
+- ML Models: Não iniciado
+- Deploy produção: Não iniciado
+
+🎯 PRÓXIMOS PASSOS
+- [Lista de tarefas prioritárias]
 ```
 
-### 🔄 Sugerindo Mudanças de Código
+### 🔄 Implementando Novos Componentes Python
 
-Ao sugerir mudanças no código, o Copilot deve:
+Ao implementar novos componentes, o Copilot deve:
 
-1. **Buscar primeiro as funções similares** já existentes usando o Serena MCP Server
-2. **Analisar o contexto** da função: parâmetros, tipos, lógica
-3. **Manter estilo e convenções** do código existente
-4. **Adicionar testes** para nova lógica ou alterações relevantes
-5. **Documentar alterações** significativas
+1. **Criar na estrutura correta** em `streamlit-app/`
+2. **Seguir padrões Python** (PEP 8, type hints, docstrings)
+3. **Importar dependências corretas** (LangChain, Pandas, etc)
+4. **Adicionar testes** em `tests/`
+5. **Atualizar documentação** no plano de migração
+6. **Testar localmente** antes de commitar
 
 ---
 

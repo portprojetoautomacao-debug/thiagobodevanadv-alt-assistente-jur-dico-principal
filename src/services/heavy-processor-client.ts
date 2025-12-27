@@ -261,7 +261,7 @@ export function getHeavyProcessorClient(): HeavyProcessorClient {
  */
 export function shouldUseHeavyProcessor(expedientes: Expediente[]): boolean {
   // Verificar se está habilitado via env var
-  const enabled = import.meta.env.VITE_HEAVY_PROCESSOR_ENABLED === 'true';
+  const enabled = import.meta.env.VITE_HEAVY_PROCESSOR_ENABLED === "true";
   if (!enabled) {
     return false;
   }

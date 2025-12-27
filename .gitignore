@@ -7,6 +7,11 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Runtime files
+*.pid
+nohup.out
+backend.log
+
 # Chrome DevTools profiles
 *.heapsnapshot
 *.har
