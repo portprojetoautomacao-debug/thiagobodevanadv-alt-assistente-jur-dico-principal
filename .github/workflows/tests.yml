@@ -48,15 +48,28 @@ jobs:
           echo "⏳ Waiting for Azurite to be ready..."
           sleep 5
 
-          # Wait for Blob service to respond
-          for i in {1..30}; do
-            if curl -f http://localhost:10000/devstoreaccount1?comp=list &>/dev/null; then
-              echo "✅ Azurite is ready!"
-              exit 0
-            fi
-            echo "Waiting... ($i/30)"
-            sleep 2
-          done
+          # Wait for Blob service usando SDK
+          npm install --no-save @azure/storage-blob
+          node -e "
+          const { BlobServiceClient } = require('@azure/storage-blob');
+          const connStr = 'DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCRA7bhD4tgYBqh7tQAp3Ku3vMjMQsZQqqyRLwDdoezSEQ9fLeA==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;';
+          (async () => {
+            for (let i = 0; i < 30; i++) {
+              try {
+                const client = BlobServiceClient.fromConnectionString(connStr);
+                await client.getProperties();
+                console.log('✅ Azurite is ready!');
+                const container = client.getContainerClient('test-container');
+                await container.createIfNotExists();
+                return process.exit(0);
+              } catch (e) {
+                console.log('Waiting... (' + (i+1) + '/30)');
+                await new Promise(r => setTimeout(r, 2000));
+              }
+            }
+            process.exit(1);
+          })();
+          " || exit 1
 
           echo "❌ Azurite failed to start"
           docker logs azurite
