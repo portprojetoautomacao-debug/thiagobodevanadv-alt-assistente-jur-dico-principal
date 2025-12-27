@@ -45,8 +45,3 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Uncomment to publish to Chrome Web Store
-      # - name: Publish to Chrome Web Store
-      #   run: |
-      #     echo "Add Chrome Web Store publish step here"
-      #     echo "Requires CHROME_WEBSTORE_ID and CHROME_WEBSTORE_TOKEN secrets"
