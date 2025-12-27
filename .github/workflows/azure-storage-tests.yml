@@ -86,13 +86,14 @@ jobs:
 
       - name: Start Azurite
         run: |
-          # Use pinned stable version instead of :latest
+          # Use pinned stable version with loose mode for compatibility
           docker run -d \
             --name azurite \
             -p 10000:10000 \
             -p 10001:10001 \
             -p 10002:10002 \
-            mcr.microsoft.com/azure-storage/azurite:3.28.0
+            mcr.microsoft.com/azure-storage/azurite:3.28.0 \
+            azurite-blob --blobHost 0.0.0.0 --loose --skipApiVersionCheck
 
           echo "⏳ Waiting for Azurite to be ready..."
           sleep 5

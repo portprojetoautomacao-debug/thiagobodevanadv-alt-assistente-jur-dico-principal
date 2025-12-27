@@ -40,13 +40,14 @@ else
         exit 1
     fi
 
-    # Iniciar Azurite
+    # Iniciar Azurite com flags de compatibilidade
     docker run -d \
         --name azurite-test \
         -p 10000:10000 \
         -p 10001:10001 \
         -p 10002:10002 \
-        mcr.microsoft.com/azure-storage/azurite:latest
+        mcr.microsoft.com/azure-storage/azurite:3.28.0 \
+        azurite-blob --blobHost 0.0.0.0 --loose --skipApiVersionCheck
 
     # Aguardar Azurite ficar pronto
     log_info "⏳ Aguardando Azurite iniciar..."
