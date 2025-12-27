@@ -13,7 +13,7 @@ jobs:
   backend-tests:
     name: Backend FastAPI Tests
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
 
@@ -51,7 +51,7 @@ jobs:
   lint-python:
     name: Python Linting
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
 
