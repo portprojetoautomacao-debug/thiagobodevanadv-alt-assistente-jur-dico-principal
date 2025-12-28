@@ -219,8 +219,23 @@ jobs:
           npx serve -s dist -p 3000 &
           SERVER_PID=$!
 
-          # Aguardar servidor iniciar
-          sleep 10
+          # Aguardar servidor iniciar com health check
+          echo "⏳ Aguardando servidor iniciar..."
+          for i in {1..30}; do
+            if curl -f http://localhost:3000 > /dev/null 2>&1; then
+              echo "✅ Servidor respondendo na porta 3000"
+              break
+            fi
+            echo "Tentativa $i/30: Aguardando servidor..."
+            sleep 2
+          done
+
+          # Verificar se servidor está acessível
+          if ! curl -f http://localhost:3000 > /dev/null 2>&1; then
+            echo "❌ Erro: Servidor não está acessível em http://localhost:3000"
+            kill $SERVER_PID 2>/dev/null || true
+            exit 1
+          fi
 
           # Executar Lighthouse
           npx lighthouse http://localhost:3000 \
