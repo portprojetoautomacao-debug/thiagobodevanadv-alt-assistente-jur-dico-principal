@@ -1,47 +1,55 @@
 services:
+  # Backend FastAPI
   - type: web
-    name: assistente-juridico-pje
-    env: node
-    region: oregon # ou 'frankfurt' para Europa
-    plan: free # Plano gratuito do Render
-    buildCommand: npm ci && npm run build
-    startCommand: npm start
+    name: assistente-juridico-backend
+    env: python
+    region: oregon
+    plan: free
+    rootDir: streamlit-app
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.7
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: UPSTASH_REDIS_REST_URL
+        sync: false
+      - key: UPSTASH_REDIS_REST_TOKEN
+        sync: false
+      - key: DJEN_USERNAME
+        sync: false
+      - key: DJEN_PASSWORD
+        sync: false
+      - key: ALLOWED_ORIGINS
+        value: https://assistente-juridico-streamlit.onrender.com
+
+  # Frontend Streamlit
+  - type: web
+    name: assistente-juridico-streamlit
+    env: python
+    region: oregon
+    plan: free
+    rootDir: streamlit-app
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run app.py --server.port $PORT --server.address 0.0.0.0
     healthCheckPath: /
     envVars:
-      # Node.js version (obrigatório)
-      - key: NODE_VERSION
-        value: 20
-      
-      # Variáveis do Google OAuth (obrigatórias)
-      - key: VITE_GOOGLE_CLIENT_ID
-        sync: false # Configure manualmente no dashboard do Render
-      
-      - key: VITE_REDIRECT_URI
-        value: https://assistente-juridico-pje.onrender.com
-      
-      # Variáveis do GitHub Spark (obrigatórias para funcionalidades de IA)
-      - key: GITHUB_RUNTIME_PERMANENT_NAME
-        sync: false # Configure manualmente no dashboard do Render
-      
-      - key: GITHUB_TOKEN
-        sync: false # Configure manualmente no dashboard do Render
-      
-      # Ambiente da aplicação
-      - key: VITE_APP_ENV
-        value: production
-      
-      # URL da API do GitHub (opcional)
-      - key: GITHUB_API_URL
-        value: https://api.github.com
-      
-      # Tribunais para monitoramento DJEN (opcional)
-      - key: DJEN_TRIBUNAIS
-        value: TST,TRT3,TJMG,TRF1,TJES,TJSP,STJ
-      
-      # Backend URL (opcional - se usar backend separado)
-      # - key: VITE_BACKEND_URL
-      #   value: https://seu-backend.onrender.com
-      
-      # Google Gemini API (opcional - alternativa ao Spark LLM)
-      # - key: VITE_GEMINI_API_KEY
-      #   sync: false
+      - key: PYTHON_VERSION
+        value: 3.11.7
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: UPSTASH_REDIS_REST_URL
+        sync: false
+      - key: UPSTASH_REDIS_REST_TOKEN
+        sync: false
+      - key: QDRANT_URL
+        sync: false
+      - key: QDRANT_API_KEY
+        sync: false
+      - key: REACT_API_URL
+        fromService:
+          type: web
+          name: assistente-juridico-backend
+          property: url
