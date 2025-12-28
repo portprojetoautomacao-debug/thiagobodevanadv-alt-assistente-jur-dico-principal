@@ -27,10 +27,13 @@ from fastapi.responses import JSONResponse
 # Add lib to path
 sys.path.append(str(Path(__file__).parent.parent / "lib"))
 
+# Add backend to path to fix imports
+sys.path.append(str(Path(__file__).parent))
+
 from config import load_config
-from cron_jobs import start_scheduler
-from database import RedisClient
-from routers import agents, djen, expedientes, intimacoes, kv, metrics, processes
+from backend.cron_jobs import start_scheduler
+from backend.database import RedisClient
+from backend.routers import agents, djen, expedientes, intimacoes, kv, metrics, processes
 
 # Configuração
 config = load_config()
