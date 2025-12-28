@@ -13,17 +13,15 @@ Mantém compatibilidade total com backend React/Vercel.
 """
 
 import sys
-import threading
+import subprocess
 import time
+import socket
 from pathlib import Path
 
 import streamlit as st
-import uvicorn
 
 # Add lib to path
 sys.path.append(str(Path(__file__).parent / "lib"))
-# Add backend to path
-sys.path.append(str(Path(__file__).parent / "backend"))
 
 from backend_client import BackendClient
 from config import APP_CONFIG, load_config
@@ -32,22 +30,41 @@ from config import APP_CONFIG, load_config
 # START BACKEND (Python Edition)
 # ============================================
 
+def is_port_open(host, port):
+    """Verifica se a porta está aberta (backend rodando)."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex((host, port)) == 0
 
 def start_backend():
-    """Inicia o backend FastAPI em uma thread separada."""
-    try:
-        from main import app as fastapi_app
+    """Inicia o backend FastAPI em um subprocesso."""
+    if not is_port_open("127.0.0.1", 8000):
+        print("🚀 Iniciando backend FastAPI...")
+        script_path = Path(__file__).parent / "backend" / "main.py"
+        
+        # Inicia o processo em background
+        subprocess.Popen(
+            [sys.executable, str(script_path)],
+            stdout=subprocess.DEVNULL, # Redireciona logs para não poluir
+            stderr=subprocess.DEVNULL
+        )
+        
+        # Aguarda inicialização
+        with st.spinner("Iniciando servidor backend..."):
+            for _ in range(10):
+                if is_port_open("127.0.0.1", 8000):
+                    print("✅ Backend iniciado com sucesso!")
+                    return
+                time.sleep(1)
+            print("⚠️ Backend demorou para responder, mas pode estar iniciando.")
 
-        uvicorn.run(fastapi_app, host="127.0.0.1", port=8000, log_level="error")
-    except Exception as e:
-        print(f"Erro ao iniciar backend: {e}")
-
-
-# Iniciar backend apenas uma vez
+# Iniciar backend na inicialização
 if "backend_started" not in st.session_state:
-    thread = threading.Thread(target=start_backend, daemon=True)
-    thread.start()
+    start_backend()
     st.session_state["backend_started"] = True
+
+# ============================================
+# PAGE CONFIG
+# ============================================
     # Aguardar inicialização
     time.sleep(3)
 
