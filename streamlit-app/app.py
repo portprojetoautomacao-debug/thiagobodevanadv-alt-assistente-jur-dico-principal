@@ -153,13 +153,52 @@ with st.sidebar:
 # NAVIGATION (AUTOMATIC MODE)
 # ============================================
 
-# Import dashboard directly for the main page
-try:
-    from pages.dashboard import render as render_dashboard
+# Welcome message on main page
+st.markdown(
+    """
+    # ⚖️ Bem-vindo ao Assistente Jurídico PJe
+    
+    Sistema 100% Python com **Streamlit + LangChain + FastAPI**
+    
+    ### 🚀 Funcionalidades
+    
+    - 📋 **Processos**: Gestão completa de processos judiciais
+    - 📄 **Expedientes**: Análise automática de intimações
+    - 🤖 **Agentes IA**: 16 agentes especializados
+    - ⚙️ **Automações**: Integração com PJe e DJEN
+    - 📊 **Dashboard**: Métricas e análises em tempo real
+    - 📝 **Minutas**: Geração automática de petições
+    
+    ### 👈 Começar
+    
+    Selecione uma página no menu lateral para começar.
+    """
+)
 
-    render_dashboard()
-except ImportError:
-    st.info("👈 Selecione uma página no menu lateral para começar.")
+# Show a metrics overview
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    st.metric(
+        label="🤖 Agentes IA",
+        value="16",
+        help="Agentes especializados disponíveis"
+    )
+
+with col2:
+    st.metric(
+        label="📋 Módulos",
+        value="7",
+        help="Módulos principais do sistema"
+    )
+
+with col3:
+    st.metric(
+        label="⚡ Status",
+        value="Online",
+        delta="Operacional",
+        help="Sistema operacional"
+    )
 
 # ============================================
 # SIDEBAR FOOTER
