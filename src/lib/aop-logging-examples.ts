@@ -15,7 +15,8 @@ import {
   aopMiddleware,
   wrapAgentFunction,
 } from "./aop-logging";
-import type { Expediente, AgentTask } from "@/types";
+import type { Expediente } from "@/types";
+import type { AgentTask } from "@/lib/agents";
 
 // ============================================================================
 // EXEMPLO 1: Decorator em Agente IA
