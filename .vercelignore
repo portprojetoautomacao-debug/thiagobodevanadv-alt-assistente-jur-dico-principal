@@ -12,3 +12,9 @@ api/tests/
 **/*.spec.ts
 **/*.spec.tsx
 
+# Ignorar pasta Python/Streamlit (não buildar no Vercel)
+streamlit-app/
+*.py
+requirements.txt
+pytest.ini
+

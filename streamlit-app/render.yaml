@@ -1,0 +1,46 @@
+services:
+  # Backend FastAPI
+  - type: web
+    name: assistente-juridico-backend
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: UPSTASH_REDIS_REST_URL
+        sync: false
+      - key: UPSTASH_REDIS_REST_TOKEN
+        sync: false
+      - key: DJEN_USERNAME
+        sync: false
+      - key: DJEN_PASSWORD
+        sync: false
+      - key: ALLOWED_ORIGINS
+        value: https://assistente-juridico-frontend.onrender.com,http://localhost:8501
+
+  # Frontend Streamlit
+  - type: web
+    name: assistente-juridico-frontend
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run app.py --server.port $PORT --server.address 0.0.0.0
+    healthCheckPath: /
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: UPSTASH_REDIS_REST_URL
+        sync: false
+      - key: UPSTASH_REDIS_REST_TOKEN
+        sync: false
+      - key: BACKEND_URL
+        value: https://assistente-juridico-backend.onrender.com
