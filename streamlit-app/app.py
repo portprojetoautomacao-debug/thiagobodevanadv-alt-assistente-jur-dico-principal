@@ -12,10 +12,10 @@ Versão Python do sistema jurídico com:
 Mantém compatibilidade total com backend React/Vercel.
 """
 
-import sys
-import subprocess
-import time
 import socket
+import subprocess
+import sys
+import time
 from pathlib import Path
 
 import streamlit as st
@@ -30,41 +30,61 @@ from config import APP_CONFIG, load_config
 # START BACKEND (Python Edition)
 # ============================================
 
+
 def is_port_open(host, port):
     """Verifica se a porta está aberta (backend rodando)."""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         return s.connect_ex((host, port)) == 0
+
 
 def start_backend():
     """Inicia o backend FastAPI em um subprocesso."""
     if not is_port_open("127.0.0.1", 8000):
         print("🚀 Iniciando backend FastAPI...")
         script_path = Path(__file__).parent / "backend" / "main.py"
-        
+
         # Inicia o processo em background
-        subprocess.Popen(
+        # Captura stdout/stderr para debug em caso de erro
+        process = subprocess.Popen(
             [sys.executable, str(script_path)],
-            stdout=subprocess.DEVNULL, # Redireciona logs para não poluir
-            stderr=subprocess.DEVNULL
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
         )
-        
+
         # Aguarda inicialização
         with st.spinner("Iniciando servidor backend..."):
-            for _ in range(10):
+            for _ in range(20): # Aumentado para 20s
+                # Verifica se o processo morreu
+                if process.poll() is not None:
+                    stdout, stderr = process.communicate()
+                    st.error(f"❌ Erro fatal ao iniciar backend:\n\nSTDOUT:\n{stdout}\n\nSTDERR:\n{stderr}")
+                    return
+
                 if is_port_open("127.0.0.1", 8000):
                     print("✅ Backend iniciado com sucesso!")
                     return
                 time.sleep(1)
-            print("⚠️ Backend demorou para responder, mas pode estar iniciando.")
+            
+            # Se chegou aqui, não morreu mas não abriu porta
+            st.warning("⚠️ Backend demorou para responder. Verifique os logs.")
+            # Tenta ler o que já saiu
+            try:
+                outs, errs = process.communicate(timeout=1)
+                if outs or errs:
+                    st.code(f"Logs parciais:\n{outs}\n{errs}")
+            except:
+                pass
+
 
 # Iniciar backend na inicialização
 if "backend_started" not in st.session_state:
     start_backend()
     st.session_state["backend_started"] = True
 
-# ============================================
-# PAGE CONFIG
-# ============================================
+    # ============================================
+    # PAGE CONFIG
+    # ============================================
     # Aguardar inicialização
     time.sleep(3)
 
