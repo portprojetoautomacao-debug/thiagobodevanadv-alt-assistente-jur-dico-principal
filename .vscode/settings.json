@@ -586,13 +586,13 @@
     },
     "thiagobodevanadv-alt-assistente-jur-dico-principal/.vscode/mcp.json: io.github.github/github-mcp-server": {
       "allowedModels": [
-        "copilot/claude-sonnet-4.5",
         "copilot/auto",
         "copilot/claude-haiku-4.5",
         "copilot/claude-opus-41",
         "copilot/claude-opus-4.5",
         "aitk-foundry/Microsoft Foundry/claude-opus-4-5",
         "copilot/claude-sonnet-4",
+        "copilot/claude-sonnet-4.5",
         "aitk-foundry/Microsoft Foundry/claude-sonnet-4-5",
         "copilot/gemini-2.5-pro",
         "copilot/gemini-3-flash-preview",
