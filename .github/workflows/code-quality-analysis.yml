@@ -83,6 +83,9 @@ jobs:
           # Executar ESLint com formato legível e capturar exit code
           npm run lint -- --max-warnings 350 || EXIT_CODE=$?
 
+          # Gerar arquivo SARIF para upload
+          npm run lint:sarif || echo "⚠️  Aviso: Falha ao gerar SARIF, mas continuando..."
+
           if [[ $EXIT_CODE -eq 0 ]]; then
             echo "✅ ESLint passou sem erros ou warnings"
           else
@@ -126,12 +129,15 @@ jobs:
           fi
 
       - name: 📤 Upload Resultados ESLint
+        if: always()
         uses: actions/upload-artifact@v4.4.3
         with:
           name: eslint-results
           path: eslint-results.sarif
+          if-no-files-found: warn
 
       - name: 📊 Upload Relatório SARIF para GitHub
+        if: always() && hashFiles('eslint-results.sarif') != ''
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: eslint-results.sarif

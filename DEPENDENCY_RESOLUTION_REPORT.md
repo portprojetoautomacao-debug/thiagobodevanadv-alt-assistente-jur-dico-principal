@@ -1,6 +1,6 @@
 # 📦 Relatório de Resolução de Dependências
 **Data:** 26/12/2024
-**Issue:** #[número] - Dependências desatualizadas detectadas
+**Issue:** #25 - Dependências desatualizadas detectadas
 **Status:** ✅ RESOLVIDO
 
 ## 🎯 Resumo Executivo
@@ -37,6 +37,7 @@ npm list --depth=0
 ### Vulnerabilidades
 ```json
 {
+  "auditReportVersion": 2,
   "vulnerabilities": {
     "info": 0,
     "low": 0,
@@ -44,6 +45,24 @@ npm list --depth=0
     "high": 0,
     "critical": 0,
     "total": 0
+  },
+  "metadata": {
+    "vulnerabilities": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0,
+      "total": 0
+    },
+    "dependencies": {
+      "prod": 859,
+      "dev": 545,
+      "optional": 17,
+      "peer": 8,
+      "peerOptional": 0,
+      "total": 1421
+    }
   }
 }
 ```
@@ -176,12 +195,14 @@ dist/assets/index-CPaJh-sx.js                     196.03 KB
 - npm audit: Executar mensalmente
 - Security advisories: Acompanhar via GitHub
 
-## 📝 Commits
+## 📝 Contexto de Commits
 
-1. **fix: restore missing use-autonomous-agents hook implementation**
-   - Criado stub funcional do hook
-   - Corrigido erro de build
-   - JSDoc comment em agents.ts
+Este relatório de resolução de dependências é **retrospectivo** e documenta o estado atual do projeto após commits já aplicados anteriormente na branch principal. Em especial:
+
+1. **fix: restore missing use-autonomous-agents hook implementation** *(já presente no histórico antes deste PR)*
+   - Confirmada a presença da implementação completa do hook em `src/hooks/use-autonomous-agents.ts` (≈160 linhas)
+   - Este PR **não** introduz alterações nesse arquivo; trata-se apenas de documentação e análise de dependências
+   - Corrigido JSDoc comment em `src/lib/agents.ts`
 
 ## 🏆 Conformidade com Modo Manutenção
 

@@ -22,6 +22,7 @@ import {
   createPIIFilteredBeforeSend,
   DEFAULT_PII_CONFIG,
   type PIIFilterConfig,
+  type MinimalSentryEvent,
 } from "@/services/pii-filtering";
 import * as Sentry from "@sentry/react";
 
@@ -213,7 +214,7 @@ export function initErrorTracking(): void {
       // ✅ LGPD: Before send hook com PII filtering
       beforeSend(event, hint) {
         // 1. Aplica PII filtering
-        event = piiFilteredBeforeSend(event) as any;
+        event = piiFilteredBeforeSend(event) as MinimalSentryEvent;
 
         // 2. Filtra erros de extensões do navegador
         if (

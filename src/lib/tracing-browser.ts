@@ -25,7 +25,6 @@ const resource = resourceFromAttributes({
 });
 
 // ✅ Configuração de tracing otimizada para AI Toolkit
-const isDev = import.meta.env.MODE === "development";
 const otlpEndpoint = import.meta.env.VITE_OTLP_ENDPOINT || "";
 const tracingEnabled = import.meta.env.VITE_ENABLE_TRACING === "true" && otlpEndpoint !== "";
 
