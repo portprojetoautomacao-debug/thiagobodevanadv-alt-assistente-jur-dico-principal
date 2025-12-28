@@ -13,15 +13,43 @@ Mantém compatibilidade total com backend React/Vercel.
 """
 
 import sys
+import threading
+import time
 from pathlib import Path
 
 import streamlit as st
+import uvicorn
 
 # Add lib to path
 sys.path.append(str(Path(__file__).parent / "lib"))
+# Add backend to path
+sys.path.append(str(Path(__file__).parent / "backend"))
 
 from backend_client import BackendClient
 from config import APP_CONFIG, load_config
+
+# ============================================
+# START BACKEND (Python Edition)
+# ============================================
+
+
+def start_backend():
+    """Inicia o backend FastAPI em uma thread separada."""
+    try:
+        from main import app as fastapi_app
+
+        uvicorn.run(fastapi_app, host="127.0.0.1", port=8000, log_level="error")
+    except Exception as e:
+        print(f"Erro ao iniciar backend: {e}")
+
+
+# Iniciar backend apenas uma vez
+if "backend_started" not in st.session_state:
+    thread = threading.Thread(target=start_backend, daemon=True)
+    thread.start()
+    st.session_state["backend_started"] = True
+    # Aguardar inicialização
+    time.sleep(3)
 
 # ============================================
 # PAGE CONFIG
