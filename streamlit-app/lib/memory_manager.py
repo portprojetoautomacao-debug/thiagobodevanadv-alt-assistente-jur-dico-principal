@@ -2,8 +2,7 @@ import logging
 import os
 from typing import Any, Dict
 
-from langchain.memory import ChatMessageHistory
-from langchain_core.chat_history import BaseChatMessageHistory
+from langchain_core.chat_history import BaseChatMessageHistory, InMemoryChatMessageHistory
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +63,7 @@ class MemoryManager:
 
         # Fallback ou modo local
         if session_id not in self._local_memory:
-            self._local_memory[session_id] = ChatMessageHistory()
+            self._local_memory[session_id] = InMemoryChatMessageHistory()
 
         return self._local_memory[session_id]
 
