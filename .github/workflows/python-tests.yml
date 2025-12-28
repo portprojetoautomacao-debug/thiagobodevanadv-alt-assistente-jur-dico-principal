@@ -41,6 +41,7 @@ jobs:
           pytest tests/test_backend_api.py tests/test_e2e.py tests/test_integrations.py tests/test_agents.py tests/test_djen_workflow.py -v --tb=short --cov=. --cov-report=xml --cov-report=term
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
           UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
 

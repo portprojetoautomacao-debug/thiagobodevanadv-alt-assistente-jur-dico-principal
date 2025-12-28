@@ -222,10 +222,10 @@ export function initErrorTracking (): void
       sendDefaultPii: false,
 
       // ✅ LGPD: Before send hook com PII filtering
-      beforeSend ( event, hint )
+      beforeSend ( event: Sentry.ErrorEvent, hint: Sentry.EventHint ): Sentry.ErrorEvent | null
       {
         // 1. Aplica PII filtering
-        event = piiFilteredBeforeSend( event ) as Sentry.Event;
+        event = piiFilteredBeforeSend( event ) as Sentry.ErrorEvent;
 
         // 2. Filtra erros de extensões do navegador
         if (

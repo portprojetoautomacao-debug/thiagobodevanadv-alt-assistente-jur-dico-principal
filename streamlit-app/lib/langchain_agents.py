@@ -9,7 +9,12 @@ import importlib
 import logging
 from typing import Any, Dict, List, Optional
 
-from memory_manager import MemoryManager
+# Try relative import first (when imported as lib.langchain_agents)
+# Then fall back to absolute import (when lib is in sys.path)
+try:
+    from .memory_manager import MemoryManager
+except ImportError:
+    from memory_manager import MemoryManager
 
 logger = logging.getLogger(__name__)
 

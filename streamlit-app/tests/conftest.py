@@ -21,6 +21,16 @@ sys.path.insert(0, str(root_dir / "lib" / "tools"))
 sys.path.insert(0, str(root_dir / "lib" / "integrations"))
 sys.path.insert(0, str(root_dir / "backend"))
 
+# ✅ Configurar API keys para testes (mock se não disponível)
+if not os.getenv("GEMINI_API_KEY") and not os.getenv("GOOGLE_API_KEY"):
+    # Usar chave dummy para testes se nenhuma key real disponível
+    os.environ["GEMINI_API_KEY"] = "test-dummy-key-for-ci"
+    os.environ["GOOGLE_API_KEY"] = "test-dummy-key-for-ci"
+
+# ✅ Se GEMINI_API_KEY existe mas GOOGLE_API_KEY não, copiar o valor
+if os.getenv("GEMINI_API_KEY") and not os.getenv("GOOGLE_API_KEY"):
+    os.environ["GOOGLE_API_KEY"] = os.getenv("GEMINI_API_KEY")
+
 
 @pytest.fixture
 def caso_teste_basico():

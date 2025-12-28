@@ -215,14 +215,51 @@ jobs:
           # Instalar servisor local
           npm install --save-dev serve
 
-          # Servir aplicação localmente
-          npx serve -s dist -p 3000 &
+          # Servir aplicação localmente em background com logs
+          echo "🚀 Iniciando servidor na porta 3000..."
+          npx serve -s dist -p 3000 > serve.log 2>&1 &
           SERVER_PID=$!
+          echo "📝 PID do servidor: $SERVER_PID"
 
-          # Aguardar servidor iniciar
-          sleep 10
+          # Aguardar um pouco para o servidor começar
+          sleep 3
+
+          # Verificar se o processo ainda está rodando
+          if ! kill -0 $SERVER_PID 2>/dev/null; then
+            echo "❌ Erro: Processo do servidor morreu imediatamente"
+            echo "📋 Logs do servidor:"
+            cat serve.log || echo "Sem logs disponíveis"
+            exit 1
+          fi
+
+          # Aguardar servidor iniciar com health check
+          echo "⏳ Aguardando servidor iniciar..."
+          SERVER_READY=false
+          for i in {1..30}; do
+            if curl -f http://localhost:3000 > /dev/null 2>&1; then
+              echo "✅ Servidor respondendo na porta 3000"
+              SERVER_READY=true
+              break
+            fi
+            echo "Tentativa $i/30: Aguardando servidor..."
+            sleep 2
+          done
+
+          # Verificar se servidor está acessível
+          if [ "$SERVER_READY" = false ]; then
+            echo "❌ Erro: Servidor não está acessível em http://localhost:3000"
+            echo "📋 Logs do servidor:"
+            cat serve.log || echo "Sem logs disponíveis"
+            echo "🔍 Verificando se dist/ existe:"
+            ls -la dist/ || echo "dist/ não encontrado"
+            echo "🔍 Processos rodando na porta 3000:"
+            lsof -i :3000 || echo "Nenhum processo na porta 3000"
+            kill $SERVER_PID 2>/dev/null || true
+            exit 1
+          fi
 
           # Executar Lighthouse
+          echo "🔍 Executando Lighthouse..."
           npx lighthouse http://localhost:3000 \
             --output=json \
             --output-path=lighthouse-performance.json \
@@ -230,7 +267,9 @@ jobs:
             --chrome-flags="--headless --disable-gpu --no-sandbox --disable-dev-shm-usage"
 
           # Matar servidor
-          kill $SERVER_PID
+          echo "🛑 Encerrando servidor..."
+          kill $SERVER_PID 2>/dev/null || true
+          wait $SERVER_PID 2>/dev/null || true
 
           # Extrair métricas
           PERFORMANCE_SCORE=$(jq '.categories.performance.score * 100' lighthouse-performance.json)
