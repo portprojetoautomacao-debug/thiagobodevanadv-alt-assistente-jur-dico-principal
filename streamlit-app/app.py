@@ -49,23 +49,25 @@ def start_backend():
             [sys.executable, str(script_path)],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            text=True
+            text=True,
         )
 
         # Aguarda inicialização
         with st.spinner("Iniciando servidor backend..."):
-            for _ in range(20): # Aumentado para 20s
+            for _ in range(20):  # Aumentado para 20s
                 # Verifica se o processo morreu
                 if process.poll() is not None:
                     stdout, stderr = process.communicate()
-                    st.error(f"❌ Erro fatal ao iniciar backend:\n\nSTDOUT:\n{stdout}\n\nSTDERR:\n{stderr}")
+                    st.error(
+                        f"❌ Erro fatal ao iniciar backend:\n\nSTDOUT:\n{stdout}\n\nSTDERR:\n{stderr}"
+                    )
                     return
 
                 if is_port_open("127.0.0.1", 8000):
                     print("✅ Backend iniciado com sucesso!")
                     return
                 time.sleep(1)
-            
+
             # Se chegou aqui, não morreu mas não abriu porta
             st.warning("⚠️ Backend demorou para responder. Verifique os logs.")
             # Tenta ler o que já saiu
