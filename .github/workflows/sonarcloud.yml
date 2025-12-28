@@ -76,6 +76,7 @@ jobs:
         with:
           sarif_file: eslint-results.sarif
           category: sonarcloud-eslint
+        continue-on-error: true
 
       - name: Build application
         run: npm run build
