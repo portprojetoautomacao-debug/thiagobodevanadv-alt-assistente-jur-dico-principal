@@ -12,6 +12,7 @@ Versão Python do sistema jurídico com:
 Mantém compatibilidade total com backend React/Vercel.
 """
 
+import os
 import socket
 import subprocess
 import sys
@@ -27,6 +28,15 @@ from backend_client import BackendClient
 from config import APP_CONFIG, load_config
 
 # ============================================
+# PAGE CONFIG (MUST BE FIRST)
+# ============================================
+st.set_page_config(
+    page_title=APP_CONFIG["title"],
+    page_icon=APP_CONFIG["icon"],
+    layout=APP_CONFIG["layout"],
+)
+
+# ============================================
 # START BACKEND (Python Edition)
 # ============================================
 
@@ -39,6 +49,16 @@ def is_port_open(host, port):
 
 def start_backend():
     """Inicia o backend FastAPI em um subprocesso."""
+    # Se estiver configurado para usar backend remoto, não inicia local
+    backend_url = APP_CONFIG.get("backend_url", "") or os.getenv("REACT_API_URL", "")
+    if (
+        backend_url
+        and "localhost" not in backend_url
+        and "127.0.0.1" not in backend_url
+    ):
+        print(f"ℹ️ Usando backend remoto: {backend_url}")
+        return
+
     if not is_port_open("127.0.0.1", 8000):
         print("🚀 Iniciando backend FastAPI...")
         script_path = Path(__file__).parent / "backend" / "main.py"
@@ -83,23 +103,8 @@ def start_backend():
 if "backend_started" not in st.session_state:
     start_backend()
     st.session_state["backend_started"] = True
-
-    # ============================================
-    # PAGE CONFIG
-    # ============================================
     # Aguardar inicialização
     time.sleep(3)
-
-# ============================================
-# PAGE CONFIG
-# ============================================
-
-st.set_page_config(
-    page_title=APP_CONFIG["title"],
-    page_icon=APP_CONFIG["icon"],
-    layout=APP_CONFIG["layout"],
-    initial_sidebar_state="expanded",
-)
 
 # ============================================
 # CUSTOM CSS
