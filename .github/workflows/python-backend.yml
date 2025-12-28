@@ -35,6 +35,7 @@ jobs:
           sleep 5
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
       - name: Test backend
         run: |
@@ -47,6 +48,7 @@ jobs:
           pytest tests/test_agents.py -v
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
   lint-python:
     name: Python Linting
