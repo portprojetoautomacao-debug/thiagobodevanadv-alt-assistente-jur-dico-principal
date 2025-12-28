@@ -9,7 +9,7 @@ pydantic==2.5.0
 pydantic-settings==2.1.0
 
 # CORS
-python-multipart==0.0.6
+python-multipart==0.0.18
 
 # Utilities
 python-dotenv==1.0.0
