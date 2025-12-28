@@ -212,17 +212,31 @@ jobs:
         run: |
           echo "🖥️  Executando Lighthouse performance test..."
 
-          # Instalar servisor local
-          npm install --save-dev serve
+          # Instalar servidor local globalmente
+          npm install -g serve
 
-          # Servir aplicação localmente em background com logs
+          # Verificar se dist/ existe e tem conteúdo
+          if [ ! -d "dist" ]; then
+            echo "❌ Erro: Diretório dist/ não encontrado"
+            exit 1
+          fi
+
+          echo "📁 Conteúdo de dist/:"
+          ls -la dist/
+
+          # Verificar se há um index.html
+          if [ ! -f "dist/index.html" ]; then
+            echo "⚠️ Aviso: index.html não encontrado em dist/"
+          fi
+
+          # Iniciar servidor com mais opções e redirecionamento adequado
           echo "🚀 Iniciando servidor na porta 3000..."
-          npx serve -s dist -p 3000 > serve.log 2>&1 &
+          serve -s dist -l 3000 --no-port-switching --no-clipboard > serve.log 2>&1 &
           SERVER_PID=$!
           echo "📝 PID do servidor: $SERVER_PID"
 
-          # Aguardar um pouco para o servidor começar
-          sleep 3
+          # Aguardar processo estabilizar
+          sleep 5
 
           # Verificar se o processo ainda está rodando
           if ! kill -0 $SERVER_PID 2>/dev/null; then
@@ -232,15 +246,23 @@ jobs:
             exit 1
           fi
 
-          # Aguardar servidor iniciar com health check
+          # Aguardar servidor iniciar com health check mais robusto
           echo "⏳ Aguardando servidor iniciar..."
           SERVER_READY=false
           for i in {1..30}; do
-            if curl -f http://localhost:3000 > /dev/null 2>&1; then
+            if curl -s -f -o /dev/null http://localhost:3000; then
               echo "✅ Servidor respondendo na porta 3000"
               SERVER_READY=true
               break
             fi
+
+            # Verificar se processo ainda existe
+            if ! kill -0 $SERVER_PID 2>/dev/null; then
+              echo "❌ Servidor morreu durante inicialização (tentativa $i)"
+              cat serve.log || echo "Sem logs"
+              exit 1
+            fi
+
             echo "Tentativa $i/30: Aguardando servidor..."
             sleep 2
           done
@@ -250,8 +272,6 @@ jobs:
             echo "❌ Erro: Servidor não está acessível em http://localhost:3000"
             echo "📋 Logs do servidor:"
             cat serve.log || echo "Sem logs disponíveis"
-            echo "🔍 Verificando se dist/ existe:"
-            ls -la dist/ || echo "dist/ não encontrado"
             echo "🔍 Processos rodando na porta 3000:"
             lsof -i :3000 || echo "Nenhum processo na porta 3000"
             kill $SERVER_PID 2>/dev/null || true
