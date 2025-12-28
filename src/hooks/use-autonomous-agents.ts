@@ -1,224 +1,324 @@
-/**
- * Hook para gerenciar agentes autônomos
- *
- * Este é um stub temporário para manter compatibilidade com componentes existentes.
- * A implementação completa está em desenvolvimento.
- */
-
-import { useState, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import type { Agent, AgentTask } from "@/lib/agents";
-import { DEFAULT_AGENTS } from "@/lib/agents";
+import { useKV } from "./use-kv";
 
-export interface ActivityLogEntry {
+export interface ActivityLog {
   id: string;
-  timestamp: string;
   agentId: string;
-  agentName: string;
-  type: "started" | "completed" | "failed" | "info";
-  message: string;
+  timestamp: string;
   action: string;
-  result: "success" | "error" | "warning";
-  taskId?: string;
-  success: boolean;
+  result: "success" | "warning" | "error";
 }
 
-export interface UseAutonomousAgentsReturn {
-  agents: Agent[];
-  activityLog: ActivityLogEntry[];
-  toggleAgent: (agentId: string) => void;
-  executeTask: (agentId: string, task: AgentTask) => Promise<void>;
-  clearActivityLog: () => void;
-  // Propriedades adicionais para compatibilidade
-  taskQueue: AgentTask[];
-  completedTasks: AgentTask[];
-  streamingContent: string;
-  isStreamingEnabled: boolean;
-  toggleStreaming: () => void;
-  serverLogs: ActivityLogEntry[];
-  legalMemory: unknown;
-  refreshServerData: () => void;
-  setAgents: (agents: Agent[]) => void;
-  addTask: (task: AgentTask) => void;
-}
-
-// Export tipos adicionais para compatibilidade
 export interface MemoryItem {
   id: string;
-  type: string;
+  category: string;
   content: string;
   timestamp: string;
   createdAt: string;
+  agentId: string;
+  type?: string;
   metadata?: Record<string, unknown>;
 }
 
-export function processAutonomousTask(task: AgentTask): Promise<void> {
-  return Promise.resolve();
+export interface AgentActionLog {
+  agentId: string;
+  action: string;
+  details?: Record<string, unknown>;
+  timestamp: string;
+  success: boolean;
+  durationMs?: number;
 }
 
+interface UseAutonomousAgentsReturn {
+  agents: Agent[];
+  tasks: AgentTask[];
+  taskQueue: AgentTask[];
+  completedTasks: AgentTask[];
+  activityLog: ActivityLog[];
+  streamingContent: Record<string, string>;
+  isStreamingEnabled: boolean;
+  serverLogs: AgentActionLog[];
+  legalMemory: MemoryItem[];
+  addTask: (task: AgentTask | Omit<AgentTask, "id" | "createdAt" | "status">) => Promise<void>;
+  toggleAgent: (agentId: string) => Promise<void>;
+  toggleStreaming: (enabled: boolean) => void;
+  refreshServerData: () => Promise<void>;
+  setAgents: (agents: Agent[] | ((prev: Agent[]) => Agent[])) => void;
+  isLoading: boolean;
+  error: string | null;
+}
+
+const AGENTS_KEY = "agents";
+const TASKS_KEY = "agent-tasks";
+const ACTIVITY_LOG_KEY = "activity-log";
+
 /**
- * Hook para gerenciar agentes autônomos
+ * Hook para gerenciar agentes autônomos 24/7
+ * Fornece estado e controle para o sistema de agentes IA
+ * 
+ * @note streamingContent changed from string to Record<string, string> to support multiple agents.
+ * If migrating from previous version, clear browser storage/cache.
  */
 export function useAutonomousAgents(): UseAutonomousAgentsReturn {
-  const [agents, setAgents] = useState<Agent[]>(() =>
-    DEFAULT_AGENTS.map((agent) => ({
-      ...agent,
-      status: "idle" as const,
-      enabled: false,
-      lastActivity: new Date().toISOString(),
-      continuousMode: false,
-    }))
+  const [agentsData, updateAgents] = useKV<Agent[]>(AGENTS_KEY, []);
+  const [tasksData, updateTasks] = useKV<AgentTask[]>(TASKS_KEY, []);
+  const [activityData, updateActivity] = useKV<ActivityLog[]>(ACTIVITY_LOG_KEY, []);
+
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [streamingContent, setStreamingContent] = useState<Record<string, string>>({});
+  const [isStreamingEnabled, setIsStreamingEnabled] = useState(false);
+  const [serverLogs, setServerLogs] = useState<AgentActionLog[]>([]);
+  const [legalMemory, setLegalMemory] = useState<MemoryItem[]>([]);
+
+  const agents = agentsData;
+  const allTasks = tasksData;
+  const activityLog = activityData;
+
+  // Ref to track if default agents have been initialized
+  const initializedRef = useRef(false);
+
+  // Separar tarefas completas das pendentes e fila de tarefas
+  const tasks = allTasks.filter((t: AgentTask) => t.status !== "completed" && t.status !== "failed");
+  const completedTasks = allTasks.filter((t: AgentTask) => t.status === "completed" || t.status !== "failed");
+  const taskQueue = tasks; // taskQueue is an alias for tasks
+
+  // Inicializar agentes padrão se não houver dados (executa apenas uma vez)
+  useEffect(() => {
+    if (!initializedRef.current && agents.length === 0) {
+      initializedRef.current = true;
+      const defaultAgents: Agent[] = [
+        {
+          id: "harvey",
+          name: "Harvey Specter",
+          description: "Estrategista-chefe do escritório",
+          type: "strategic",
+          status: "idle",
+          enabled: true,
+          lastActivity: "Aguardando tarefas",
+          continuousMode: true,
+        },
+        {
+          id: "justine",
+          name: "Mrs. Justin-e",
+          description: "Especialista em intimações e prazos",
+          type: "intimation",
+          status: "idle",
+          enabled: true,
+          lastActivity: "Aguardando tarefas",
+          continuousMode: true,
+        },
+        {
+          id: "analise-documental",
+          name: "Análise Documental",
+          description: "Analisador de documentos 24/7",
+          type: "document",
+          status: "idle",
+          enabled: true,
+          lastActivity: "Aguardando tarefas",
+          continuousMode: true,
+        },
+        {
+          id: "monitor-djen",
+          name: "Monitor DJEN",
+          description: "Monitoramento de publicações",
+          type: "monitoring",
+          status: "idle",
+          enabled: true,
+          lastActivity: "Aguardando tarefas",
+          continuousMode: true,
+        },
+        {
+          id: "gestao-prazos",
+          name: "Gestão de Prazos",
+          description: "Calculadora e gestor de prazos",
+          type: "deadline",
+          status: "idle",
+          enabled: true,
+          lastActivity: "Aguardando tarefas",
+          continuousMode: true,
+        },
+      ];
+
+      updateAgents(defaultAgents);
+    }
+  }, [agents.length, updateAgents]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Adicionar nova tarefa - aceita tarefa parcial ou completa
+  const addTask = useCallback(
+    async (
+      taskData: AgentTask | Omit<AgentTask, "id" | "createdAt" | "status">
+    ) => {
+      try {
+        const generatedId = crypto.randomUUID();
+        const now = new Date().toISOString();
+
+        // Type-safe handling: check if required fields exist
+        const hasId = "id" in taskData && typeof taskData.id === "string";
+        const hasCreatedAt = "createdAt" in taskData && typeof taskData.createdAt === "string";
+        const hasStatus = "status" in taskData && typeof taskData.status === "string";
+
+        const newTask: AgentTask = {
+          ...taskData,
+          id: hasId ? taskData.id : generatedId,
+          createdAt: hasCreatedAt ? taskData.createdAt : now,
+          status: hasStatus ? (taskData as AgentTask).status : "queued",
+        };
+
+        const updatedTasks = [...allTasks, newTask];
+        updateTasks(updatedTasks);
+
+        // Adicionar log de atividade
+        const newLog: ActivityLog = {
+          id: crypto.randomUUID(),
+          agentId: newTask.agentId,
+          timestamp: now,
+          action: `Nova tarefa: ${newTask.type}`,
+          result: "success",
+        };
+
+        updateActivity([newLog, ...activityLog].slice(0, 100)); // Manter últimas 100 atividades
+
+        setError(null);
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : "Erro desconhecido";
+        setError(errorMsg);
+        throw new Error(`Falha ao adicionar tarefa: ${errorMsg}`);
+      }
+    },
+    [allTasks, activityLog, updateTasks, updateActivity]
   );
 
-  const [activityLog, setActivityLog] = useState<ActivityLogEntry[]>([]);
+  // Habilitar/desabilitar agente (sem segundo parâmetro para compatibilidade com AIAgents)
+  const toggleAgent = useCallback(
+    async (agentId: string) => {
+      try {
+        const updatedAgents = agents.map((agent: Agent) => {
+          if (agent.id === agentId) {
+            const newEnabled = !agent.enabled;
+            return {
+              ...agent,
+              enabled: newEnabled,
+              lastActivity: newEnabled ? "Ativado pelo usuário" : "Pausado pelo usuário",
+            };
+          }
+          return agent;
+        });
 
-  const addToLog = useCallback((entry: Omit<ActivityLogEntry, "id" | "timestamp">) => {
-    const newEntry: ActivityLogEntry = {
-      ...entry,
-      id: `log-${Date.now()}-${Math.random()}`,
-      timestamp: new Date().toISOString(),
-    };
+        updateAgents(updatedAgents);
 
-    setActivityLog((prev) => [newEntry, ...prev].slice(0, 100));
+        // Adicionar log de atividade
+        const agent = agents.find((a: Agent) => a.id === agentId);
+        const newLog: ActivityLog = {
+          id: `log-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+          agentId,
+          timestamp: new Date().toISOString(),
+          action: agent?.enabled ? "Agente pausado" : "Agente ativado",
+          result: "success",
+        };
+
+        updateActivity([newLog, ...activityLog].slice(0, 100));
+        setError(null);
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : "Erro desconhecido";
+        setError(errorMsg);
+        throw new Error(`Falha ao atualizar agente: ${errorMsg}`);
+      }
+    },
+    [agents, activityLog, updateAgents, updateActivity]
+  );
+
+  // Toggle streaming
+  const toggleStreaming = useCallback((enabled: boolean) => {
+    setIsStreamingEnabled(enabled);
+    if (!enabled) {
+      setStreamingContent({});
+    }
   }, []);
 
-  const toggleAgent = useCallback(
-    (agentId: string) => {
-      setAgents((prev) =>
-        prev.map((agent) =>
-          agent.id === agentId
-            ? {
-                ...agent,
-                enabled: !agent.enabled,
-                status: !agent.enabled ? "active" : "idle",
-                lastActivity: new Date().toISOString(),
-              }
-            : agent
-        )
-      );
-
-      const agent = agents.find((a) => a.id === agentId);
-      if (agent) {
-        addToLog({
-          agentId,
-          agentName: agent.name,
-          type: "info",
-          message: `Agente ${agent.enabled ? "desativado" : "ativado"}`,
-          action: "toggle",
-          result: "success",
-          success: true,
-        });
-      }
-    },
-    [agents, addToLog]
-  );
-
-  const executeTask = useCallback(
-    async (agentId: string, task: AgentTask) => {
-      const agent = agents.find((a) => a.id === agentId);
-      if (!agent) {
-        console.error(`Agent ${agentId} not found`);
-        return;
-      }
-
-      addToLog({
-        agentId,
-        agentName: agent.name,
-        type: "started",
-        message: `Executando tarefa: ${task.type}`,
-        taskId: task.id,
-        action: "execute",
-        result: "success",
-        success: true,
-      });
-
-      setAgents((prev) =>
-        prev.map((a) =>
-          a.id === agentId
-            ? {
-                ...a,
-                status: "processing",
-                currentTask: task,
-                lastActivity: new Date().toISOString(),
-              }
-            : a
-        )
-      );
-
+  // Refresh server data (fetch logs and memory)
+  const refreshServerData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      // Fetch server logs - use existing log endpoint
       try {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        setAgents((prev) =>
-          prev.map((a) =>
-            a.id === agentId
-              ? {
-                  ...a,
-                  status: "idle",
-                  currentTask: undefined,
-                  lastActivity: new Date().toISOString(),
-                }
-              : a
-          )
-        );
-
-        addToLog({
-          agentId,
-          agentName: agent.name,
-          type: "completed",
-          message: `Tarefa concluída: ${task.type}`,
-          taskId: task.id,
-          action: "complete",
-          result: "success",
-          success: true,
-        });
-      } catch (error) {
-        setAgents((prev) =>
-          prev.map((a) =>
-            a.id === agentId
-              ? {
-                  ...a,
-                  status: "error",
-                  currentTask: undefined,
-                  lastActivity: new Date().toISOString(),
-                }
-              : a
-          )
-        );
-
-        addToLog({
-          agentId,
-          agentName: agent.name,
-          type: "failed",
-          message: `Erro na tarefa: ${error instanceof Error ? error.message : "Erro desconhecido"}`,
-          taskId: task.id,
-          action: "execute",
-          result: "error",
-          success: false,
-        });
+        const logsResponse = await fetch("/api/agents/log");
+        if (logsResponse.ok) {
+          const logsData = await logsResponse.json();
+          // Convert to AgentActionLog format if data exists
+          if (Array.isArray(logsData)) {
+            setServerLogs(logsData.slice(0, 50));
+          }
+        }
+      } catch (logErr) {
+        console.warn("Failed to fetch server logs:", logErr);
+        // Don't throw - continue with other fetches
       }
-    },
-    [agents, addToLog]
-  );
 
-  const clearActivityLog = useCallback(() => {
-    setActivityLog([]);
+      // Fetch legal memory - endpoint may not exist yet
+      try {
+        const memoryResponse = await fetch("/api/agents/memory");
+        if (memoryResponse.ok) {
+          const memory = await memoryResponse.json();
+          if (Array.isArray(memory)) {
+            setLegalMemory(memory.slice(0, 100));
+          }
+        }
+      } catch (memErr) {
+        console.warn("Failed to fetch legal memory:", memErr);
+        // Don't throw - memory endpoint is optional
+      }
+
+      setError(null);
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : "Erro desconhecido";
+      console.error("Error refreshing server data:", errorMsg);
+      setError(errorMsg);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
   return {
     agents,
+    tasks,
+    taskQueue,
+    completedTasks,
     activityLog,
+    streamingContent,
+    isStreamingEnabled,
+    serverLogs,
+    legalMemory,
+    addTask,
     toggleAgent,
-    executeTask,
-    clearActivityLog,
-    // Valores padrão para compatibilidade
-    taskQueue: [],
-    completedTasks: [],
-    streamingContent: "",
-    isStreamingEnabled: false,
-    toggleStreaming: () => {},
-    serverLogs: activityLog,
-    legalMemory: null,
-    refreshServerData: () => {},
-    setAgents,
-    addTask: () => {},
+    toggleStreaming,
+    refreshServerData,
+    setAgents: updateAgents,
+    isLoading,
+    error,
   };
+}
+
+/**
+ * Process autonomous task - NO-OP stub for compatibility.
+ *
+ * This function exists only for backward compatibility with
+ * aop-logging-examples.ts and DOES NOT perform any real
+ * task processing. Actual processing happens in the backend/API.
+ *
+ * @deprecated This is a no-op compatibility stub. New code should
+ *             call the appropriate backend/API endpoints for
+ *             autonomous task processing instead of using this
+ *             function.
+ * @param task - The task to process (logged only, not actually processed)
+ */
+export async function processAutonomousTask(task: AgentTask): Promise<void> {
+  console.warn(
+    "[useAutonomousAgents] processAutonomousTask is a no-op stub for compatibility only. " +
+      "Actual autonomous task processing occurs in the backend/API."
+  );
+  console.log("processAutonomousTask called with task:", task);
+  // Intentionally no-op: maintained only for backward compatibility
+  return;
 }

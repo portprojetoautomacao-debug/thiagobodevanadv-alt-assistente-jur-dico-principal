@@ -15,7 +15,8 @@ import {
   aopMiddleware,
   wrapAgentFunction,
 } from "./aop-logging";
-import type { Expediente, AgentTask } from "@/types";
+import type { Expediente } from "@/types";
+import type { AgentTask } from "./agents";
 
 // ============================================================================
 // EXEMPLO 1: Decorator em Agente IA
@@ -47,12 +48,13 @@ class JustineAgent {
 
     const task: AgentTask = {
       id: crypto.randomUUID(),
-      type: "analisar_intimacao",
-      status: "pending",
-      priority: analysis.urgencia === "alta" ? "high" : "normal",
+      type: "ANALYZE_INTIMATION",
+      status: "queued",
+      priority: analysis.urgencia === "alta" ? "high" : "medium",
       createdAt: new Date().toISOString(),
       agentId: "justine",
-    } as AgentTask;
+      data: {}, // Required property
+    };
 
     return task;
   }
