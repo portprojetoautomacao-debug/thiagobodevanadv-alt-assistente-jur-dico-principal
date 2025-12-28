@@ -31,9 +31,18 @@ sys.path.append(str(Path(__file__).parent.parent / "lib"))
 sys.path.append(str(Path(__file__).parent))
 
 from config import load_config
+
 from backend.cron_jobs import start_scheduler
 from backend.database import RedisClient
-from backend.routers import agents, djen, expedientes, intimacoes, kv, metrics, processes
+from backend.routers import (
+    agents,
+    djen,
+    expedientes,
+    intimacoes,
+    kv,
+    metrics,
+    processes,
+)
 
 # Configuração
 config = load_config()
