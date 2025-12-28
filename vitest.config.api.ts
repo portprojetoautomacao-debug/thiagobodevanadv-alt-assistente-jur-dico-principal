@@ -20,6 +20,16 @@ export default defineConfig({
     // Ambiente Node é ideal para testar APIs da pasta /api do Vercel
     environment: 'node',
 
+    // Variáveis de ambiente para testes
+    env: {
+      ENABLE_HYBRID_AGENTS: 'true',
+      LANGGRAPH_API_URL: 'http://localhost:8000',
+      AUTOGEN_API_KEY: 'test-autogen-key',
+      RESEND_API_KEY: 're_test_key_123',
+      GEMINI_API_KEY: 'test-gemini-key',
+      NODE_ENV: 'test',
+    },
+
     // Testes localizados somente na pasta /api
     include: ['api/**/*.test.ts'],
 

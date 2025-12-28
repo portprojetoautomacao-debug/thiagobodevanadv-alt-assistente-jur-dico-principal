@@ -45,6 +45,29 @@ export interface ChatMessage {
   timestamp: string;
 }
 
+export interface ActivityLogEntry {
+  id: string;
+  timestamp: string;
+  agentId: string;
+  agentName: string;
+  type: "started" | "completed" | "failed" | "info";
+  message: string;
+  action?: string;
+  result?: string;
+  taskId?: string;
+}
+
+export interface AgentTask {
+  id: string;
+  agentId: string;
+  type: string;
+  priority: "low" | "medium" | "high" | "urgent";
+  status: "pending" | "processing" | "completed" | "failed";
+  data?: Record<string, unknown>;
+  createdAt: string;
+  completedAt?: string;
+}
+
 export interface Feriado {
   data: string;
   nome: string;

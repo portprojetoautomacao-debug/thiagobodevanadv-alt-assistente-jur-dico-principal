@@ -16,6 +16,8 @@ describe( 'Heavy Processor Client', () =>
   beforeEach( () =>
   {
     vi.clearAllMocks();
+    // Habilitar Heavy Processor para os testes
+    import.meta.env.VITE_HEAVY_PROCESSOR_ENABLED = 'true';
   } );
 
   describe( 'shouldUseHeavyProcessor', () =>

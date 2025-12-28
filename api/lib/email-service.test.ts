@@ -10,34 +10,28 @@ vi.mock( "resend", () => ( {
 } ) );
 
 // Mock completo do email-service para testes
-vi.mock( "./email-service.js", async ( importOriginal ) =>
-{
-  const actual = await importOriginal<typeof import( "./email-service.js" )>();
-
-  return {
-    ...actual,
-    sendEmail: vi.fn().mockResolvedValue( {
-      success: true,
-      messageId: "mock-email-id-123",
-      error: null,
-    } ),
-    sendNotificationEmail: vi.fn().mockResolvedValue( {
-      success: true,
-      messageId: "mock-notification-id-456",
-      error: null,
-    } ),
-    sendUrgentDeadlineAlert: vi.fn().mockResolvedValue( {
-      success: true,
-      messageId: "mock-alert-id-789",
-      error: null,
-    } ),
-    sendDailySummaryEmail: vi.fn().mockResolvedValue( {
-      success: true,
-      messageId: "mock-summary-id-012",
-      error: null,
-    } ),
-  };
-} );
+vi.mock("./email-service.js", () => ({
+  sendEmail: vi.fn().mockResolvedValue({
+    success: true,
+    messageId: "mock-email-id-123",
+    error: null,
+  }),
+  sendNotificationEmail: vi.fn().mockResolvedValue({
+    success: true,
+    messageId: "mock-notification-id-456",
+    error: null,
+  }),
+  sendUrgentDeadlineAlert: vi.fn().mockResolvedValue({
+    success: true,
+    messageId: "mock-alert-id-789",
+    error: null,
+  }),
+  sendDailySummaryEmail: vi.fn().mockResolvedValue({
+    success: true,
+    messageId: "mock-summary-id-012",
+    error: null,
+  }),
+}));
 
 import
 {

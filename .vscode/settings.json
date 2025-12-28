@@ -2,17 +2,14 @@
   // ========================================
   // 🤖 GITHUB COPILOT - AGENTE DE CODIFICAÇÃO
   // ========================================
-
   // Habilitar Copilot Instruction Files (copilot-instructions.md)
   "github.copilot.chat.useInstructionFiles": true,
-
   // Configurações avançadas do Copilot
   "github.copilot.chat.alternateGptPrompt.enabled": true,
   "github.copilot.chat.anthropic.thinking.enabled": true,
   "github.copilot.chat.anthropic.tools.websearch.enabled": true,
   "github.copilot.chat.codesearch.enabled": true,
   "github.copilot.editor.enableAutoCompletions": true,
-
   // 🚀 AUTOMAÇÃO MÁXIMA - Copilot trabalha sozinho
   "github.copilot.enable": {
     "*": true,
@@ -25,7 +22,6 @@
     "inlineSuggestCount": 3,
     "listCount": 10
   },
-
   // Instruções contextuais para geração de código
   "github.copilot.chat.codeGeneration.instructions": [
     {
@@ -47,105 +43,125 @@
       "text": "Mantenha compatibilidade com Vercel serverless (Node.js 22.x)"
     }
   ],
-
   // ========================================
   // 🔍 SONARLINT - ANÁLISE DE QUALIDADE
   // ========================================
-
   // Telemetria DESABILITADA para privacidade
   "sonarlint.disableTelemetry": true,
-
   // Análise automática HABILITADA (análise em tempo real)
   "sonarlint.automaticAnalysis.enabled": true,
   "sonarlint.automaticAnalysis.onSave": true,
   "sonarlint.automaticAnalysis.onType": true,
-
   // Connected Mode com SonarCloud
   "sonarlint.connectedMode.project": {
     "connectionId": "sonarcloud",
     "projectKey": "portprojetoautomacao-debug_thiagobodevanadv-alt-assistente-jur-dico-principal"
   },
-
   // Notificações de servidor habilitadas
   "sonarlint.notifications.enabled": true,
   "sonarlint.notifications.showOnceMessages": true,
-
   // Focus em New Code (Clean as You Code)
   "sonarlint.focusOnNewCode": true,
-
   // Mostrar todas as localizações de issues
   "sonarlint.showAllLocations": true,
-
   // Quick fixes automáticos
   "sonarlint.quickfixes.enabled": true,
-
   // Security hotspots
   "sonarlint.hotspots.enabled": true,
-
   // Taint vulnerabilities (vulnerabilidades de fluxo de dados)
   "sonarlint.taintVulnerabilities.enabled": true,
-
   // IDE Labs features (experimental)
   "sonarlint.ideLabs.enabled": true,
-
   // Regras customizadas para TypeScript/JavaScript
   "sonarlint.rules": {
     // Segurança - HABILITADAS
-    "typescript:S2245": { "level": "on" }, // Geração de números aleatórios inseguros
-    "typescript:S4426": { "level": "on" }, // Algoritmos criptográficos fracos
-    "typescript:S5852": { "level": "on" }, // RegEx vulneráveis (ReDoS)
-    "typescript:S6268": { "level": "on" }, // Angular template XSS
-    "typescript:S6303": { "level": "on" }, // React XSS via dangerouslySetInnerHTML
-
+    "typescript:S2245": {
+      "level": "on"
+    }, // Geração de números aleatórios inseguros
+    "typescript:S4426": {
+      "level": "on"
+    }, // Algoritmos criptográficos fracos
+    "typescript:S5852": {
+      "level": "on"
+    }, // RegEx vulneráveis (ReDoS)
+    "typescript:S6268": {
+      "level": "on"
+    }, // Angular template XSS
+    "typescript:S6303": {
+      "level": "on"
+    }, // React XSS via dangerouslySetInnerHTML
     // Code Smells - HABILITADAS
-    "typescript:S1481": { "level": "on" }, // Variáveis não utilizadas
-    "typescript:S1854": { "level": "on" }, // Valores atribuídos não utilizados
-    "typescript:S1172": { "level": "on" }, // Parâmetros não utilizados
-    "typescript:S3776": { "level": "on" }, // Complexidade cognitiva
-    "typescript:S138": { "level": "on" }, // Funções com muitas linhas
-    "typescript:S1067": { "level": "on" }, // Expressões complexas
-
+    "typescript:S1481": {
+      "level": "on"
+    }, // Variáveis não utilizadas
+    "typescript:S1854": {
+      "level": "on"
+    }, // Valores atribuídos não utilizados
+    "typescript:S1172": {
+      "level": "on"
+    }, // Parâmetros não utilizados
+    "typescript:S3776": {
+      "level": "on"
+    }, // Complexidade cognitiva
+    "typescript:S138": {
+      "level": "on"
+    }, // Funções com muitas linhas
+    "typescript:S1067": {
+      "level": "on"
+    }, // Expressões complexas
     // Bugs - HABILITADAS
-    "typescript:S1656": { "level": "on" }, // Atribuição em condições
-    "typescript:S1862": { "level": "on" }, // Branches idênticos
-    "typescript:S2737": { "level": "on" }, // catch vazio
-    "typescript:S3358": { "level": "on" }, // Operador ternário sem efeito
-    "typescript:S2201": { "level": "on" }, // Return de função ignorado
-
+    "typescript:S1656": {
+      "level": "on"
+    }, // Atribuição em condições
+    "typescript:S1862": {
+      "level": "on"
+    }, // Branches idênticos
+    "typescript:S2737": {
+      "level": "on"
+    }, // catch vazio
+    "typescript:S3358": {
+      "level": "on"
+    }, // Operador ternário sem efeito
+    "typescript:S2201": {
+      "level": "on"
+    }, // Return de função ignorado
     // React específico
-    "typescript:S6477": { "level": "on" }, // Hook dependencies incorretos
-    "typescript:S6440": { "level": "on" }, // State mutations diretas
-
+    "typescript:S6477": {
+      "level": "on"
+    }, // Hook dependencies incorretos
+    "typescript:S6440": {
+      "level": "on"
+    }, // State mutations diretas
     // Desabilitadas (muito rigorosas para este projeto)
-    "typescript:S117": { "level": "off" }, // Naming conventions (muito restritivo)
-    "typescript:S125": { "level": "off" }, // Commented out code (útil durante dev)
-    "typescript:S1128": { "level": "off" } // Imports não utilizados (false positives)
+    "typescript:S117": {
+      "level": "off"
+    }, // Naming conventions (muito restritivo)
+    "typescript:S125": {
+      "level": "off"
+    }, // Commented out code (útil durante dev)
+    "typescript:S1128": {
+      "level": "off"
+    } // Imports não utilizados (false positives)
   },
-
   // Arquivos ignorados pelo SonarLint
   "sonarlint.pathToNodeExecutable": "/usr/local/share/nvm/versions/node/v22.21.1/bin/node",
   "sonarlint.output.showVerboseLogs": false,
   "sonarlint.output.showAnalyzerLogs": false,
-
   // ========================================
   // 📝 EDITOR - AUTOMAÇÃO E FORMATAÇÃO
   // ========================================
-
   // Auto-save rápido
   "files.autoSave": "afterDelay",
   "files.autoSaveDelay": 1000,
-
   // Format on save
   "editor.formatOnSave": true,
   "editor.formatOnPaste": true,
   "editor.formatOnType": false,
-
   // ESLint auto-fix on save
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit",
     "source.organizeImports": "explicit"
   },
-
   // Prettier como formatador padrão
   "[typescript]": {
     "editor.defaultFormatter": "vscode.typescript-language-features",
@@ -167,16 +183,14 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[jsonc]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "vscode.json-language-features"
   },
   "[markdown]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-
   // ========================================
   // 🔍 TYPESCRIPT & JAVASCRIPT
   // ========================================
-
   "typescript.tsdk": "node_modules/typescript/lib",
   "typescript.enablePromptUseWorkspaceTsdk": true,
   "typescript.tsserver.maxTsServerMemory": 8192,
@@ -189,12 +203,10 @@
   "typescript.preferences.includePackageJsonAutoImports": "auto",
   "typescript.npm": "/usr/local/share/nvm/versions/node/v22.21.1/bin/npm",
   "typescript.preferences.importModuleSpecifier": "non-relative",
-
   // Excluir node_modules da validação TypeScript
   "typescript.tsserver.useSeparateSyntaxServer": true,
   "typescript.disableAutomaticTypeAcquisition": false,
   "typescript.tsserver.nodePath": "/usr/local/share/nvm/versions/node/v22.21.1/bin/node",
-
   "js/ts.implicitProjectConfig.target": "ES2021",
   "typescript.preferences.autoImportFileExcludePatterns": [
     "**/*.test.ts",
@@ -232,55 +244,53 @@
   ],
   "typescript.updateImportsOnFileMove.enabled": "always",
   "javascript.updateImportsOnFileMove.enabled": "always",
-
   // TypeScript Go experimental (se instalado e configurado)
   // Desabilita TS/JS language features para usar TypeScript Go extension
   "typescript.experimental.useTsgo": true,
-
   // Inlay Hints (sugestões visuais)
   "typescript.inlayHints.parameterNames.enabled": "all",
   "typescript.inlayHints.parameterTypes.enabled": true,
   "typescript.inlayHints.variableTypes.enabled": true,
   "typescript.inlayHints.functionLikeReturnTypes.enabled": true,
-
   // ========================================
   // 🎨 TAILWIND CSS
   // ========================================
-
-  "tailwindCSS.experimental.classRegex": [["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"]],
+  "tailwindCSS.experimental.classRegex": [
+    [
+      "cva\\(([^)]*)\\)",
+      "[\"'`]([^\"'`]*).*?[\"'`]"
+    ]
+  ],
   "tailwindCSS.emmetCompletions": true,
-
   // ========================================
   // ✅ ESLINT
   // ========================================
-
   "eslint.enable": true,
-  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ],
   "eslint.format.enable": true,
   "eslint.workingDirectories": [
     {
       "mode": "auto"
     }
   ],
-
   // ========================================
   // 🧪 TESTES - VITEST
   // ========================================
-
   "vitest.enable": true,
   "vitest.commandLine": "npm run test",
-
   // ========================================
   // 🚀 TASKS AUTOMÁTICAS
   // ========================================
-
   "task.allowAutomaticTasks": "on",
   "task.autoDetect": "on",
-
   // ========================================
   // 🔐 SEGURANÇA & PRIVACIDADE
   // ========================================
-
   "files.exclude": {
     "**/.git": true,
     "**/.DS_Store": true,
@@ -293,7 +303,6 @@
     "**/coverage-api": true,
     "**/.nyc_output": true
   },
-
   // Excluir node_modules de checagens TypeScript
   "files.watcherExclude": {
     "**/.git/objects/**": true,
@@ -303,7 +312,6 @@
     "**/dist/**": true,
     "**/coverage/**": true
   },
-
   "search.exclude": {
     "**/node_modules": true,
     "**/dist": true,
@@ -312,34 +320,27 @@
     "**/coverage-api": true,
     "**/.git": true
   },
-
   // ========================================
   // 🔧 SONARQUBE/SONARLINT
   // ========================================
-
   "sonarlint.pathToNodeExecutable": "/usr/local/share/nvm/versions/node/v22.21.1/bin/node",
   "sonarlint.pathToNpmExecutable": "/usr/local/share/nvm/versions/node/v22.21.1/bin/npm",
   "sonarlint.ls.javaHome": "/usr/local/sdkman/candidates/java/current",
-
   // Reduzir logs para melhorar performance
   "sonarlint.output.showAnalyzerLogs": false,
   "sonarlint.output.showVerboseLogs": false,
-
   // Análise otimizada
   "sonarlint.focusOnNewCode": false,
   "sonarlint.automaticAnalysis": true,
   "sonarlint.ideLabsEnabled": false,
-
   // Configurações de análise
   "sonarlint.disableTelemetry": true,
   "sonarlint.analyzerProperties": {
     "sonar.javascript.node.maxspace": "4096"
   },
-
   // Exclusões para evitar erros de filesystem
   "sonarlint.pathToCompileCommands": "",
   "sonarlint.testFilePattern": "**/*.{test,spec}.{ts,tsx,js,jsx}",
-
   // Connected Mode - SonarCloud
   "sonarlint.connectedMode.connections.sonarcloud": [
     {
@@ -349,22 +350,18 @@
       "region": "EU"
     }
   ],
-
   "sonarlint.rules": {
     "typescript:S1128": {
       "level": "off"
     }
   },
-
   // ========================================
   // 🎯 EXPERIENCE & UI
   // ========================================
-
   "explorer.confirmDelete": false,
   "explorer.confirmDragAndDrop": false,
   "workbench.iconTheme": "material-icon-theme",
   "workbench.startupEditor": "none",
-
   // Terminal
   "terminal.integrated.defaultProfile.linux": "bash",
   "terminal.integrated.fontSize": 13,
@@ -372,7 +369,6 @@
   "terminal.integrated.tabs.title": "${process}",
   "terminal.integrated.tabs.separator": " - ",
   "terminal.integrated.tabs.location": "left",
-
   // Editor
   "editor.tabSize": 2,
   "editor.insertSpaces": true,
@@ -383,17 +379,23 @@
   "editor.inlineSuggest.enabled": true,
   "editor.bracketPairColorization.enabled": true,
   "editor.guides.bracketPairs": true,
-
   // IntelliSense
   "vsintellicode.modify.editor.suggestSelection": "automaticallyOverrodeDefaultValue",
-  "python.testing.unittestArgs": ["-v", "-s", ".", "-p", "*test.py"],
+  "python.testing.unittestArgs": [
+    "-v",
+    "-s",
+    ".",
+    "-p",
+    "*test.py"
+  ],
   "python.testing.pytestEnabled": false,
   "python.testing.unittestEnabled": true,
   "chat.tools.terminal.autoReplyToPrompts": true,
-  "github-actions.workflows.pinned.workflows": [".github/workflows/ci.yml"],
+  "github-actions.workflows.pinned.workflows": [
+    ".github/workflows/ci.yml"
+  ],
   "editor.codeActions.triggerOnFocusChange": true,
   "windowsaistudio.enableRemoteFine-tuningAndInference": true,
-
   // ========================================
   //  GO LANGUAGE CONFIGURATION
   // ========================================
@@ -401,11 +403,9 @@
   "go.gopath": "/home/node/go",
   "go.toolsManagement.autoUpdate": true,
   "git.ignoreLimitWarning": true,
-
   // ========================================
   // 🌐 REST CLIENT - API TESTING
   // ========================================
-
   // Ambientes para testes (local, staging, produção)
   "rest-client.environmentVariables": {
     "$shared": {
@@ -423,13 +423,11 @@
       "baseUrl": "https://assistente-juridico-github.vercel.app"
     }
   },
-
   // Headers padrão
   "rest-client.defaultHeaders": {
     "User-Agent": "vscode-restclient-assistente-juridico",
     "Accept": "application/json"
   },
-
   "rest-client.mimeAndFileExtensionMapping": {
     "application/json": "json",
     "application/xml": "xml",
@@ -444,29 +442,24 @@
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
     "text/csv": "csv"
   },
-
   // Configurações de visualização
   "rest-client.previewOption": "exchange",
   "rest-client.previewResponsePanelTakeFocus": true,
   "rest-client.showResponseInDifferentTab": false,
   "rest-client.fontSize": 13,
   "rest-client.fontFamily": "Menlo, Monaco, Consolas, 'Courier New', monospace",
-
   // Funcionalidades
   "rest-client.enableSendRequestCodeLens": true,
   "rest-client.enableCustomVariableReferencesCodeLens": true,
   "rest-client.rememberCookiesForSubsequentRequests": true,
   "rest-client.followredirect": true,
   "rest-client.timeoutinmilliseconds": 30000,
-
   // Logs e debugging
   "rest-client.logLevel": "info",
   "rest-client.enableTelemetry": false,
-
   // 🤖 CLAUDE SKILLS
   // ========================================
   "github.copilot.chat.useClaudeSkills": true,
-
   "chat.mcp.serverSampling": {
     "thiagobodevanadv-alt-assistente-jur-dico-principal/.vscode/mcp.json: azure-ai-foundry/mcp-foundry": {
       "allowedModels": [
@@ -590,6 +583,39 @@
         "aitk-foundry/Microsoft Foundry/gpt-4.1-mini",
         "copilot/oswe-vscode-prime"
       ]
+    },
+    "thiagobodevanadv-alt-assistente-jur-dico-principal/.vscode/mcp.json: io.github.github/github-mcp-server": {
+      "allowedModels": [
+        "copilot/claude-sonnet-4.5",
+        "copilot/auto",
+        "copilot/claude-haiku-4.5",
+        "copilot/claude-opus-41",
+        "copilot/claude-opus-4.5",
+        "aitk-foundry/Microsoft Foundry/claude-opus-4-5",
+        "copilot/claude-sonnet-4",
+        "aitk-foundry/Microsoft Foundry/claude-sonnet-4-5",
+        "copilot/gemini-2.5-pro",
+        "copilot/gemini-3-flash-preview",
+        "copilot/gemini-3-pro-preview",
+        "copilot/gpt-4.1",
+        "copilot/gpt-4o",
+        "copilot/gpt-5",
+        "copilot/gpt-5-mini",
+        "copilot/gpt-5-codex",
+        "copilot/gpt-5.1",
+        "copilot/gpt-5.1-codex",
+        "copilot/gpt-5.1-codex-max",
+        "copilot/gpt-5.1-codex-mini",
+        "copilot/gpt-5.2",
+        "aitk-github/GitHub/grok-3",
+        "aitk-github/GitHub/grok-3-mini",
+        "copilot/grok-code-fast-1",
+        "aitk-foundry/Microsoft Foundry/gpt-4.1",
+        "aitk-foundry/Microsoft Foundry/gpt-4.1-mini",
+        "copilot/oswe-vscode-prime"
+      ]
     }
-  }
+  },
+  "java.compile.nullAnalysis.mode": "automatic",
+  "sarif-viewer.connectToGithubCodeScanning": "on"
 }

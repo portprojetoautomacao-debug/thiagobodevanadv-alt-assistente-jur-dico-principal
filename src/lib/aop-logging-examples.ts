@@ -231,7 +231,7 @@ export const processAutonomousTaskWithAOP = wrapAgentFunction(
 async function processarTarefaComAOP(task: AgentTask) {
   return withRequestContext(
     async () => {
-      const result = await processAutonomousTaskWithAOP(task);
+      const result = await processAutonomousTaskWithAOP(task as any);
 
       // Log consolidado disponível
       const log = generateConsolidatedLog();

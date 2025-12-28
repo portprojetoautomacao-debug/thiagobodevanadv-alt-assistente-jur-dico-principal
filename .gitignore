@@ -128,19 +128,16 @@ pkg/
 *.ipynb
 *Untitled*.ipynb
 
-# Arquivos Python temporários
-*.py
+# Python cache and compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
 
-# Diretórios de teste temporários
-src/lib/tolkitagentetest/
-
-# Binários Go (não commitados)
-bin/
-pkg/
-
-# Notebooks Jupyter temporários
-*.ipynb
-*Untitled*.ipynb
+# Arquivos Python temporários de teste
+test_*.tmp.py
+debug_*.tmp.py
 
 # Diretórios de teste temporários
 src/lib/tolkitagentetest/

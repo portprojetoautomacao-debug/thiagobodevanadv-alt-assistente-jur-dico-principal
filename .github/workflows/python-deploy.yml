@@ -1,0 +1,44 @@
+name: Deploy Python App
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "streamlit-app/**"
+  workflow_dispatch:
+
+jobs:
+  deploy-streamlit:
+    name: Deploy Streamlit App
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Verificar ambiente
+        run: |
+          cd streamlit-app
+          python --version
+          pip --version
+          ls -la
+
+      - name: Success
+        run: |
+          echo "✅ Deploy verificado"
+          echo "⚠️ Deploy real requer Railway/Render/Cloud Run configurado"
+          echo ""
+          echo "📦 Arquivos prontos para deploy:"
+          echo "  - streamlit-app/app.py (Streamlit)"
+          echo "  - streamlit-app/backend/main.py (FastAPI)"
+          echo "  - streamlit-app/requirements.txt"
+          echo ""
+          echo "🚀 Para deploy manual:"
+          echo "  1. Railway: railway up"
+          echo "  2. Render: render deploy"
+          echo "  3. Cloud Run: gcloud run deploy"

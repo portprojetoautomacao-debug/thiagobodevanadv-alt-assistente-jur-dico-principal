@@ -31,6 +31,13 @@ concurrency:
   group: code-analysis-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+  security-events: write
+  actions: read
+
 jobs:
   # ==========================================
   # 🔍 ANÁLISE ESTÁTICA E LINTING
@@ -76,6 +83,10 @@ jobs:
           # Executar ESLint com formato legível e capturar exit code
           npm run lint -- --max-warnings 350 || EXIT_CODE=$?
 
+          # Gerar arquivo SARIF para upload (independente do resultado)
+          echo "📊 Gerando relatório SARIF..."
+          npm run lint:sarif || echo "⚠️  Falha ao gerar SARIF, mas continuando..."
+
           if [[ $EXIT_CODE -eq 0 ]]; then
             echo "✅ ESLint passou sem erros ou warnings"
           else
@@ -119,16 +130,19 @@ jobs:
           fi
 
       - name: 📤 Upload Resultados ESLint
+        if: always() && hashFiles('eslint-results.sarif') != ''
         uses: actions/upload-artifact@v4.4.3
         with:
           name: eslint-results
           path: eslint-results.sarif
 
       - name: 📊 Upload Relatório SARIF para GitHub
+        if: always() && hashFiles('eslint-results.sarif') != ''
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: eslint-results.sarif
           category: eslint
+        continue-on-error: true
 
       - name: Generate TypeScript SARIF report
         run: npm run tsc:sarif || true
@@ -357,7 +371,7 @@ jobs:
               echo "⚠️  Cobertura de funções abaixo do threshold (80%)" >> coverage-comment.md
             fi
 
-            gh pr comment ${{ github.event_name == 'pull_request' && github.event.number || github.sha }} --body-file coverage-comment.md
+            gh pr comment ${{ github.event.pull_request.number }} --body-file coverage-comment.md
           fi
         env:
           GH_TOKEN: ${{ github.token }}
@@ -459,7 +473,8 @@ jobs:
   quality-dashboard:
     name: "📊 Dashboard de Qualidade"
     runs-on: ubuntu-latest
-    needs: [static-analysis, complexity-analysis, test-coverage, security-analysis]
+    needs:
+      [static-analysis, complexity-analysis, test-coverage, security-analysis]
     if: always()
     outputs:
       status: ${{ steps.quality-status.outputs.STATUS }}
@@ -562,7 +577,7 @@ jobs:
           echo "2. Corrigir problemas críticos antes do merge" >> quality-alert.md
           echo "3. Considerar refatoração para melhorar a qualidade" >> quality-alert.md
 
-          gh pr comment ${{ github.event_name == 'pull_request' && github.event.number || github.sha }} --body-file quality-alert.md
+          gh pr comment ${{ github.event.pull_request.number }} --body-file quality-alert.md
         env:
           GH_TOKEN: ${{ github.token }}
 

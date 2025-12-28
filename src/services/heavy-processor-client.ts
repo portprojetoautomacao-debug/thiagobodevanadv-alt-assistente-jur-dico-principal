@@ -260,10 +260,9 @@ export function getHeavyProcessorClient(): HeavyProcessorClient {
  * Verifica se deve usar o processador pesado ao invés do processamento local
  */
 export function shouldUseHeavyProcessor(expedientes: Expediente[]): boolean {
-  const client = getHeavyProcessorClient();
-
-  // Desabilitado na config
-  if (!client["config"].enabled) {
+  // Verificar se está habilitado via env var
+  const enabled = import.meta.env.VITE_HEAVY_PROCESSOR_ENABLED === 'true';
+  if (!enabled) {
     return false;
   }
 

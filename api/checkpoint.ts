@@ -16,7 +16,7 @@ import {
     getLastCheckpoint,
     hasCheckpoints,
     listCheckpoints
-} from '../src/lib/checkpoint-service.js';
+} from '../src/lib/checkpoint-service';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Habilitar CORS

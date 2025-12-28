@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAgentBackup } from "@/hooks/use-agent-backup";
-import { useAutonomousAgents } from "@/hooks/use-autonomous-agents";
+import { useAutonomousAgents, type MemoryItem } from "@/hooks/use-autonomous-agents";
 import { useKV } from "@/hooks/use-kv";
 import { themeConfig } from "@/lib/themes";
 import {
@@ -576,8 +576,11 @@ export default function AIAgents({ onNavigate }: Readonly<AIAgentsProps>) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {agents.map((agent) => {
               const IconComponent = agentIcons[agent.id] || Bot;
-              const isStreaming = !!streamingContent[agent.id];
-              const streamPreview = streamingContent[agent.id]?.slice(-100) || "";
+              const agentStreamContent = (streamingContent as unknown as Record<string, string>)[
+                agent.id
+              ];
+              const isStreaming = !!agentStreamContent;
+              const streamPreview = agentStreamContent?.slice(-100) || "";
               const statusColor = getStatusColor(agent.enabled, isStreaming, agent.status);
 
               return (
@@ -869,7 +872,10 @@ export default function AIAgents({ onNavigate }: Readonly<AIAgentsProps>) {
 
         {/* Memory */}
         <TabsContent value="memory" className="space-y-4">
-          <LegalMemoryViewer memory={legalMemory} onRefresh={refreshServerData} />
+          <LegalMemoryViewer
+            memory={legalMemory as MemoryItem[] | undefined}
+            onRefresh={refreshServerData}
+          />
         </TabsContent>
       </Tabs>
 

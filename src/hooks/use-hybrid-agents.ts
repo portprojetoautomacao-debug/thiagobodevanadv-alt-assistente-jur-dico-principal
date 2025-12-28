@@ -135,10 +135,10 @@ export function useHybridAgents(options: UseHybridAgentsOptions = {}) {
   const getHybridAgents = useCallback((): HybridAgentInfo[] => {
     const hybridList = listHybridAgents();
 
-    return hybridList.map((item: { agentId: string; type: string }) => ({
+    return hybridList.map((item) => ({
       agentId: item.agentId,
       hasHybridVersion: true,
-      type: item.type,
+      type: item.hasLangGraph && item.hasTraditional ? "hybrid" : item.hasLangGraph ? "langgraph" : "traditional",
     }));
   }, []);
 

@@ -24,26 +24,21 @@ export default defineConfig( {
     // Configuração de pool para estabilidade (modo manutenção)
     // Objetivo: executar em worker único e reutilizado, evitando flakiness de lifecycle do tinypool
     // (ex.: "Worker exited unexpectedly" no final da suíte).
+    // ✅ UPDATED: Pool configuration moved to top-level (Vitest 4 migration)
     pool: "forks",
-    poolOptions: {
-      forks: {
-        singleFork: true,
-        minForks: 1,
-        maxForks: 1,
-        // Isolamento por arquivo (recycle do processo) para evitar vazamento de cache/mocks.
-        isolate: true,
-        ...( forkDebug
-          ? {
-            execArgv: [ "--trace-uncaught", "--trace-warnings", "--unhandled-rejections=strict" ],
-          }
-          : {} ),
-      },
-    },
+    singleFork: true,
+    minForks: 1,
+    maxForks: 1,
+    // Isolamento por arquivo (recycle do processo) para evitar vazamento de cache/mocks.
+    isolate: true,
+    ...( forkDebug
+      ? {
+        execArgv: [ "--trace-uncaught", "--trace-warnings", "--unhandled-rejections=strict" ],
+      }
+      : {} ),
     // Rodar de forma sequencial para maximizar determinismo
     maxConcurrency: 1,
     fileParallelism: false,
-    // Manter isolamento por arquivo para evitar vazamento de cache/mocks entre suites
-    isolate: true,
     // ✅ Suporte a sharding para execução paralela
     // Use --shard=1/4 --shard=2/4 etc nos comandos
     // Este config é voltado ao frontend (React + JSDOM).
@@ -55,7 +50,6 @@ export default defineConfig( {
       "**/build/**",
       "**/.{git,cache,output,temp}/**",
       "api/**",
-      "tests/integration/**",
       // Testes locais que sobem servidor real devem ser executados via scripts dedicados
       "**/*.local-e2e.test.ts",
       "tests/e2e/**",
@@ -70,6 +64,13 @@ export default defineConfig( {
     env: {
       NODE_ENV: "test",
       VITEST: "true",
+      ENABLE_HYBRID_AGENTS: "true",
+      LANGGRAPH_API_URL: "http://localhost:8000",
+      AUTOGEN_API_KEY: "test-autogen-key",
+      GEMINI_API_KEY: "test-gemini-key",
+      RESEND_API_KEY: "re_test_key_123",
+      VITE_HEAVY_PROCESSOR_ENABLED: "true",
+      VITE_HEAVY_PROCESSOR_URL: "http://localhost:8080",
     },
   },
   resolve: {
