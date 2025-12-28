@@ -52,4 +52,4 @@ services:
         fromService:
           type: web
           name: assistente-juridico-backend
-          property: url
+          property: host

@@ -20,8 +20,18 @@ APP_CONFIG = {
 }
 
 # Backend React/Vercel
+_react_api_url = os.getenv("REACT_API_URL", "http://localhost:8000/api")
+
+# Ensure URL has schema
+if not _react_api_url.startswith("http"):
+    _react_api_url = f"https://{_react_api_url}"
+
+# Ensure URL ends with /api if not present (assuming standard Render host)
+if "onrender.com" in _react_api_url and not _react_api_url.endswith("/api"):
+    _react_api_url = f"{_react_api_url}/api"
+
 BACKEND_CONFIG = {
-    "url": os.getenv("REACT_API_URL", "http://localhost:8000/api"),
+    "url": _react_api_url,
     "api_key": os.getenv("REACT_API_KEY", ""),
     "timeout": 30,
 }
