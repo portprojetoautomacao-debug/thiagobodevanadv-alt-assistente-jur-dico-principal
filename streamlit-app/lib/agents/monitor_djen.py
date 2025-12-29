@@ -3,7 +3,7 @@
 import logging
 from typing import Any, Dict, Optional
 
-from langchain.tools import tool
+from langchain_core.tools import tool
 
 try:
     from lib.tools.djen_tools import buscar_publicacoes_djen
@@ -44,31 +44,13 @@ class MonitorDJENAgent(BaseAgent):
 
             messages = [("system", system_prompt), ("human", f"Tarefa: {task}")]
 
-            # Usar bind_tools se disponível ou ReAct agent
-            # Simplificando para chamada direta via LLM com tools (function calling)
-            # Mas como estamos usando ainvoke direto no BaseAgent, vamos adaptar para usar as tools no prompt
-            # ou usar um AgentExecutor como no JustineAgent.
-
-            # Para manter consistência com JustineAgent (que é mais avançado):
-            from langchain.agents import AgentExecutor, create_react_agent
-            from langchain.prompts import PromptTemplate
-
-            prompt_template = PromptTemplate.from_template(
-                system_prompt
-                + "\n\n{tools}\n\nUse as ferramentas para cumprir a tarefa: {input}\n\n{agent_scratchpad}"
-            )
-
-            agent = create_react_agent(self.llm, self.tools, prompt_template)
-            agent_executor = AgentExecutor(
-                agent=agent, tools=self.tools, verbose=True, handle_parsing_errors=True
-            )
-
-            result = await agent_executor.ainvoke({"input": task})
+            # Chamada direta ao LLM (simplificado)
+            response = await self.llm.ainvoke(messages)
 
             return {
                 "agentId": self.agent_id,
                 "agentName": self.name,
-                "response": result["output"],
+                "response": response.content,
                 "status": "completed",
                 "confidence": 0.90,
             }

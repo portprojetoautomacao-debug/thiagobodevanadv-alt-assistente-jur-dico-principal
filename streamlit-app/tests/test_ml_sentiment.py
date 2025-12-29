@@ -3,7 +3,7 @@ Testes para Sentiment Analyzer
 """
 
 import pytest
-from lib.ml.sentiment import SentimentAnalyzer
+from ml.sentiment import SentimentAnalyzer
 
 
 class TestSentimentAnalyzer:

@@ -5,7 +5,7 @@ Testes para DataJud API Client
 from unittest.mock import Mock, patch
 
 import pytest
-from lib.integrations.datajud import DataJudClient
+from integrations.datajud import DataJudClient
 
 
 class TestDataJudClient:

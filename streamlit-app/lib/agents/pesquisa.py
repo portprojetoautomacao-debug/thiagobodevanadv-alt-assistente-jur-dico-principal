@@ -6,7 +6,7 @@ Agente LangChain REAL para busca de precedentes
 import logging
 from typing import Any, Dict, List
 
-from langchain.tools import tool
+from langchain_core.tools import tool
 
 try:
     from lib.tools.search_tools import (

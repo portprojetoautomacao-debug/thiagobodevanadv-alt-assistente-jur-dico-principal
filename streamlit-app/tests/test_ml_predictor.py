@@ -4,7 +4,7 @@ Testes para Success Predictor
 
 import pandas as pd
 import pytest
-from lib.ml.predictor import SuccessPredictor
+from ml.predictor import SuccessPredictor
 
 
 class TestSuccessPredictor:
