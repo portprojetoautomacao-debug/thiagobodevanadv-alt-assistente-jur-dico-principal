@@ -32,9 +32,9 @@ class TestCronJobs:
         """Testar que jobs estão configurados"""
         if not scheduler.running:
             start_scheduler()
-        
+
         jobs = scheduler.get_jobs()
         job_ids = [job.id for job in jobs]
-        
+
         # Verificar jobs principais
         assert "djen_noon" in job_ids or "djen_evening" in job_ids or len(jobs) > 0

@@ -98,7 +98,9 @@ Características:
             # Construir prompt com resultados das ferramentas
             messages = [
                 ("system", self.prompt),
-                ("human", f"""Análise da intimação:
+                (
+                    "human",
+                    f"""Análise da intimação:
 
 Texto: {task}
 
@@ -111,7 +113,8 @@ Forneça uma análise completa desta intimação, incluindo:
 2. Prazo identificado (se houver)
 3. Urgência
 4. Ações recomendadas
-"""),
+""",
+                ),
             ]
 
             response = await self.llm.ainvoke(messages)
