@@ -15,6 +15,10 @@ export default tseslint.config(
       ".vercel/**",
       "coverage/**",
       "coverage-api/**",
+      // Virtualenvs Python (não devem ser analisados pelo ESLint)
+      "streamlit-app/venv/**",
+      "streamlit-app/.venv/**",
+      ".venv*/**",
     ],
   },
   {

@@ -1,0 +1,85 @@
+# Constraints file to keep pip resolver fast/deterministic on Render
+# Used by `streamlit-app/requirements.txt` via `-c constraints.txt`
+#
+# Motivo: o pip estava entrando em backtracking extremo e falhando com
+# `ResolutionTooDeep` durante o deploy (Render), principalmente no stack Google.
+
+# --- Core runtime ---
+streamlit==1.52.2
+fastapi==0.128.0
+uvicorn==0.40.0
+python-dotenv==1.2.1
+pydantic==2.12.5
+
+# --- Database & Cache ---
+redis==7.1.0
+upstash-redis==1.5.0
+
+# --- AI / LangChain ---
+langchain==1.2.0
+langchain-google-genai==4.1.1
+langchain-community==0.4.1
+google-generativeai==0.8.6
+google-genai==1.55.0
+
+# --- Data Science & ML ---
+pandas==2.3.3
+numpy==2.4.0
+scikit-learn==1.8.0
+plotly==6.5.0
+
+# --- HTTP & API ---
+requests==2.32.5
+httpx==0.28.1
+aiohttp==3.13.2
+
+# --- Testing ---
+pytest==9.0.2
+pytest-asyncio==1.3.0
+pytest-cov==7.0.0
+pytest-mock==3.15.1
+
+# --- Utilities ---
+python-dateutil==2.9.0.post0
+pytz==2025.2
+beautifulsoup4==4.14.3
+lxml==6.0.2
+APScheduler==3.11.2
+
+# --- Optional - Vector DB ---
+qdrant-client==1.16.2
+
+# --- Google APIs (principal fonte de backtracking no pip) ---
+# google-auth-oauthlib 1.2.x funciona bem com google-auth 2.41.x
+google-auth==2.41.1
+google-auth-oauthlib==1.2.3
+google-auth-httplib2==0.2.0
+
+# Mantém o stack de API Core/Client estável
+google-api-core==2.28.1
+google-api-python-client==2.187.0
+
+# Mantém o protobuf numa faixa compatível (Streamlit aceita <7)
+protobuf==5.29.5
+
+# Evita variação de grpc no resolver
+grpcio==1.71.2
+grpcio-status==1.71.2
+grpcio-tools==1.71.2
+
+# Dependências comuns do extra `uvicorn[standard]`
+h11==0.16.0
+httptools==0.7.1
+PyYAML==6.0.3
+uvloop==0.22.1
+watchfiles==1.1.1
+websockets==15.0.1
+
+# --- Optional - Document processing ---
+PyPDF2==3.0.1
+python-docx==1.2.0
+
+# --- Automation (atenção: depende de ambiente headless no Render) ---
+selenium==4.39.0
+webdriver-manager==4.0.2
+pyautogui==0.9.54
