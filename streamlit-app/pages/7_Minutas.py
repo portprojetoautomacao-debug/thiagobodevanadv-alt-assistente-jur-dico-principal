@@ -9,6 +9,7 @@ Próximos passos: Substituir por streamlit-quill para editor WYSIWYG
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
+import streamlit as st
 from lib.backend_client import BackendClient
 
 # ===========================
