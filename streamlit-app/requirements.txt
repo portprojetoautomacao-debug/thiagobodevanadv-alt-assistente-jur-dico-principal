@@ -11,9 +11,10 @@ upstash-redis>=0.15.0
 
 # AI & LangChain
 langchain>=0.3.0
-langchain-google-genai>=2.0.0
+langchain-google-genai==4.1.1
 langchain-community>=0.3.0
-google-generativeai>=0.8.0
+google-generativeai==0.8.6
+google-genai==1.55.0
 
 # Data Science & ML
 pandas>=2.1.0
@@ -45,8 +46,11 @@ APScheduler>=3.10.0
 qdrant-client>=1.7.0
 
 # Google APIs
-google-auth-oauthlib>=1.2.0
-google-api-python-client>=2.111.0
+# Fixado para evitar backtracking/extrema lentidão do pip (logs baixando dezenas de versões)
+google-auth-oauthlib==1.2.3
+google-api-python-client==2.187.0
+google-api-core==2.28.1
+grpcio-status==1.71.2
 
 # Optional - Document processing
 PyPDF2>=3.0.0
