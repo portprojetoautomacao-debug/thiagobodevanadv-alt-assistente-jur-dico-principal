@@ -32,7 +32,18 @@ export default defineConfig({
     ],
 
     // Excluir testes de frontend e E2E
-    exclude: ["node_modules/**", "dist/**", "src/**", "tests/e2e/**", "chrome-extension-pje/**"],
+    exclude: [
+      "node_modules/**",
+      "dist/**",
+      "src/**",
+      "tests/e2e/**",
+      "chrome-extension-pje/**",
+      // Excluir arquivos de teste vazios até implementação
+      "api/dspy-bridge.test.ts",
+      "api/tests/agent-monitoring.test.ts",
+      "api/tests/azure-upload.test.ts",
+      "api/tests/pje-sync.integration.test.ts",
+    ],
 
     // Configuração de cobertura
     coverage: {

@@ -28,10 +28,11 @@ jobs:
           - 10001:10001
           - 10002:10002
         options: >-
-          --health-cmd "curl -f http://localhost:10000/devstoreaccount1?comp=list"
+          --health-cmd "node -e \"require('http').get('http://localhost:10000/devstoreaccount1?comp=list', (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))\""
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+          --health-start-period 10s
 
     strategy:
       matrix:
