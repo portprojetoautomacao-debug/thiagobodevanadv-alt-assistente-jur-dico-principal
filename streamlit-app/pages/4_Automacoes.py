@@ -7,8 +7,12 @@ import time
 from datetime import datetime, timedelta
 
 import pandas as pd
+import pytz
 import streamlit as st
 from lib.backend_client import BackendClient
+
+# Fuso horário de Brasília
+BRAZIL_TZ = pytz.timezone("America/Sao_Paulo")
 
 
 def render():
@@ -123,12 +127,13 @@ def render():
 
     st.subheader("📜 Logs de Execução")
 
-    # Dados simulados para logs
+    # Dados simulados para logs - usando horário de Brasília
+    now_brazil = datetime.now(BRAZIL_TZ)
     logs_data = {
         "Data/Hora": [
-            datetime.now().strftime("%d/%m/%Y %H:%M"),
-            (datetime.now() - timedelta(minutes=15)).strftime("%d/%m/%Y %H:%M"),
-            (datetime.now() - timedelta(hours=1)).strftime("%d/%m/%Y %H:%M"),
+            now_brazil.strftime("%d/%m/%Y %H:%M"),
+            (now_brazil - timedelta(minutes=15)).strftime("%d/%m/%Y %H:%M"),
+            (now_brazil - timedelta(hours=1)).strftime("%d/%m/%Y %H:%M"),
         ],
         "Automação": ["Monitor DJEN", "Bot PJe", "Monitor DJEN"],
         "Status": ["Sucesso", "Sucesso", "Sucesso"],
