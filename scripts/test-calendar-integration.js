@@ -1,5 +1,5 @@
-// @ts-check
 #!/usr/bin/env node
+// @ts-check
 
 /**
  * Teste de Integração com Google Calendar

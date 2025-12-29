@@ -151,71 +151,124 @@ function transformFromGemini ( data: unknown ): LLMResponse
   };
 }
 
-export default async function handler ( req: VercelRequest, res: VercelResponse )
+type CacheEntry = { expiresAt: number; data: unknown };
+type CircuitEntry = { failures: number; openedUntil?: number };
+
+const CACHE_TTL_MS = 5 * 1000; // 5s short-term cache
+
+const ChatMessageSchema = z.object( {
+  role: z.enum( [ "system", "user", "assistant" ] ),
+  content: z.string().min( 1 ).max( 20000 ),
+} );
+
+// Mantém campos extras (passthrough) porque o frontend pode enviar flags adicionais
+// e este proxy deve ser transparente.
+const LLMRequestSchema = z
+  .object( {
+    model: z.string().optional(),
+    messages: z.array( ChatMessageSchema ).optional(),
+    temperature: z.number().optional(),
+    max_tokens: z.number().optional(),
+  } )
+  .passthrough();
+
+function parseAllowedOrigins (): string[]
 {
-  // CORS - restrict to ALLOWED_ORIGINS list
-  const allowedOrigins = ( process.env.ALLOWED_ORIGINS ?? "" )
+  return ( process.env.ALLOWED_ORIGINS ?? "" )
     .split( "," )
     .map( ( x ) => x.trim() )
     .filter( Boolean );
+}
+
+function applyCors ( req: VercelRequest, res: VercelResponse ): { origin: string }
+{
+  const allowedOrigins = parseAllowedOrigins();
   const origin = ( req.headers && ( req.headers[ "origin" ] as string | undefined ) ) || "";
+
+  // CORS - restrict to ALLOWED_ORIGINS list
   if ( origin && allowedOrigins.length > 0 )
   {
     if ( !allowedOrigins.includes( origin ) )
     {
-      return res.status( 403 ).json( { error: "Origin not allowed" } );
+      // Mantém o comportamento: responder 403 quando origin não for permitido
+      res.status( 403 ).json( { error: "Origin not allowed" } );
+      return { origin };
     }
     res.setHeader( "Access-Control-Allow-Origin", origin );
   } else if ( allowedOrigins.length === 0 )
   {
     res.setHeader( "Access-Control-Allow-Origin", "*" );
   }
+
   res.setHeader( "Access-Control-Allow-Methods", "POST, OPTIONS" );
   res.setHeader( "Access-Control-Allow-Headers", "Content-Type, Authorization" );
 
+  return { origin };
+}
+
+function ensureMethodOrRespond ( req: VercelRequest, res: VercelResponse ): boolean
+{
   if ( req.method === "OPTIONS" )
   {
     res.status( 200 ).end();
-    return;
+    return false;
   }
 
   if ( req.method !== "POST" )
   {
     res.status( 405 ).json( { error: "Method not allowed. Only POST is supported." } );
-    return;
+    return false;
   }
 
+  return true;
+}
+
+function requireProxyApiKeyIfNeeded ( req: VercelRequest, res: VercelResponse ): boolean
+{
   // LLM Proxy API Key opcional - permite uso público se LLM_PROXY_ALLOW_PUBLIC=true
-  if ( process.env.LLM_PROXY_ALLOW_PUBLIC !== "true" )
+  if ( process.env.LLM_PROXY_ALLOW_PUBLIC === "true" )
   {
-    const authResult = requireApiKey( req, res, "LLM_PROXY_API_KEY" );
-    if ( !authResult )
-    {
-      return;
-    }
+    return true;
   }
 
-  // rate limit middleware
-  const clientIP =
+  const authResult = requireApiKey( req, res, "LLM_PROXY_API_KEY" );
+  return Boolean( authResult );
+}
+
+function getClientIp ( req: VercelRequest ): string
+{
+  return (
     ( req.headers[ "x-forwarded-for" ] as string | undefined ) ||
     ( req.headers[ "x-real-ip" ] as string | undefined ) ||
-    "unknown";
+    "unknown"
+  );
+}
+
+async function applyRateLimitOrRespond (
+  res: VercelResponse,
+  clientIP: string
+): Promise<boolean>
+{
   const rl = await rateLimitMiddleware( clientIP );
   Object.entries( rl.headers || {} ).forEach( ( [ k, v ] ) => res.setHeader( k, v ) );
-  if ( !rl.allowed )
+
+  if ( rl.allowed )
   {
-    res.setHeader(
-      "Retry-After",
-      Math.max(
-        1,
-        Math.ceil( ( Number( rl.headers[ "X-RateLimit-Reset" ] ) - Date.now() ) / 1000 )
-      ).toString()
-    );
-    return res.status( 429 ).json( { error: rl.error || "Rate limit exceeded" } );
+    return true;
   }
 
-  // Configurar provedores (ordem de prioridade)
-  const providers: ProviderConfig[] = [
+  res.setHeader(
+    "Retry-After",
+    Math.max( 1, Math.ceil( ( Number( rl.headers[ "X-RateLimit-Reset" ] ) - Date.now() ) / 1000 ) )
+      .toString()
+  );
+  res.status( 429 ).json( { error: rl.error || "Rate limit exceeded" } );
+  return false;
+}
+
+function buildProviders (): ProviderConfig[]
+{
+  return [
     // 1. OpenAI (prioridade máxima)
     {
       name: "OpenAI",
@@ -241,230 +294,325 @@ export default async function handler ( req: VercelRequest, res: VercelResponse 
       transformResponse: transformFromGemini,
     },
   ];
+}
 
-  // ✅ VALIDAÇÃO: Verificar se API keys estão configuradas
-  const hasAnyKey = providers.some( ( p ) => p.apiKey && p.apiKey.trim().length > 0 );
-  if ( !hasAnyKey )
-  {
-    console.error( "[LLM Proxy] ERRO: Nenhuma API key configurada para provedores LLM" );
-    return res.status( 500 ).json( {
-      error: "No LLM API keys configured",
-      message: "Configure OPENAI_API_KEY, GEMINI_API_KEY ou GITHUB_TOKEN nas variáveis de ambiente",
-      providers: providers.map( ( p ) => ( { name: p.name, hasKey: !!p.apiKey } ) ),
-    } );
-  }
+function hasAnyProviderKey ( providers: ProviderConfig[] ): boolean
+{
+  return providers.some( ( p ) => p.apiKey && p.apiKey.trim().length > 0 );
+}
 
-  // Encontrar provedor disponível
-  const provider = providers.find( ( p ) => p.apiKey );
+function selectProvider ( providers: ProviderConfig[] ): ProviderConfig | undefined
+{
+  return providers.find( ( p ) => p.apiKey && p.apiKey.trim().length > 0 );
+}
 
-  // Simple in-memory cache to reduce duplicate LLM calls during hot reload / repeated requests
-  // Important: This cache is ephemeral (serverless) and intended for short TTL caching only
-  const CACHE_TTL_MS = 5 * 1000; // 5s short-term cache
-  const cacheKeyBase = JSON.stringify( { body: req.body, origin, clientIP } );
+function getGlobalCache (): Map<string, CacheEntry>
+{
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore - simple global cache variable for serverless lifecycle reuse
   ( globalThis as Record<string, unknown> ).__LLM_PROXY_CACHE =
-    ( globalThis as Record<string, unknown> ).__LLM_PROXY_CACHE ||
-    new Map<string, { expiresAt: number; data: unknown }>();
-  const globalCache: Map<string, { expiresAt: number; data: unknown }> = (
-    globalThis as Record<string, unknown>
-  ).__LLM_PROXY_CACHE as Map<string, { expiresAt: number; data: unknown }>;
+    ( globalThis as Record<string, unknown> ).__LLM_PROXY_CACHE || new Map<string, CacheEntry>();
 
-  const cacheKey = `${ provider?.name ?? "unknown" }:${ cacheKeyBase }`;
-  const cached = globalCache.get( cacheKey );
-  if ( cached && cached.expiresAt > Date.now() )
-  {
-    return res.status( 200 ).json( cached.data as LLMResponse );
-  }
+  return ( globalThis as Record<string, unknown> ).__LLM_PROXY_CACHE as Map<string, CacheEntry>;
+}
 
-  // Circuit breaker (in-memory) to avoid repeated failed calls to the same provider
-  // Note: Serverless memory is ephemeral; consider Redis/KV for cluster-wide circuit breaker
+function getGlobalCircuit (): Map<string, CircuitEntry>
+{
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   ( globalThis as Record<string, unknown> ).__LLM_PROXY_CIRCUIT =
     ( globalThis as Record<string, unknown> ).__LLM_PROXY_CIRCUIT ||
-    new Map<string, { failures: number; openedUntil?: number }>();
-  const circuit = ( globalThis as Record<string, unknown> ).__LLM_PROXY_CIRCUIT as Map<
-    string,
-    { failures: number; openedUntil?: number }
-  >;
-  const providerCircuit = circuit.get( provider?.name ?? "unknown" ) || { failures: 0 };
-  if ( providerCircuit.openedUntil && providerCircuit.openedUntil > Date.now() )
+    new Map<string, CircuitEntry>();
+
+  return ( globalThis as Record<string, unknown> ).__LLM_PROXY_CIRCUIT as Map<string, CircuitEntry>;
+}
+
+function tryServeFromCache (
+  res: VercelResponse,
+  cache: Map<string, CacheEntry>,
+  cacheKey: string
+): boolean
+{
+  const cached = cache.get( cacheKey );
+  if ( cached && cached.expiresAt > Date.now() )
   {
-    // Circuit open
-    return res
-      .status( 503 )
-      .json( { error: "LLM provider temporarily unavailable (circuit open). Try later." } );
+    res.status( 200 ).json( cached.data as LLMResponse );
+    return true;
   }
+  return false;
+}
 
-  if ( !provider )
+function isCircuitOpen ( entry: CircuitEntry ): boolean
+{
+  return Boolean( entry.openedUntil && entry.openedUntil > Date.now() );
+}
+
+function respondNoProviderConfigured ( req: VercelRequest, res: VercelResponse ): void
+{
+  const isVercel = Boolean( process.env.VERCEL_ENV );
+  const isDev = process.env.NODE_ENV === "development";
+
+  console.error( "No LLM provider configured" );
+
+  // Em desenvolvimento, retornamos um fallback no formato OpenAI para evitar
+  // que o frontend quebre (e para orientar a configuração da chave).
+  if ( !isVercel && isDev )
   {
-    const isVercel = Boolean( process.env.VERCEL_ENV );
-    const isDev = process.env.NODE_ENV === "development";
+    const fallbackPayload = {
+      summary:
+        "⚠️ IA não configurada: defina OPENAI_API_KEY ou GEMINI_API_KEY para habilitar a análise automática.",
+      documentType: "Intimação",
+      priority: "média",
+      deadline: { days: 15, type: "úteis", endDate: "Verificar" },
+      suggestedActions: [ "Configurar OPENAI_API_KEY ou GEMINI_API_KEY", "Reexecutar a análise" ],
+      nextSteps: [ "Abrir configurações", "Adicionar chave de API", "Tentar novamente" ],
+    };
 
-    console.error( "No LLM provider configured" );
+    const content = `\n\n\`\`\`json\n${ JSON.stringify( fallbackPayload, null, 2 ) }\n\`\`\``;
 
-    // Em desenvolvimento, retornamos um fallback no formato OpenAI para evitar
-    // que o frontend quebre (e para orientar a configuração da chave).
-    if ( !isVercel && isDev )
-    {
-      const fallbackPayload = {
-        summary:
-          "⚠️ IA não configurada: defina OPENAI_API_KEY ou GEMINI_API_KEY para habilitar a análise automática.",
-        documentType: "Intimação",
-        priority: "média",
-        deadline: { days: 15, type: "úteis", endDate: "Verificar" },
-        suggestedActions: [ "Configurar OPENAI_API_KEY ou GEMINI_API_KEY", "Reexecutar a análise" ],
-        nextSteps: [ "Abrir configurações", "Adicionar chave de API", "Tentar novamente" ],
-      };
-
-      const content = `\n\n\`\`\`json\n${ JSON.stringify( fallbackPayload, null, 2 ) }\n\`\`\``;
-
-      return res.status( 200 ).json( {
-        id: `unconfigured-${ Date.now() }`,
-        object: "chat.completion",
-        created: Math.floor( Date.now() / 1000 ),
-        model: "unconfigured",
-        choices: [
-          {
-            index: 0,
-            message: { role: "assistant", content },
-            finish_reason: "stop",
-          },
-        ],
-        usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
-        _provider: "none",
-        _warning: "No LLM provider configured",
-      } satisfies LLMResponse );
-    }
-
-    // Em produção (Vercel), falhar explicitamente para evitar comportamento silencioso.
-    return res.status( 503 ).json( {
-      error: "No LLM provider configured",
-      message: "Configure uma das seguintes variáveis no ambiente:",
-      options: [
+    res.status( 200 ).json( {
+      id: `unconfigured-${ Date.now() }`,
+      object: "chat.completion",
+      created: Math.floor( Date.now() / 1000 ),
+      model: "unconfigured",
+      choices: [
         {
-          name: "OPENAI_API_KEY",
-          description: "API key da OpenAI (recomendado)",
-          url: "https://platform.openai.com/api-keys",
-        },
-        {
-          name: "GEMINI_API_KEY",
-          description: "API key do Google Gemini",
-          url: "https://aistudio.google.com/app/apikey",
+          index: 0,
+          message: { role: "assistant", content },
+          finish_reason: "stop",
         },
       ],
+      usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
+      _provider: "none",
+      _warning: "No LLM provider configured",
+    } satisfies LLMResponse );
+    return;
+  }
+
+  // Em produção (Vercel), falhar explicitamente para evitar comportamento silencioso.
+  res.status( 503 ).json( {
+    error: "No LLM provider configured",
+    message: "Configure uma das seguintes variáveis no ambiente:",
+    options: [
+      {
+        name: "OPENAI_API_KEY",
+        description: "API key da OpenAI (recomendado)",
+        url: "https://platform.openai.com/api-keys",
+      },
+      {
+        name: "GEMINI_API_KEY",
+        description: "API key do Google Gemini",
+        url: "https://aistudio.google.com/app/apikey",
+      },
+    ],
+  } );
+}
+
+function parseAndValidateBodyOrRespond (
+  req: VercelRequest,
+  res: VercelResponse
+): LLMRequest | null
+{
+  const raw = typeof req.body === "string" ? JSON.parse( req.body ) : req.body;
+  const parsed = LLMRequestSchema.safeParse( raw );
+  if ( !parsed.success )
+  {
+    res.status( 400 ).json( { error: "Invalid request body", details: parsed.error.format() } );
+    return null;
+  }
+  return parsed.data as LLMRequest;
+}
+
+function sanitizeRequestMessages ( body: LLMRequest ): void
+{
+  if ( !body.messages ) return;
+  body.messages.forEach( ( m ) =>
+  {
+    m.content = escapeHtml( m.content );
+  } );
+}
+
+function buildProviderCall (
+  provider: ProviderConfig,
+  body: LLMRequest
+): { targetUrl: string; requestBody: unknown; requestedModel: string }
+{
+  const defaultModel = provider.name === "OpenAI" ? "gpt-4o-mini" : "gemini-2.5-pro";
+  const requestedModel = body.model || defaultModel;
+
+  if ( provider.name === "Gemini" )
+  {
+    const geminiModel = MODEL_MAPPING.gemini[ requestedModel ] || "gemini-2.5-pro";
+    console.log( `[Gemini] Modelo solicitado: ${ requestedModel } → ${ geminiModel }` );
+    return {
+      targetUrl: `${ provider.baseUrl }/${ geminiModel }:generateContent?key=${ provider.apiKey }`,
+      requestBody: provider.transformRequest!( body ),
+      requestedModel,
+    };
+  }
+
+  // OpenAI
+  const mapped = MODEL_MAPPING.openai[ requestedModel ] || requestedModel;
+  return {
+    targetUrl: provider.baseUrl,
+    requestBody: { ...body, model: mapped },
+    requestedModel,
+  };
+}
+
+async function fetchProviderJson (
+  provider: ProviderConfig,
+  targetUrl: string,
+  requestBody: unknown
+): Promise<unknown>
+{
+  const response = await fetch( targetUrl, {
+    method: "POST",
+    headers: provider.headers( provider.apiKey! ),
+    body: JSON.stringify( requestBody ),
+  } );
+
+  if ( response.ok )
+  {
+    return response.json();
+  }
+
+  const errorText = await response.text();
+  // ✅ FIX: Log detalhado para debug de erros 429/500
+  console.error( `[${ provider.name }] HTTP ${ response.status }:`, {
+    url: targetUrl.replace( /key=[^&]+/, "key=***" ),
+    status: response.status,
+    error: errorText.substring( 0, 500 ),
+  } );
+
+  // ✅ FIX: Tratamento específico para 429 (Rate Limit)
+  if ( response.status === 429 )
+  {
+    throw new Error( `${ provider.name } Rate Limit: ${ errorText.substring( 0, 200 ) }` );
+  }
+
+  throw new Error( `${ provider.name } API error: ${ response.status } - ${ errorText }` );
+}
+
+function recordCircuitSuccess (
+  circuit: Map<string, CircuitEntry>,
+  providerName: string,
+  current: CircuitEntry
+): void
+{
+  if ( current.failures && current.failures > 0 )
+  {
+    circuit.set( providerName, { failures: 0 } );
+  }
+}
+
+function recordCircuitFailure (
+  circuit: Map<string, CircuitEntry>,
+  providerName: string,
+  errorMessage: string
+): CircuitEntry
+{
+  const st = circuit.get( providerName ) || { failures: 0 };
+  st.failures = ( st.failures || 0 ) + 1;
+
+  // ✅ FIX: Circuit breaker mais agressivo para Rate Limit
+  const isRateLimit = errorMessage.includes( "Rate Limit" );
+  const FAILURE_THRESHOLD = isRateLimit ? 2 : 5;
+  const OPEN_TIME_MS = isRateLimit ? 120_000 : 60_000; // 2min para rate limit
+
+  if ( st.failures >= FAILURE_THRESHOLD )
+  {
+    st.openedUntil = Date.now() + OPEN_TIME_MS;
+    console.warn( `[LLM Proxy] Circuit breaker ABERTO para ${ providerName } (${ st.failures } falhas)` );
+  }
+
+  circuit.set( providerName, st );
+  return st;
+}
+
+function respondProxyError (
+  res: VercelResponse,
+  providerName: string,
+  errorMessage: string,
+  circuitState: CircuitEntry
+): void
+{
+  const isRateLimit = errorMessage.includes( "Rate Limit" );
+  res.status( isRateLimit ? 429 : 500 ).json( {
+    error: "Failed to process LLM request",
+    message: errorMessage,
+    provider: providerName,
+    circuitOpen: circuitState.openedUntil ? circuitState.openedUntil > Date.now() : false,
+  } );
+}
+
+export default async function handler ( req: VercelRequest, res: VercelResponse )
+{
+  const { origin } = applyCors( req, res );
+  // Se applyCors já respondeu 403, não continua
+  if ( res.headersSent ) return;
+
+  if ( !ensureMethodOrRespond( req, res ) ) return;
+  if ( !requireProxyApiKeyIfNeeded( req, res ) ) return;
+
+  const clientIP = getClientIp( req );
+  if ( !( await applyRateLimitOrRespond( res, clientIP ) ) ) return;
+
+  const providers = buildProviders();
+  if ( !hasAnyProviderKey( providers ) )
+  {
+    console.error( "[LLM Proxy] ERRO: Nenhuma API key configurada para provedores LLM" );
+    res.status( 500 ).json( {
+      error: "No LLM API keys configured",
+      message: "Configure OPENAI_API_KEY, GEMINI_API_KEY ou GITHUB_TOKEN nas variáveis de ambiente",
+      providers: providers.map( ( p ) => ( { name: p.name, hasKey: !!p.apiKey } ) ),
     } );
+    return;
+  }
+
+  const provider = selectProvider( providers );
+  if ( !provider )
+  {
+    respondNoProviderConfigured( req, res );
+    return;
+  }
+
+  const cache = getGlobalCache();
+  const circuit = getGlobalCircuit();
+
+  const cacheKeyBase = JSON.stringify( { body: req.body, origin, clientIP } );
+  const cacheKey = `${ provider.name }:${ cacheKeyBase }`;
+  if ( tryServeFromCache( res, cache, cacheKey ) ) return;
+
+  const providerCircuit = circuit.get( provider.name ) || { failures: 0 };
+  if ( isCircuitOpen( providerCircuit ) )
+  {
+    res
+      .status( 503 )
+      .json( { error: "LLM provider temporarily unavailable (circuit open). Try later." } );
+    return;
   }
 
   console.log( `Using LLM provider: ${ provider.name }` );
 
   try
   {
-    const body = typeof req.body === "string" ? JSON.parse( req.body ) : req.body;
+    const body = parseAndValidateBodyOrRespond( req, res );
+    if ( !body ) return;
 
-    // Simple validation using Zod
-    const ChatMessageSchema = z.object( {
-      role: z.enum( [ "system", "user", "assistant" ] ),
-      content: z.string().min( 1 ).max( 20000 ),
-    } );
-    const LLMRequestSchema = z.object( {
-      model: z.string().optional(),
-      messages: z.array( ChatMessageSchema ).optional(),
-      temperature: z.number().optional(),
-      max_tokens: z.number().optional(),
-    } );
-    const parsed = LLMRequestSchema.safeParse( body );
-    if ( !parsed.success )
-    {
-      return res
-        .status( 400 )
-        .json( { error: "Invalid request body", details: parsed.error.format() } );
-    }
+    sanitizeRequestMessages( body );
 
-    // sanitize message contents
-    if ( parsed.data.messages )
-    {
-      parsed.data.messages.forEach( ( m ) =>
-      {
-        m.content = escapeHtml( m.content );
-      } );
-    }
-
-    // Modelo padrão baseado no provedor
-    const defaultModel = provider.name === "OpenAI" ? "gpt-4o-mini" : "gemini-2.5-pro";
-    const requestedModel = body.model || defaultModel;
-
-    // Construir URL e body baseado no provedor
-    let targetUrl = provider.baseUrl;
-    let requestBody = body;
-
-    if ( provider.name === "Gemini" )
-    {
-      // Mapear modelo e construir URL específica do Gemini
-      const geminiModel = MODEL_MAPPING.gemini[ requestedModel ] || "gemini-2.5-pro";
-      console.log( `[Gemini] Modelo solicitado: ${ requestedModel } → ${ geminiModel }` );
-      targetUrl = `${ provider.baseUrl }/${ geminiModel }:generateContent?key=${ provider.apiKey }`;
-      requestBody = provider.transformRequest!( body );
-    } else if ( provider.name === "OpenAI" )
-    {
-      // Mapear modelo OpenAI
-      body.model = MODEL_MAPPING.openai[ requestedModel ] || requestedModel;
-      requestBody = body;
-    }
-
-    // Fazer requisição
-    // Make request with timeout + retry
-    const fetchFn = async () =>
-    {
-      const response = await fetch( targetUrl, {
-        method: "POST",
-        headers: provider.headers( provider.apiKey! ),
-        body: JSON.stringify( requestBody ),
-      } );
-      if ( !response.ok )
-      {
-        const errorText = await response.text();
-        // ✅ FIX: Log detalhado para debug de erros 429/500
-        console.error( `[${ provider.name }] HTTP ${ response.status }:`, {
-          url: targetUrl.replace( /key=[^&]+/, "key=***" ),
-          status: response.status,
-          error: errorText.substring( 0, 500 ),
-        } );
-
-        // ✅ FIX: Tratamento específico para 429 (Rate Limit)
-        if ( response.status === 429 )
-        {
-          throw new Error( `${ provider.name } Rate Limit: ${ errorText.substring( 0, 200 ) }` );
-        }
-
-        throw new Error( `${ provider.name } API error: ${ response.status } - ${ errorText }` );
-      }
-      return response.json();
-    };
+    const { targetUrl, requestBody } = buildProviderCall( provider, body );
+    const fetchFn = async () => fetchProviderJson( provider, targetUrl, requestBody );
 
     // ✅ FIX: Reduzir retries para evitar timeout em cascata
     const data = await retryWithBackoff( () => withTimeout( 45000, fetchFn() ), 2, 1000 );
 
-    // Response status has already been checked inside fetchFn
+    const transformed = provider.transformResponse ? provider.transformResponse( data ) : ( data as any );
+    ( transformed as any )._provider = provider.name;
 
-    // data already set from retryWithBackoff
-
-    // Transformar resposta se necessário
-    let transformed = data;
-    if ( provider.transformResponse ) transformed = provider.transformResponse( data );
-
-    // Adicionar metadata sobre o provedor usado
-    transformed._provider = provider.name;
-
-    // Update circuit status: success => reset
-    if ( providerCircuit.failures && providerCircuit.failures > 0 )
-    {
-      circuit.set( provider.name, { failures: 0 } );
-    }
-
-    // Store in short-term cache
-    globalCache.set( cacheKey, { expiresAt: Date.now() + CACHE_TTL_MS, data: transformed } );
+    recordCircuitSuccess( circuit, provider.name, providerCircuit );
+    cache.set( cacheKey, { expiresAt: Date.now() + CACHE_TTL_MS, data: transformed } );
 
     res.status( 200 ).json( transformed );
   } catch ( error )
@@ -476,30 +624,9 @@ export default async function handler ( req: VercelRequest, res: VercelResponse 
       stack: error instanceof Error ? error.stack?.substring( 0, 300 ) : undefined,
     } );
 
-    // Update circuit failure count
+    const circuit = getGlobalCircuit();
     const name = provider?.name || "unknown";
-    const st = circuit.get( name ) || { failures: 0 };
-    st.failures = ( st.failures || 0 ) + 1;
-
-    // ✅ FIX: Circuit breaker mais agressivo para Rate Limit
-    const FAILURE_THRESHOLD = errorMessage.includes( "Rate Limit" ) ? 2 : 5;
-    const OPEN_TIME_MS = errorMessage.includes( "Rate Limit" ) ? 120_000 : 60_000; // 2min para rate limit
-
-    if ( st.failures >= FAILURE_THRESHOLD )
-    {
-      st.openedUntil = Date.now() + OPEN_TIME_MS;
-      console.warn( `[LLM Proxy] Circuit breaker ABERTO para ${ name } (${ st.failures } falhas)` );
-    }
-    circuit.set( name, st );
-
-    // ✅ FIX: Retornar 429 se for rate limit, 500 caso contrário
-    const statusCode = errorMessage.includes( "Rate Limit" ) ? 429 : 500;
-
-    res.status( statusCode ).json( {
-      error: "Failed to process LLM request",
-      message: errorMessage,
-      provider: provider.name,
-      circuitOpen: st.openedUntil ? st.openedUntil > Date.now() : false,
-    } );
+    const st = recordCircuitFailure( circuit, name, errorMessage );
+    respondProxyError( res, provider.name, errorMessage, st );
   }
 }

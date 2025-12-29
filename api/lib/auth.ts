@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import crypto from "node:crypto";
+import { timingSafeEqual } from "node:crypto";
 
 /**
  * Middleware para checar Authorization: Bearer <TOKEN>
@@ -40,7 +40,7 @@ export function requireApiKey (
       // Use constant-time compare with zero-padded buffers
       const padded = Buffer.alloc( Math.max( a.length, b.length ) );
       a.copy( padded );
-      const cmp = crypto.timingSafeEqual( padded, padded );
+      const cmp = timingSafeEqual( padded, padded );
       // deliberately fail
       if ( !cmp )
       {
@@ -50,7 +50,7 @@ export function requireApiKey (
       return false;
     }
 
-    const ok = crypto.timingSafeEqual( a, b );
+    const ok = timingSafeEqual( a, b );
     if ( !ok )
     {
       res.status( 401 ).json( { error: "Unauthorized" } );

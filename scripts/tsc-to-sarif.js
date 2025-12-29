@@ -1,5 +1,5 @@
-// @ts-check
 #!/usr/bin/env node
+// @ts-check
 /*
  * Simple tsc -> SARIF converter.
  * Runs `tsc --noEmit --pretty false` and parses the output to SARIF 2.1.0.

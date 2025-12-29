@@ -1,5 +1,5 @@
-// @ts-check
 #!/usr/bin/env node
+// @ts-check
 /*
  * Convert Vitest JSON output to SARIF 2.1.0 format.
  * Run: vitest run --reporter json > vitest-results.json

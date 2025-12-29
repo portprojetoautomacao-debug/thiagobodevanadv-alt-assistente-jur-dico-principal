@@ -281,15 +281,17 @@ const args = process.argv.slice( 3 );
       break;
 
     case 'add':
-      if ( args.length < 2 )
       {
-        console.error( 'Uso: npm run vercel:env:add KEY VALUE [targets]' );
-        console.error( 'Targets: production,preview,development (separados por vírgula)' );
-        process.exit( 1 );
+        if ( args.length < 2 )
+        {
+          console.error( 'Uso: npm run vercel:env:add KEY VALUE [targets]' );
+          console.error( 'Targets: production,preview,development (separados por vírgula)' );
+          process.exit( 1 );
+        }
+        const targets = args[ 2 ] ? args[ 2 ].split( ',' ) : [ 'production', 'preview', 'development' ];
+        await addEnvVar( args[ 0 ], args[ 1 ], targets );
+        break;
       }
-      const targets = args[ 2 ] ? args[ 2 ].split( ',' ) : [ 'production', 'preview', 'development' ];
-      await addEnvVar( args[ 0 ], args[ 1 ], targets );
-      break;
 
     case 'remove':
       if ( args.length < 1 )
