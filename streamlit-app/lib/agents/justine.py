@@ -1,4 +1,4 @@
-"""
+""" 
 Mrs. Justin-e - Especialista em intimações e prazos
 Agente LangChain REAL para análise de intimações
 """
@@ -8,9 +8,7 @@ import re
 from datetime import datetime, timedelta
 from typing import Any, Dict
 
-from langchain.agents import AgentExecutor, create_react_agent
-from langchain.prompts import PromptTemplate
-from langchain.tools import tool
+from langchain_core.tools import tool
 
 from .base_agent import BaseAgent
 
@@ -75,14 +73,6 @@ Características:
 - Classificação correta de intimações
 - Priorização inteligente
 - Criação de tarefas claras
-
-Tarefa: {input}
-
-Use as ferramentas para extrair prazos e classificar o tipo de intimação.
-
-{agent_scratchpad}
-
-Histórico: {chat_history}
 """
 
     async def execute(
@@ -101,29 +91,42 @@ Histórico: {chat_history}
         try:
             logger.info(f"📋 Justin-e analisando intimação")
 
-            # Definir prompt template
-            prompt_template = PromptTemplate.from_template(self.prompt)
+            # Executar ferramentas localmente
+            prazo_result = extrair_prazo.invoke({"texto": task})
+            tipo_result = classificar_intimacao.invoke({"texto": task})
 
-            # Criar agente ReAct
-            agent = create_react_agent(self.llm, self.tools, prompt_template)
+            # Construir prompt com resultados das ferramentas
+            messages = [
+                ("system", self.prompt),
+                ("human", f"""Análise da intimação:
 
-            # Criar executor
-            agent_executor = AgentExecutor(
-                agent=agent, tools=self.tools, verbose=True, handle_parsing_errors=True
-            )
+Texto: {task}
 
-            # Executar
-            result = await agent_executor.ainvoke({"input": task, "chat_history": ""})
+Resultados das ferramentas:
+- {prazo_result}
+- {tipo_result}
+
+Forneça uma análise completa desta intimação, incluindo:
+1. Tipo de intimação identificado
+2. Prazo identificado (se houver)
+3. Urgência
+4. Ações recomendadas
+"""),
+            ]
+
+            response = await self.llm.ainvoke(messages)
 
             logger.info(f"✅ Justin-e concluiu análise")
 
             return {
                 "agentId": self.agent_id,
                 "agentName": self.name,
-                "response": result["output"],
+                "response": response.content,
                 "status": "completed",
                 "confidence": 0.90,
                 "metadata": {
+                    "prazo": prazo_result,
+                    "tipo": tipo_result,
                     "hasDeadline": "prazo" in task.lower(),
                     "isUrgent": "urgente" in task.lower(),
                 },

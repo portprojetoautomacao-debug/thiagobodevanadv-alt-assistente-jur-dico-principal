@@ -6,7 +6,7 @@ Agente LangChain REAL para criação de documentos
 import logging
 from typing import Any, Dict
 
-from langchain.tools import tool
+from langchain_core.tools import tool
 
 try:
     from lib.tools.search_tools import buscar_jurisprudencia_datajud
