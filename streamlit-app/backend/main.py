@@ -2,10 +2,9 @@
 BACKEND PYTHON NATIVO - FASTAPI
 ================================
 
-Backend 100% Python para Streamlit + React.
-Substitui backend Node.js/Vercel mantendo compatibilidade total.
+Backend 100% Python para Streamlit.
 
-Endpoints compatíveis:
+Endpoints:
 - /api/health
 - /api/kv (Redis)
 - /api/agents
@@ -20,7 +19,7 @@ from datetime import datetime
 from pathlib import Path
 
 import uvicorn
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -36,12 +35,21 @@ from backend.cron_jobs import start_scheduler
 from backend.database import RedisClient
 from backend.routers import (
     agents,
+    calendar,
+    cron,
     djen,
+    documentos,
     expedientes,
+    health,
     intimacoes,
     kv,
     metrics,
+    minutas,
+    notifications,
+    pje,
+    prazos,
     processes,
+    tarefas,
 )
 
 # Configuração
@@ -50,26 +58,18 @@ config = load_config()
 # Criar app FastAPI
 app = FastAPI(
     title="Assistente Jurídico API",
-    description="Backend Python nativo para Streamlit + React",
+    description="Backend Python nativo para Streamlit",
     version="2.0.0",
     docs_url="/api/docs",
     redoc_url="/api/redoc",
 )
 
 
-@app.on_event("startup")
-async def startup_event():
-    """Inicialização do servidor."""
-    start_scheduler()
-
-
-# CORS para permitir frontend React
+# CORS para permitir frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:5173",  # Vite dev
         "http://localhost:8501",  # Streamlit
-        "https://assistente-juridico-github.vercel.app",  # Produção
         "*",  # Permitir todos em desenvolvimento
     ],
     allow_credentials=True,
@@ -111,31 +111,6 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 
-# Health check
-@app.get("/api/health")
-async def health_check():
-    """Health check endpoint."""
-
-    # Verificar Redis
-    redis_client = RedisClient()
-    redis_ok = redis_client.is_connected()
-
-    return {
-        "status": "ok" if redis_ok else "degraded",
-        "timestamp": datetime.now().isoformat(),
-        "environment": "development",
-        "version": "2.0.0",
-        "backend": "Python FastAPI",
-        "redis": "connected" if redis_ok else "disconnected",
-        "components": {
-            "api": "healthy",
-            "redis": "healthy" if redis_ok else "unhealthy",
-            "agents": "healthy",
-            "ml": "healthy",
-        },
-    }
-
-
 # Root endpoint
 @app.get("/")
 async def root():
@@ -149,6 +124,7 @@ async def root():
 
 
 # Incluir routers
+app.include_router(health.router, prefix="/api", tags=["Health"])
 app.include_router(kv.router, prefix="/api", tags=["KV Store"])
 app.include_router(agents.router, prefix="/api", tags=["Agentes"])
 app.include_router(expedientes.router, prefix="/api", tags=["Expedientes"])
@@ -156,23 +132,10 @@ app.include_router(processes.router, prefix="/api", tags=["Processos"])
 app.include_router(metrics.router, prefix="/api", tags=["Métricas"])
 app.include_router(djen.router, prefix="/api", tags=["DJEN"])
 app.include_router(intimacoes.router, prefix="/api", tags=["Intimações"])
-
-# Importar novos routers
-from routers import (
-    calendar,
-    cron,
-    documentos,
-    minutas,
-    notifications,
-    pje,
-    prazos,
-    tarefas,
-)
-
 app.include_router(cron.router, prefix="/api", tags=["Cron Jobs"])
 app.include_router(pje.router, prefix="/api", tags=["PJe"])
-app.include_router(minutas.router, tags=["Minutas"])  # Já tem prefix no router
-app.include_router(calendar.router, tags=["Calendar"])  # Já tem prefix no router
+app.include_router(minutas.router, tags=["Minutas"])
+app.include_router(calendar.router, tags=["Calendar"])
 app.include_router(tarefas.router, prefix="/api", tags=["Tarefas"])
 app.include_router(prazos.router, prefix="/api", tags=["Prazos"])
 app.include_router(documentos.router, prefix="/api", tags=["Documentos"])
@@ -185,6 +148,9 @@ async def startup_event():
     print("🚀 Assistente Jurídico API iniciando...")
     print(f"📊 Docs: http://localhost:8000/api/docs")
     print(f"❤️  Health: http://localhost:8000/api/health")
+
+    # Iniciar scheduler
+    start_scheduler()
 
     # Testar Redis
     redis_client = RedisClient()
@@ -202,5 +168,4 @@ async def shutdown_event():
 
 # Executar se chamado diretamente
 if __name__ == "__main__":
-    # reload=False para produção/deploy para evitar erros de subprocesso
     uvicorn.run(app, host="127.0.0.1", port=8000, log_level="info")
