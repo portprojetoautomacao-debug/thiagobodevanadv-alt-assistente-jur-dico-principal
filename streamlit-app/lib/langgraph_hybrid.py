@@ -36,12 +36,11 @@ logger = logging.getLogger(__name__)
 # ESTADO DO GRAFO
 # ============================================================================
 
-@dataclass
-class LegalAssistantState:
+class LegalAssistantState(TypedDict, total=False):
     """Estado do assistente jurídico"""
     messages: Annotated[Sequence[BaseMessage], add]
-    task_type: str = field(default="generic")  # tipo de tarefa (default: generic)
-    workflow_mode: str = field(default="auto")  # modo: workflow, tools, auto (default: auto)
+    task_type: str  # tipo de tarefa
+    workflow_mode: str  # modo: workflow, tools, auto
 
 
 # ============================================================================
@@ -66,7 +65,7 @@ DEFAULT_CONFIG = Configuration(
 # NÓS DO GRAFO
 # ============================================================================
 
-def classify_task(state: LegalAssistantState) -> LegalAssistantState:
+def classify_task(state: LegalAssistantState) -> dict:
     """Classifica o tipo de tarefa do usuário"""
 
     last_message = state["messages"][-1]
@@ -95,7 +94,7 @@ def classify_task(state: LegalAssistantState) -> LegalAssistantState:
     return {"task_type": task_type}
 
 
-def call_model_with_tools(state: LegalAssistantState) -> LegalAssistantState:
+def call_model_with_tools(state: LegalAssistantState) -> dict:
     """Chama o modelo com acesso a todas as tools dos agentes"""
 
     # Criar modelo com tools
@@ -150,7 +149,7 @@ def route_by_task(state: LegalAssistantState) -> Literal["generic", "intimacao_f
 # WORKFLOWS ESPECIALIZADOS
 # ============================================================================
 
-def intimacao_workflow_node(state: LegalAssistantState) -> LegalAssistantState:
+def intimacao_workflow_node(state: LegalAssistantState) -> dict:
     """Workflow especializado para processar intimações"""
 
     logger.info("📨 Executando workflow de intimação especializado")
@@ -192,7 +191,7 @@ def intimacao_workflow_node(state: LegalAssistantState) -> LegalAssistantState:
         return {"messages": [error_msg]}
 
 
-def contrato_workflow_node(state: LegalAssistantState) -> LegalAssistantState:
+def contrato_workflow_node(state: LegalAssistantState) -> dict:
     """Workflow especializado para análise de contratos"""
 
     logger.info("📄 Executando workflow de contrato especializado")
@@ -237,7 +236,7 @@ Recomendações:
         return {"messages": [error_msg]}
 
 
-def redacao_workflow_node(state: LegalAssistantState) -> LegalAssistantState:
+def redacao_workflow_node(state: LegalAssistantState) -> dict:
     """Workflow especializado para redação de documentos"""
 
     logger.info("✍️  Executando workflow de redação especializado")
@@ -281,7 +280,7 @@ def redacao_workflow_node(state: LegalAssistantState) -> LegalAssistantState:
 # NOVOS WORKFLOWS (COMPLETANDO OS 100%)
 # ============================================================================
 
-def upload_expediente_workflow_node(state: LegalAssistantState) -> LegalAssistantState:
+def upload_expediente_workflow_node(state: LegalAssistantState) -> dict:
     """Workflow especializado para upload e análise de expedientes"""
 
     logger.info("📤 Executando workflow de upload de expediente")
@@ -333,7 +332,7 @@ def upload_expediente_workflow_node(state: LegalAssistantState) -> LegalAssistan
         return {"messages": [error_msg]}
 
 
-def gestao_processo_workflow_node(state: LegalAssistantState) -> LegalAssistantState:
+def gestao_processo_workflow_node(state: LegalAssistantState) -> dict:
     """Workflow especializado para gestão de processos (CRUD)"""
 
     logger.info("📋 Executando workflow de gestão de processo")
@@ -390,7 +389,7 @@ def gestao_processo_workflow_node(state: LegalAssistantState) -> LegalAssistantS
         return {"messages": [error_msg]}
 
 
-def monitoramento_workflow_node(state: LegalAssistantState) -> LegalAssistantState:
+def monitoramento_workflow_node(state: LegalAssistantState) -> dict:
     """Workflow especializado para monitoramento DJEN/DataJud"""
 
     logger.info("📡 Executando workflow de monitoramento")
