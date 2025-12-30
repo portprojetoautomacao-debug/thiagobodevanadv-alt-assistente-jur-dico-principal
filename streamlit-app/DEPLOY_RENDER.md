@@ -33,7 +33,8 @@ O Render vai criar 2 serviços automaticamente:
 Acesse Environment → Add Environment Variables:
 
 ```bash
-GEMINI_API_KEY=AIza...  # Sua chave do Google AI Studio
+GOOGLE_API_KEY=AIza...  # Sua chave do Google AI Studio (recomendado)
+# ou GEMINI_API_KEY=AIza...  # compatibilidade com versões antigas do app
 UPSTASH_REDIS_REST_URL=https://xxx.upstash.io
 UPSTASH_REDIS_REST_TOKEN=Axxx...
 DJEN_USERNAME=seu-cpf
@@ -44,7 +45,8 @@ DJEN_PASSWORD=sua-senha
 Acesse Environment → Add Environment Variables:
 
 ```bash
-GEMINI_API_KEY=AIza...  # Mesma do backend
+GOOGLE_API_KEY=AIza...  # Mesma do backend (recomendado)
+# ou GEMINI_API_KEY=AIza...  # compatibilidade com versões antigas do app
 UPSTASH_REDIS_REST_URL=https://xxx.upstash.io
 UPSTASH_REDIS_REST_TOKEN=Axxx...
 BACKEND_URL=https://assistente-juridico-backend.onrender.com  # Ajuste se necessário
@@ -88,7 +90,8 @@ Adicione em Environment:
 
 ```bash
 # Obrigatórias
-GEMINI_API_KEY=AIza...
+GOOGLE_API_KEY=AIza...  # (recomendado)
+# ou GEMINI_API_KEY=AIza...  # compatibilidade
 UPSTASH_REDIS_REST_URL=https://xxx.upstash.io
 UPSTASH_REDIS_REST_TOKEN=Axxx...
 

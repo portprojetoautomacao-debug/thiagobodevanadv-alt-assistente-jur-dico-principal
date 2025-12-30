@@ -75,25 +75,13 @@ IMPORTANTE: Antes de redigir, SEMPRE use a ferramenta 'buscar_jurisprudencia_dat
     ) -> Dict[str, Any]:
         """Cria documento jurídico"""
         try:
-            logger.info(f"✍️ Redator criando documento")
+            logger.info("✍️ Redator criando documento")
 
             # 1. Buscar template se aplicável
             tipo = context.get("tipo", "generico") if context else "generico"
             template = buscar_modelo.invoke({"tipo_documento": tipo})
 
-            # 2. Construir prompt
-            full_prompt = f"""{self.prompt}
-
-Template sugerido: {template}
-
-Tarefa: {task}
-
-{f"Contexto adicional: {context}" if context else ""}
-
-Gere o documento jurídico solicitado seguindo as melhores práticas.
-"""
-
-            # 3. Gerar conteúdo
+            # 2. Gerar conteúdo
             messages = [
                 ("system", self.prompt),
                 (
@@ -107,7 +95,7 @@ Gere o documento jurídico solicitado seguindo as melhores práticas.
             # 4. Validar
             validacao = validar_formatacao.invoke({"texto": texto_gerado})
 
-            logger.info(f"✅ Documento criado")
+            logger.info("✅ Documento criado")
 
             return {
                 "agentId": self.agent_id,

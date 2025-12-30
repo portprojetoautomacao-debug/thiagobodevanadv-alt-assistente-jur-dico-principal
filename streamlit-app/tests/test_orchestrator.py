@@ -30,7 +30,7 @@ class TestLegalAgentOrchestrator:
         from langchain_agents import LegalAgentOrchestrator
 
         orchestrator = LegalAgentOrchestrator()
-        
+
         assert orchestrator is not None
         assert hasattr(orchestrator, "agents_list")
         assert len(orchestrator.agents_list) == 16
@@ -55,8 +55,9 @@ class TestLegalAgentOrchestrator:
         history = orchestrator.memory_manager.get_session_history("test-session-001")
 
         assert history is not None
-        # Should be InMemoryChatMessageHistory if Redis not configured
-        assert hasattr(history, "messages")
+        # Should have messages attribute (InMemory or Redis based)
+        # Don't call .messages directly as it may try to connect to Redis
+        assert hasattr(history, "add_message") or hasattr(history, "messages")
 
     def test_list_agents(self):
         """Test that all agents are listed"""
@@ -89,11 +90,10 @@ class TestLegalAgentOrchestrator:
         from langchain_agents import LegalAgentOrchestrator
 
         orchestrator = LegalAgentOrchestrator()
-        
+
         # Use an agent that likely doesn't have real implementation yet
         result = await orchestrator.execute_agent(
-            "redacao-peticoes", 
-            "Criar petição inicial"
+            "redacao-peticoes", "Criar petição inicial"
         )
 
         assert result is not None

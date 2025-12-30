@@ -17,18 +17,21 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 load_dotenv()
 
 # Configuração do modelo
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
 MODEL_NAME = "gemini-2.0-flash-exp"  # Modelo rápido e eficiente
 
 
 class AIMinutaCommands:
     def __init__(self):
-        if not GEMINI_API_KEY:
-            raise ValueError("GEMINI_API_KEY não encontrada nas variáveis de ambiente")
+        api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+        if not api_key:
+            raise ValueError(
+                "API key requerida para Gemini. Defina GEMINI_API_KEY ou GOOGLE_API_KEY nas variáveis de ambiente"
+            )
 
         self.llm = ChatGoogleGenerativeAI(
             model=MODEL_NAME,
-            google_api_key=GEMINI_API_KEY,
+            google_api_key=api_key,
             temperature=0.7,
             convert_system_message_to_human=True,
         )

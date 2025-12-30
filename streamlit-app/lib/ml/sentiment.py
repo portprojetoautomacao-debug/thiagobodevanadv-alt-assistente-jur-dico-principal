@@ -7,21 +7,43 @@ import logging
 import re
 from typing import Dict, List, Optional
 
-import nltk
-from textblob import TextBlob
-
 logger = logging.getLogger(__name__)
 
-# Download de recursos NLTK necessários
+# Tentativa de importar NLTK - pode falhar em ambientes sem os dados
+NLTK_AVAILABLE = False
 try:
-    nltk.data.find("tokenizers/punkt")
-except LookupError:
-    nltk.download("punkt", quiet=True)
+    import nltk
+    from textblob import TextBlob
 
-try:
-    nltk.data.find("corpora/stopwords")
-except LookupError:
-    nltk.download("stopwords", quiet=True)
+    # Download de recursos NLTK necessários
+    try:
+        nltk.data.find("tokenizers/punkt")
+    except LookupError:
+        try:
+            nltk.download("punkt", quiet=True)
+        except Exception:
+            pass
+
+    # Alguns ambientes recentes do NLTK/TextBlob exigem o pacote `punkt_tab`
+    try:
+        nltk.data.find("tokenizers/punkt_tab")
+    except LookupError:
+        try:
+            nltk.download("punkt_tab", quiet=True)
+        except Exception:
+            pass
+
+    try:
+        nltk.data.find("corpora/stopwords")
+    except LookupError:
+        try:
+            nltk.download("stopwords", quiet=True)
+        except Exception:
+            pass
+
+    NLTK_AVAILABLE = True
+except Exception as e:
+    logger.warning(f"NLTK não disponível: {e}. Usando análise simplificada.")
 
 
 class SentimentAnalyzer:
@@ -107,10 +129,17 @@ class SentimentAnalyzer:
             # Limpar texto
             texto_limpo = self._limpar_texto(texto)
 
-            # Análise TextBlob (inglês, mas funciona razoavelmente para português)
-            blob = TextBlob(texto_limpo)
-            polaridade = blob.sentiment.polarity
-            subjetividade = blob.sentiment.subjectivity
+            # Análise TextBlob (se disponível)
+            if NLTK_AVAILABLE:
+                blob = TextBlob(texto_limpo)
+                polaridade = blob.sentiment.polarity
+                subjetividade = blob.sentiment.subjectivity
+                num_sentencas = len(blob.sentences)
+            else:
+                # Análise simplificada sem NLTK
+                polaridade = 0.0
+                subjetividade = 0.5
+                num_sentencas = texto_limpo.count(".") + 1
 
             # Classificação de polaridade
             if polaridade > 0.1:
@@ -134,7 +163,7 @@ class SentimentAnalyzer:
                 "analise_juridica": analise_juridica,
                 "palavras_chave": palavras_chave[:10],  # Top 10
                 "tamanho_texto": len(texto),
-                "num_sentencas": len(blob.sentences),
+                "num_sentencas": num_sentencas,
             }
 
             logger.info(f"📊 Sentimento: {sentimento} ({analise_juridica['tipo']})")

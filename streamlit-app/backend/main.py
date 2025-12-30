@@ -15,6 +15,7 @@ Endpoints:
 """
 
 import sys
+from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
 
@@ -31,7 +32,7 @@ sys.path.append(str(Path(__file__).parent))
 
 from config import load_config
 
-from backend.cron_jobs import start_scheduler
+from backend.cron_jobs import start_scheduler, stop_scheduler
 from backend.database import RedisClient
 from backend.routers import (
     agents,
@@ -55,6 +56,33 @@ from backend.routers import (
 # Configuração
 config = load_config()
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("🚀 Assistente Jurídico API iniciando...")
+    print("📊 Docs: http://localhost:8000/api/docs")
+    print("❤️  Health: http://localhost:8000/api/health")
+
+    # Iniciar scheduler
+    start_scheduler()
+
+    # Testar Redis
+    try:
+        redis_client = RedisClient()
+        if redis_client.is_connected():
+            print("✅ Redis conectado")
+        else:
+            print("⚠️  Redis offline (modo fallback)")
+    except Exception as e:
+        print(f"⚠️  Falha ao checar Redis: {e}")
+
+    yield
+
+    # Shutdown
+    stop_scheduler()
+    print("👋 Assistente Jurídico API encerrando...")
+
+
 # Criar app FastAPI
 app = FastAPI(
     title="Assistente Jurídico API",
@@ -62,6 +90,7 @@ app = FastAPI(
     version="2.0.0",
     docs_url="/api/docs",
     redoc_url="/api/redoc",
+    lifespan=lifespan,
 )
 
 
@@ -140,30 +169,6 @@ app.include_router(tarefas.router, prefix="/api", tags=["Tarefas"])
 app.include_router(prazos.router, prefix="/api", tags=["Prazos"])
 app.include_router(documentos.router, prefix="/api", tags=["Documentos"])
 app.include_router(notifications.router, prefix="/api", tags=["Notificações"])
-
-
-# Startup event
-@app.on_event("startup")
-async def startup_event():
-    print("🚀 Assistente Jurídico API iniciando...")
-    print(f"📊 Docs: http://localhost:8000/api/docs")
-    print(f"❤️  Health: http://localhost:8000/api/health")
-
-    # Iniciar scheduler
-    start_scheduler()
-
-    # Testar Redis
-    redis_client = RedisClient()
-    if redis_client.is_connected():
-        print("✅ Redis conectado")
-    else:
-        print("⚠️  Redis offline (modo fallback)")
-
-
-# Shutdown event
-@app.on_event("shutdown")
-async def shutdown_event():
-    print("👋 Assistente Jurídico API encerrando...")
 
 
 # Executar se chamado diretamente

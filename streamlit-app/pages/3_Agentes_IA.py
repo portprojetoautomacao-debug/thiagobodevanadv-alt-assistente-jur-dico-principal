@@ -3,6 +3,7 @@ Página de Agentes IA - Execução dos 16 agentes
 """
 
 import asyncio
+import os
 import sys
 from pathlib import Path
 
@@ -34,21 +35,34 @@ AGENTS_UI = {
 st.title("🤖 Agentes de IA")
 st.caption("16 agentes especializados | Powered by Gemini 2.0 Flash")
 
+api_key_present = bool(os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY"))
+if not api_key_present:
+    st.warning(
+        "⚠️ Gemini não configurado neste ambiente. Defina GEMINI_API_KEY ou GOOGLE_API_KEY para usar os agentes."
+    )
+
 # Grid de agentes
 st.subheader("📋 Todos os Agentes")
 cols = st.columns(4)
 
 for idx, (agent_id, AgentClass) in enumerate(AGENTS_MAP.items()):
     with cols[idx % 4]:
-        agent = AgentClass()
         ui = AGENTS_UI.get(agent_id, {"icon": "🤖", "color": "#gray"})
+
+        try:
+            agent = AgentClass()
+            agent_name = agent.name
+            agent_role = agent.role
+        except Exception as e:
+            agent_name = agent_id
+            agent_role = f"Indisponível: {str(e)}"
 
         st.markdown(
             f"""
         <div style="background: white; padding: 1rem; border-radius: 0.5rem;
                     border-left: 4px solid {ui['color']}; margin-bottom: 1rem;">
-            <h4>{ui['icon']} {agent.name}</h4>
-            <p style="font-size: 0.85rem; color: #666;">{agent.role}</p>
+            <h4>{ui['icon']} {agent_name}</h4>
+            <p style="font-size: 0.85rem; color: #666;">{agent_role}</p>
         </div>
         """,
             unsafe_allow_html=True,
@@ -62,10 +76,14 @@ st.subheader("🧪 Testar Agente")
 col1, col2 = st.columns([1, 2])
 
 with col1:
-    agent_names = {
-        f"{AGENTS_UI.get(id, {}).get('icon', '🤖')} {AGENTS_MAP[id]().name}": id
-        for id in AGENTS_MAP.keys()
-    }
+    agent_names = {}
+    for id in AGENTS_MAP.keys():
+        try:
+            agent_names[
+                f"{AGENTS_UI.get(id, {}).get('icon', '🤖')} {AGENTS_MAP[id]().name}"
+            ] = id
+        except Exception:
+            agent_names[f"{AGENTS_UI.get(id, {}).get('icon', '🤖')} {id}"] = id
 
     selected = st.selectbox("Escolha:", list(agent_names.keys()))
     agent_id = agent_names[selected]
@@ -75,7 +93,7 @@ with col2:
     execute = st.button("▶️ Executar", type="primary", use_container_width=True)
 
 if execute and task:
-    with st.spinner(f"🤖 Executando..."):
+    with st.spinner("🤖 Executando..."):
         try:
             AgentClass = AGENTS_MAP[agent_id]
             agent = AgentClass()
@@ -87,7 +105,9 @@ if execute and task:
                 result = asyncio.run(run())
             except Exception as e:
                 if "API_KEY" in str(e):
-                    st.warning("⚠️ Configure GEMINI_API_KEY no .env")
+                    st.warning(
+                        "⚠️ Configure GOOGLE_API_KEY ou GEMINI_API_KEY no ambiente"
+                    )
                     result = {
                         "status": "demo",
                         "response": f"[DEMO] Agente analisaria: '{task[:100]}...'",
@@ -97,7 +117,7 @@ if execute and task:
                     raise e
 
             if result.get("status") in ["completed", "demo"]:
-                st.success(f"✅ Concluído!")
+                st.success("✅ Concluído!")
                 st.markdown(result.get("response", ""))
             else:
                 st.error(f"❌ Erro: {result.get('error')}")

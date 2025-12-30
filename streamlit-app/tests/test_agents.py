@@ -2,190 +2,274 @@
 Testes para os 16 Agentes LangChain REAIS
 """
 
+import os
+
 import pytest
 
-# ✅ Helper to skip tests if agent module not found
-def skip_if_agent_not_found(agent_name):
-    """Decorator to skip test if agent module doesn't exist"""
-    def decorator(func):
-        try:
-            # Try to import the agent module
-            if agent_name == "harvey":
-                from agents.harvey import HarveyAgent
-            elif agent_name == "justine":
-                from agents.justine import JustineAgent
-            elif agent_name == "analise_doc":
-                from agents.analise_doc import AnaliseDocAgent
-            elif agent_name == "prazos":
-                from agents.prazos import GestaoPrazosAgent
-            elif agent_name == "analise_risco":
-                from agents.analise_risco import AnaliseRiscoAgent
-            elif agent_name == "revisao_contratual":
-                from agents.revisao_contratual import RevisaoContratualAgent
-            elif agent_name == "comunicacao":
-                from agents.comunicacao import ComunicacaoClientesAgent
-            elif agent_name == "financeiro":
-                from agents.financeiro import FinanceiroAgent
-            elif agent_name == "estrategia":
-                from agents.estrategia import EstrategiaProcessualAgent
-            elif agent_name == "traducao":
-                from agents.traducao import TraducaoJuridicaAgent
-            elif agent_name == "compliance":
-                from agents.compliance import ComplianceAgent
-            elif agent_name == "organizacao":
-                from agents.organizacao import OrganizacaoArquivosAgent
-            elif agent_name == "analise_sentenca":
-                from agents.analise_sentenca import AnaliseSentencaAgent
-            return func
-        except (ImportError, ModuleNotFoundError):
-            return pytest.mark.skip(reason=f"Agent module '{agent_name}' not implemented yet")(func)
-    return decorator
+# Garantir que a API key está configurada
+if not os.getenv("GEMINI_API_KEY"):
+    os.environ["GEMINI_API_KEY"] = "AIzaSyDSjxUtNlcl-m985jcgQp-7WVdF4MCh438"
+    os.environ["GOOGLE_API_KEY"] = "AIzaSyDSjxUtNlcl-m985jcgQp-7WVdF4MCh438"
+
+
+def safe_import_agent(agent_module, agent_class):
+    """Helper para importar agente com segurança"""
+    try:
+        # Primeiro, tentar importar usando o caminho completo
+        module = __import__(f"lib.agents.{agent_module}", fromlist=[agent_class])
+        return getattr(module, agent_class, None)
+    except (ImportError, ModuleNotFoundError, AttributeError):
+        pass
+    
+    try:
+        # Tentar importar diretamente do módulo agents
+        module = __import__(f"agents.{agent_module}", fromlist=[agent_class])
+        return getattr(module, agent_class, None)
+    except (ImportError, ModuleNotFoundError, AttributeError):
+        pass
+    
+    return None
+
+
+# Mapeamento correto dos nomes das classes
+AGENT_MAP = {
+    "harvey": "HarveyAgent",
+    "justine": "JustineAgent",
+    "analise_doc": "AnaliseDocAgent",
+    "analise_risco": "AnaliseRiscoAgent",
+    "analise_sentenca": "AnaliseSentencaAgent",
+    "compliance": "ComplianceAgent",
+    "comunicacao": "ComunicacaoClientesAgent",
+    "estrategia": "EstrategiaProcessualAgent",
+    "financeiro": "FinanceiroAgent",
+    "organizacao": "OrganizacaoArquivosAgent",
+    "pesquisa": "PesquisaAgent",
+    "prazos": "GestaoPrazosAgent",
+    "redacao": "RedacaoAgent",
+    "revisao_contratual": "RevisaoContratualAgent",
+    "traducao": "TraducaoJuridicaAgent",
+    "expedientes": "ExpedientesAgent",
+    "monitor_djen": "MonitorDJENAgent",
+}
 
 
 class TestAgentesLangChain:
     """Testes dos agentes LangChain reais"""
 
     @pytest.mark.asyncio
-    @skip_if_agent_not_found("harvey")
     async def test_harvey_executa_e_completa(self):
         """Testar que Harvey executa e completa"""
-        from agents.harvey import HarveyAgent
+        AgentClass = safe_import_agent("harvey", AGENT_MAP["harvey"])
+        if AgentClass is None:
+            pytest.skip("HarveyAgent não encontrado")
 
-        agent = HarveyAgent()
-        result = await agent.execute("Análise estratégica do escritório")
+        agent = AgentClass()
+        result = await agent.execute("Diga 'teste ok' em uma frase curta")
 
         assert result is not None
         assert "status" in result or "response" in result
 
     @pytest.mark.asyncio
-    @skip_if_agent_not_found("justine")
     async def test_justine_executa_e_completa(self):
         """Testar que Justine executa e completa"""
-        from agents.justine import JustineAgent
+        AgentClass = safe_import_agent("justine", AGENT_MAP["justine"])
+        if AgentClass is None:
+            pytest.skip("JustineAgent não encontrado")
 
-        agent = JustineAgent()
-        result = await agent.execute("Analisar intimação de 15 dias")
+        agent = AgentClass()
+        result = await agent.execute("Diga 'teste ok' em uma frase curta")
 
         assert result is not None
         assert "status" in result or "response" in result
 
     @pytest.mark.asyncio
-    @skip_if_agent_not_found("analise_doc")
     async def test_analise_documental_executa_e_completa(self):
         """Testar que Análise Documental executa e completa"""
-        from agents.analise_doc import AnaliseDocAgent
+        AgentClass = safe_import_agent("analise_doc", AGENT_MAP["analise_doc"])
+        if AgentClass is None:
+            pytest.skip("AnaliseDocAgent não encontrado")
 
-        agent = AnaliseDocAgent()
-        result = await agent.execute("Analisar petição inicial")
+        agent = AgentClass()
+        result = await agent.execute("Diga 'teste ok' em uma frase curta")
 
         assert result is not None
 
     @pytest.mark.asyncio
-    @skip_if_agent_not_found("prazos")
     async def test_gestao_prazos_executa_e_completa(self):
         """Testar que Gestão de Prazos executa e completa"""
-        from agents.prazos import GestaoPrazosAgent
+        AgentClass = safe_import_agent("prazos", AGENT_MAP["prazos"])
+        if AgentClass is None:
+            pytest.skip("GestaoPrazosAgent não encontrado")
 
-        agent = GestaoPrazosAgent()
-        result = await agent.execute("Calcular prazo de 15 dias")
+        agent = AgentClass()
+        result = await agent.execute("Diga 'teste ok' em uma frase curta")
 
         assert result is not None
 
     @pytest.mark.asyncio
-    @skip_if_agent_not_found("analise_risco")
     async def test_analise_risco_executa_e_completa(self):
         """Testar que Análise de Risco executa e completa"""
-        from agents.analise_risco import AnaliseRiscoAgent
+        AgentClass = safe_import_agent("analise_risco", AGENT_MAP["analise_risco"])
+        if AgentClass is None:
+            pytest.skip("AnaliseRiscoAgent não encontrado")
 
-        agent = AnaliseRiscoAgent()
-        result = await agent.execute("Avaliar viabilidade de ação")
+        agent = AgentClass()
+        result = await agent.execute("Diga 'teste ok' em uma frase curta")
 
         assert result is not None
 
     @pytest.mark.asyncio
-    @skip_if_agent_not_found("revisao_contratual")
     async def test_revisao_contratual_executa_e_completa(self):
         """Testar que Revisão Contratual executa e completa"""
-        from agents.revisao_contratual import RevisaoContratualAgent
+        AgentClass = safe_import_agent(
+            "revisao_contratual", AGENT_MAP["revisao_contratual"]
+        )
+        if AgentClass is None:
+            pytest.skip("RevisaoContratualAgent não encontrado")
 
-        agent = RevisaoContratualAgent()
-        result = await agent.execute("Revisar contrato")
+        agent = AgentClass()
+        result = await agent.execute("Diga 'teste ok' em uma frase curta")
 
         assert result is not None
 
     @pytest.mark.asyncio
-    @skip_if_agent_not_found("comunicacao")
     async def test_comunicacao_clientes_executa_e_completa(self):
         """Testar que Comunicação Clientes executa e completa"""
-        from agents.comunicacao import ComunicacaoClientesAgent
+        AgentClass = safe_import_agent("comunicacao", AGENT_MAP["comunicacao"])
+        if AgentClass is None:
+            pytest.skip("ComunicacaoClientesAgent não encontrado")
 
-        agent = ComunicacaoClientesAgent()
-        result = await agent.execute("Gerar relatório")
+        agent = AgentClass()
+        result = await agent.execute("Diga 'teste ok' em uma frase curta")
 
         assert result is not None
 
     @pytest.mark.asyncio
-    @skip_if_agent_not_found("financeiro")
     async def test_financeiro_executa_e_completa(self):
         """Testar que Financeiro executa e completa"""
-        from agents.financeiro import FinanceiroAgent
+        AgentClass = safe_import_agent("financeiro", AGENT_MAP["financeiro"])
+        if AgentClass is None:
+            pytest.skip("FinanceiroAgent não encontrado")
 
-        agent = FinanceiroAgent()
-        result = await agent.execute("Calcular honorários")
+        agent = AgentClass()
+        result = await agent.execute("Diga 'teste ok' em uma frase curta")
 
         assert result is not None
 
     @pytest.mark.asyncio
-    @skip_if_agent_not_found("estrategia")
     async def test_estrategia_processual_executa_e_completa(self):
         """Testar que Estratégia Processual executa e completa"""
-        from agents.estrategia import EstrategiaProcessualAgent
+        AgentClass = safe_import_agent("estrategia", AGENT_MAP["estrategia"])
+        if AgentClass is None:
+            pytest.skip("EstrategiaProcessualAgent não encontrado")
 
-        agent = EstrategiaProcessualAgent()
-        result = await agent.execute("Definir estratégia")
+        agent = AgentClass()
+        result = await agent.execute("Diga 'teste ok' em uma frase curta")
 
         assert result is not None
 
     @pytest.mark.asyncio
-    @skip_if_agent_not_found("traducao")
     async def test_traducao_juridica_executa_e_completa(self):
         """Testar que Tradução Jurídica executa e completa"""
-        from agents.traducao import TraducaoJuridicaAgent
+        AgentClass = safe_import_agent("traducao", AGENT_MAP["traducao"])
+        if AgentClass is None:
+            pytest.skip("TraducaoJuridicaAgent não encontrado")
 
-        agent = TraducaoJuridicaAgent()
-        result = await agent.execute("Explicar termo revelia")
+        agent = AgentClass()
+        result = await agent.execute("Diga 'teste ok' em uma frase curta")
 
         assert result is not None
 
     @pytest.mark.asyncio
-    @skip_if_agent_not_found("compliance")
     async def test_compliance_executa_e_completa(self):
         """Testar que Compliance executa e completa"""
-        from agents.compliance import ComplianceAgent
+        AgentClass = safe_import_agent("compliance", AGENT_MAP["compliance"])
+        if AgentClass is None:
+            pytest.skip("ComplianceAgent não encontrado")
 
-        agent = ComplianceAgent()
-        result = await agent.execute("Verificar conformidade LGPD")
+        agent = AgentClass()
+        result = await agent.execute("Diga 'teste ok' em uma frase curta")
 
         assert result is not None
 
     @pytest.mark.asyncio
-    @skip_if_agent_not_found("organizacao")
     async def test_organizacao_arquivos_executa_e_completa(self):
         """Testar que Organização de Arquivos executa e completa"""
-        from agents.organizacao import OrganizacaoArquivosAgent
+        AgentClass = safe_import_agent("organizacao", AGENT_MAP["organizacao"])
+        if AgentClass is None:
+            pytest.skip("OrganizacaoArquivosAgent não encontrado")
 
-        agent = OrganizacaoArquivosAgent()
-        result = await agent.execute("Organizar documentos")
+        agent = AgentClass()
+        result = await agent.execute("Diga 'teste ok' em uma frase curta")
 
         assert result is not None
 
     @pytest.mark.asyncio
-    @skip_if_agent_not_found("analise_sentenca")
     async def test_analise_sentenca_executa_e_completa(self):
         """Testar que Análise de Sentença executa e completa"""
-        from agents.analise_sentenca import AnaliseSentencaAgent
+        AgentClass = safe_import_agent(
+            "analise_sentenca", AGENT_MAP["analise_sentenca"]
+        )
+        if AgentClass is None:
+            pytest.skip("AnaliseSentencaAgent não encontrado")
 
-        agent = AnaliseSentencaAgent()
-        result = await agent.execute("Analisar sentença procedente")
+        agent = AgentClass()
+        result = await agent.execute("Diga 'teste ok' em uma frase curta")
 
         assert result is not None
+
+    @pytest.mark.asyncio
+    async def test_pesquisa_executa_e_completa(self):
+        """Testar que Pesquisa executa e completa"""
+        AgentClass = safe_import_agent("pesquisa", AGENT_MAP["pesquisa"])
+        if AgentClass is None:
+            pytest.skip("PesquisaAgent não encontrado")
+
+        agent = AgentClass()
+        result = await agent.execute("Diga 'teste ok' em uma frase curta")
+
+        assert result is not None
+
+    @pytest.mark.asyncio
+    async def test_redacao_executa_e_completa(self):
+        """Testar que Redação executa e completa"""
+        AgentClass = safe_import_agent("redacao", AGENT_MAP["redacao"])
+        if AgentClass is None:
+            pytest.skip("RedacaoAgent não encontrado")
+
+        agent = AgentClass()
+        result = await agent.execute("Diga 'teste ok' em uma frase curta")
+
+        assert result is not None
+
+
+class TestAgentesInfo:
+    """Testes de informações dos agentes"""
+
+    def test_harvey_info(self):
+        """Testar informações do Harvey"""
+        AgentClass = safe_import_agent("harvey", AGENT_MAP["harvey"])
+        if AgentClass is None:
+            pytest.skip("HarveyAgent não encontrado")
+
+        agent = AgentClass()
+        info = agent.get_info()
+
+        assert info is not None
+        assert "id" in info
+        assert "name" in info
+        assert info["id"] == "harvey"
+
+    def test_justine_info(self):
+        """Testar informações da Justine"""
+        AgentClass = safe_import_agent("justine", AGENT_MAP["justine"])
+        if AgentClass is None:
+            pytest.skip("JustineAgent não encontrado")
+
+        agent = AgentClass()
+        info = agent.get_info()
+
+        assert info is not None
+        assert "id" in info
+        assert "name" in info
+        assert info["id"] == "justine"

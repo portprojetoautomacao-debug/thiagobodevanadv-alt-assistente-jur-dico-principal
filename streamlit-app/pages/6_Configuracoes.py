@@ -41,8 +41,9 @@ def render():
         # Gemini API Key
         with st.expander("🤖 Google Gemini API", expanded=True):
             gemini_key = st.text_input(
-                "GEMINI_API_KEY:",
-                value=os.getenv("GEMINI_API_KEY", ""),
+                "GOOGLE_API_KEY (recomendado) ou GEMINI_API_KEY:",
+                value=os.getenv("GOOGLE_API_KEY", "")
+                or os.getenv("GEMINI_API_KEY", ""),
                 type="password",
                 help="Obtenha em: https://makersuite.google.com/app/apikey",
             )
