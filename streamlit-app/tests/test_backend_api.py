@@ -131,7 +131,7 @@ class TestBackendAPI:
     def test_upload_documento(self, client):
         """Testar upload de documento"""
         # Criar arquivo de teste
-        arquivo_teste = io.BytesIO(b"Conteudo do documento de teste PDF")
+        arquivo_teste = io.BytesIO(b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n1 0 obj\n<<>>\nendobj\n")
         arquivo_teste.name = "teste.pdf"
 
         files = {"file": ("teste.pdf", arquivo_teste, "application/pdf")}

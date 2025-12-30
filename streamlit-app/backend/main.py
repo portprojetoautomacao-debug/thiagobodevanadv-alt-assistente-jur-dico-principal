@@ -14,6 +14,7 @@ Endpoints:
 - /api/djen-sync
 """
 
+import os
 import sys
 from contextlib import asynccontextmanager
 from datetime import datetime
@@ -94,17 +95,80 @@ app = FastAPI(
 )
 
 
+def _parse_bool_env(name: str, default: bool = False) -> bool:
+    raw = (os.getenv(name) or "").strip().lower()
+    if raw in {"1", "true", "yes", "y", "on"}:
+        return True
+    if raw in {"0", "false", "no", "n", "off"}:
+        return False
+    return default
+
+
+def _get_allowed_origins() -> list[str]:
+    # Segurança por padrão: permitir apenas origens locais.
+    # Para desenvolvimento, pode liberar via BACKEND_CORS_ALLOW_ALL=true.
+    if _parse_bool_env("BACKEND_CORS_ALLOW_ALL", default=False):
+        return ["*"]
+
+    env_list = (os.getenv("BACKEND_CORS_ALLOW_ORIGINS") or "").strip()
+    if env_list:
+        return [o.strip() for o in env_list.split(",") if o.strip()]
+
+    return [
+        "http://localhost:8501",
+        "http://127.0.0.1:8501",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ]
+
+
+BACKEND_API_KEY = (os.getenv("BACKEND_API_KEY") or os.getenv("API_KEY") or "").strip()
+
+ALLOWED_ORIGINS = _get_allowed_origins()
+
+
+def _should_skip_auth(request: Request) -> bool:
+    # Permitir preflight de CORS
+    if request.method.upper() == "OPTIONS":
+        return True
+
+    path = request.url.path
+    # Health/root/docs devem continuar acessíveis para diagnósticos locais.
+    if path in {"/", "/api/health"}:
+        return True
+    if path.startswith("/api/docs") or path.startswith("/api/redoc"):
+        return True
+    if path.startswith("/openapi.json"):
+        return True
+
+    return False
+
+
 # CORS para permitir frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:8501",  # Streamlit
-        "*",  # Permitir todos em desenvolvimento
-    ],
-    allow_credentials=True,
+    allow_origins=ALLOWED_ORIGINS,
+    # Observação: credenciais + "*" não é compatível com a especificação.
+    allow_credentials=("*" not in ALLOWED_ORIGINS),
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def api_key_auth(request: Request, call_next):
+    # Auth é opcional: se BACKEND_API_KEY não estiver setada, mantém comportamento atual.
+    if not BACKEND_API_KEY or _should_skip_auth(request):
+        return await call_next(request)
+
+    provided = (request.headers.get("x-api-key") or "").strip()
+    if provided != BACKEND_API_KEY:
+        return JSONResponse(
+            status_code=401,
+            content={"error": "Unauthorized", "message": "Missing/invalid API key"},
+        )
+
+    return await call_next(request)
 
 
 # Middleware de logging

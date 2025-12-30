@@ -14,9 +14,15 @@ import pytest
 # Adicionar diretório pai ao path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# Configurar API key antes de importar módulos
-os.environ["GEMINI_API_KEY"] = "AIzaSyDSjxUtNlcl-m985jcgQp-7WVdF4MCh438"
-os.environ["GOOGLE_API_KEY"] = "AIzaSyDSjxUtNlcl-m985jcgQp-7WVdF4MCh438"
+RUN_REAL = os.getenv("RUN_REAL_GEMINI_TESTS") == "1"
+HAS_KEY = bool(os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY"))
+
+pytestmark = pytest.mark.skipif(
+    not (RUN_REAL and HAS_KEY),
+    reason=(
+        "Testes reais do Gemini são opt-in. Defina RUN_REAL_GEMINI_TESTS=1 e GOOGLE_API_KEY (ou GEMINI_API_KEY)."
+    ),
+)
 
 
 class TestAIMinutaCommandsReal:

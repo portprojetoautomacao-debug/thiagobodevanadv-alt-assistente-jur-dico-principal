@@ -23,6 +23,9 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
+# Constantes
+MSG_MODELO_SALVO = "   💾 Modelo salvo\n"
+
 
 def treinar_todos_modelos(n_samples: int = 2000):
     """
@@ -59,7 +62,7 @@ def treinar_todos_modelos(n_samples: int = 2000):
 
         # Salvar
         predictor.salvar(str(models_dir / "success_predictor.pkl"))
-        logger.info("   💾 Modelo salvo\n")
+        logger.info(MSG_MODELO_SALVO)
 
     except Exception as e:
         logger.error(f"   ❌ Erro: {str(e)}\n")
@@ -86,7 +89,7 @@ def treinar_todos_modelos(n_samples: int = 2000):
 
         # Salvar
         estimator.salvar(str(models_dir / "duration_estimator.pkl"))
-        logger.info("   💾 Modelo salvo\n")
+        logger.info(MSG_MODELO_SALVO)
 
     except Exception as e:
         logger.error(f"   ❌ Erro: {str(e)}\n")
@@ -114,7 +117,7 @@ def treinar_todos_modelos(n_samples: int = 2000):
 
         # Salvar
         clusterer.salvar(str(models_dir / "process_clusterer.pkl"))
-        logger.info("   💾 Modelo salvo\n")
+        logger.info(MSG_MODELO_SALVO)
 
     except Exception as e:
         logger.error(f"   ❌ Erro: {str(e)}\n")

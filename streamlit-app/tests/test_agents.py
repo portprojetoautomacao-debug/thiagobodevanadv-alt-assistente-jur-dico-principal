@@ -8,8 +8,8 @@ import pytest
 
 # Garantir que a API key está configurada
 if not os.getenv("GEMINI_API_KEY"):
-    os.environ["GEMINI_API_KEY"] = "AIzaSyDSjxUtNlcl-m985jcgQp-7WVdF4MCh438"
-    os.environ["GOOGLE_API_KEY"] = "AIzaSyDSjxUtNlcl-m985jcgQp-7WVdF4MCh438"
+    os.environ["GEMINI_API_KEY"] = "DUMMY_TEST_KEY"
+    os.environ["GOOGLE_API_KEY"] = "DUMMY_TEST_KEY"
 
 
 def safe_import_agent(agent_module, agent_class):

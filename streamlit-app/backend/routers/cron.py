@@ -1,9 +1,11 @@
-"""
-Router de Cron Jobs - Gerenciamento de tarefas agendadas
+"""Router de Cron Jobs - Gerenciamento de tarefas agendadas.
+
+Este router expõe o estado do APScheduler definido em `backend/cron_jobs.py`.
 """
 
 import logging
-from typing import Any, Dict, List
+from datetime import datetime
+from typing import List
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -28,125 +30,115 @@ class CronJob(BaseModel):
     status: str = "idle"
 
 
-# Mock de jobs - será implementado com APScheduler
-MOCK_JOBS = [
-    {
-        "id": "djen-monitor",
-        "name": "Monitor DJEN",
-        "schedule": "0 12,20 * * *",  # 12:00 e 20:00
-        "enabled": True,
-        "last_run": "2025-12-27T12:00:00",
-        "next_run": "2025-12-27T20:00:00",
-        "status": "idle",
-    },
-    {
-        "id": "datajud-monitor",
-        "name": "Monitor DataJud",
-        "schedule": "0 16 * * *",  # 16:00
-        "enabled": True,
-        "last_run": "2025-12-26T16:00:00",
-        "next_run": "2025-12-27T16:00:00",
-        "status": "idle",
-    },
-    {
-        "id": "deadline-alerts",
-        "name": "Alertas de Prazo",
-        "schedule": "55 11 * * *",  # 11:55
-        "enabled": True,
-        "last_run": "2025-12-27T11:55:00",
-        "next_run": "2025-12-28T11:55:00",
-        "status": "idle",
-    },
-    {
-        "id": "process-queue",
-        "name": "Fila de Agentes",
-        "schedule": "*/15 * * * *",  # A cada 15 min
-        "enabled": True,
-        "last_run": "2025-12-27T14:45:00",
-        "next_run": "2025-12-27T15:00:00",
-        "status": "running",
-    },
-    {
-        "id": "backup",
-        "name": "Backup Diário",
-        "schedule": "0 3 * * *",  # 03:00
-        "enabled": True,
-        "last_run": "2025-12-27T03:00:00",
-        "next_run": "2025-12-28T03:00:00",
-        "status": "idle",
-    },
-]
+
+
+def _fmt_dt(dt: datetime | None) -> str | None:
+    return dt.isoformat() if dt else None
+
+
+def _get_scheduler():
+    from backend.cron_jobs import get_scheduler
+
+    return get_scheduler()
+
+
+def _job_to_model(job) -> CronJob:
+    trigger = getattr(job, "trigger", None)
+    next_run = getattr(job, "next_run_time", None)
+    enabled = next_run is not None
+
+    return CronJob(
+        id=str(getattr(job, "id", "")),
+        name=str(getattr(job, "name", "")) or str(getattr(job, "id", "")),
+        schedule=str(trigger) if trigger is not None else "-",
+        enabled=enabled,
+        last_run=None,
+        next_run=_fmt_dt(next_run),
+        status="idle",
+    )
 
 
 @router.get("/jobs", response_model=List[CronJob])
 async def list_jobs():
     """Lista todos os cron jobs"""
-    return MOCK_JOBS
+    scheduler = _get_scheduler()
+    return [_job_to_model(j) for j in scheduler.get_jobs()]
 
 
 @router.get("/jobs/{job_id}", response_model=CronJob)
 async def get_job(job_id: str):
     """Obtém detalhes de um job específico"""
-    job = next((j for j in MOCK_JOBS if j["id"] == job_id), None)
-
+    scheduler = _get_scheduler()
+    job = scheduler.get_job(job_id)
     if not job:
         raise HTTPException(status_code=404, detail=JOB_NOT_FOUND)
-
-    return job
+    return _job_to_model(job)
 
 
 @router.post("/jobs/{job_id}/enable")
 async def enable_job(job_id: str):
     """Habilita um job"""
-    job = next((j for j in MOCK_JOBS if j["id"] == job_id), None)
-
+    scheduler = _get_scheduler()
+    job = scheduler.get_job(job_id)
     if not job:
         raise HTTPException(status_code=404, detail=JOB_NOT_FOUND)
 
-    job["enabled"] = True
-    logger.info(f"Job {job_id} habilitado")
-
+    scheduler.resume_job(job_id)
+    logger.info("Job %s habilitado", job_id)
     return {"success": True, "message": f"Job {job_id} habilitado"}
 
 
 @router.post("/jobs/{job_id}/disable")
 async def disable_job(job_id: str):
     """Desabilita um job"""
-    job = next((j for j in MOCK_JOBS if j["id"] == job_id), None)
-
+    scheduler = _get_scheduler()
+    job = scheduler.get_job(job_id)
     if not job:
         raise HTTPException(status_code=404, detail=JOB_NOT_FOUND)
 
-    job["enabled"] = False
-    logger.info(f"Job {job_id} desabilitado")
-
+    scheduler.pause_job(job_id)
+    logger.info("Job %s desabilitado", job_id)
     return {"success": True, "message": f"Job {job_id} desabilitado"}
 
 
 @router.post("/jobs/{job_id}/run")
 async def run_job_now(job_id: str):
     """Executa um job manualmente"""
-    job = next((j for j in MOCK_JOBS if j["id"] == job_id), None)
-
+    scheduler = _get_scheduler()
+    job = scheduler.get_job(job_id)
     if not job:
-        raise HTTPException(status_code=404, detail="Job não encontrado")
+        raise HTTPException(status_code=404, detail=JOB_NOT_FOUND)
 
-    logger.info(f"Executando job {job_id} manualmente")
+    logger.info("Executando job %s manualmente", job_id)
 
-    # Stub - será implementado com APScheduler
-    return {"success": True, "message": f"Job {job_id} executado", "job_id": job_id}
+    # Best-effort: executar a função configurada.
+    # Observação: no nosso scheduler, as funções são wrappers que já lidam com async.
+    try:
+        result = job.func(*job.args, **job.kwargs)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Falha ao executar job: {e}")
+
+    return {
+        "success": True,
+        "message": f"Job {job_id} disparado",
+        "job_id": job_id,
+        "result": str(result),
+    }
 
 
 @router.get("/status")
 async def get_cron_status():
     """Obtém status geral do sistema de cron"""
-    total_jobs = len(MOCK_JOBS)
-    enabled_jobs = sum(1 for j in MOCK_JOBS if j["enabled"])
-    running_jobs = sum(1 for j in MOCK_JOBS if j["status"] == "running")
+    scheduler = _get_scheduler()
+    jobs = scheduler.get_jobs()
+
+    total_jobs = len(jobs)
+    enabled_jobs = sum(1 for j in jobs if getattr(j, "next_run_time", None) is not None)
 
     return {
         "total_jobs": total_jobs,
         "enabled_jobs": enabled_jobs,
-        "running_jobs": running_jobs,
+        "running_jobs": 0,
         "healthy": True,
+        "scheduler_running": scheduler.running,
     }

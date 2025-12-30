@@ -20,6 +20,10 @@ from typing import Dict, List, Any, Tuple
 import pickle
 import os
 
+# Constantes
+TIPO_ACAO_PADRAO = "Cível"
+
+
 class LegalMLModels:
     """Modelos de Machine Learning para análises jurídicas."""
 
@@ -125,7 +129,7 @@ class LegalMLModels:
             'tempo_tramitacao': caso.get('tempo_tramitacao', 0),
             'qtd_recursos': caso.get('qtd_recursos', 0),
             'experiencia_advogado': caso.get('experiencia_advogado', 5),
-            'tipo_acao_encoded': self.encoders['tipo_acao'].transform([caso.get('tipo_acao', 'Cível')])[0],
+            'tipo_acao_encoded': self.encoders['tipo_acao'].transform([caso.get('tipo_acao', TIPO_ACAO_PADRAO)])[0],
             'tribunal_encoded': self.encoders['tribunal'].transform([caso.get('tribunal', 'TJSP')])[0]
         }])
 
@@ -210,7 +214,7 @@ class LegalMLModels:
         features = pd.DataFrame([{
             'qtd_partes': caso.get('qtd_partes', 2),
             'valor_causa': caso.get('valor_causa', 0),
-            'tipo_acao_encoded': self.encoders['duration_tipo_acao'].transform([caso.get('tipo_acao', 'Cível')])[0],
+            'tipo_acao_encoded': self.encoders['duration_tipo_acao'].transform([caso.get('tipo_acao', TIPO_ACAO_PADRAO)])[0],
             'tribunal_encoded': self.encoders['duration_tribunal'].transform([caso.get('tribunal', 'TJSP')])[0],
             'complexidade_encoded': self.encoders['duration_complexidade'].transform([caso.get('complexidade', 'média')])[0]
         }])
@@ -364,7 +368,7 @@ class LegalMLModels:
         """Gera dados sintéticos para treinamento (demo)."""
         np.random.seed(42)
 
-        tipos_acao = ['Trabalhista', 'Cível', 'Criminal', 'Tributária', 'Família']
+        tipos_acao = ['Trabalhista', TIPO_ACAO_PADRAO, 'Criminal', 'Tributária', 'Família']
         tribunais = ['TJSP', 'TJRJ', 'TJMG', 'TJRS', 'TJDF']
         complexidades = ['baixa', 'média', 'alta']
 

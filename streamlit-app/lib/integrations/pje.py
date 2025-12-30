@@ -29,6 +29,9 @@ from webdriver_manager.chrome import ChromeDriverManager
 logger = logging.getLogger(__name__)
 
 
+# Constantes
+ERRO_LOGIN_NECESSARIO = "❌ É necessário fazer login primeiro"
+
 class PJeScraper:
     """
     Scraper e automação para PJe (Processo Judicial Eletrônico)
@@ -189,7 +192,7 @@ class PJeScraper:
             Lista de processos
         """
         if not self.logged_in:
-            logger.error("❌ É necessário fazer login primeiro")
+            logger.error(ERRO_LOGIN_NECESSARIO)
             return []
 
         try:
@@ -232,7 +235,7 @@ class PJeScraper:
             Dados do processo ou None
         """
         if not self.logged_in:
-            logger.error("❌ É necessário fazer login primeiro")
+            logger.error(ERRO_LOGIN_NECESSARIO)
             return None
 
         try:
@@ -278,7 +281,7 @@ class PJeScraper:
             Lista de expedientes
         """
         if not self.logged_in:
-            logger.error("❌ É necessário fazer login primeiro")
+            logger.error(ERRO_LOGIN_NECESSARIO)
             return []
 
         try:
@@ -327,7 +330,7 @@ class PJeScraper:
             True se protocolo bem-sucedido
         """
         if not self.logged_in:
-            logger.error("❌ É necessário fazer login primeiro")
+            logger.error(ERRO_LOGIN_NECESSARIO)
             return False
 
         try:

@@ -41,8 +41,9 @@ def _setup_path():
 _setup_path()
 
 # ✅ Configurar API keys para testes
-# Chave de teste fornecida para execução de testes reais
-TEST_GEMINI_API_KEY = "AIzaSyDSjxUtNlcl-m985jcgQp-7WVdF4MCh438"
+# IMPORTANTE: não commitar chaves reais. Para testes que não fazem chamada real,
+# um valor dummy é suficiente para passar pela validação de inicialização.
+TEST_GEMINI_API_KEY = "DUMMY_TEST_KEY"
 
 if not os.getenv("GEMINI_API_KEY") and not os.getenv("GOOGLE_API_KEY"):
     # Usar chave de teste se nenhuma key real disponível

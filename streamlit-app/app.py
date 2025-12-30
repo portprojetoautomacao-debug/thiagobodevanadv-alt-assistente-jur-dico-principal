@@ -12,11 +12,14 @@ Versão Python do sistema jurídico com:
 Mantém compatibilidade total com backend React/Vercel.
 """
 
+import atexit
 import os
 import socket
 import subprocess
 import sys
+import threading
 import time
+from collections import deque
 from pathlib import Path
 
 import streamlit as st
@@ -68,27 +71,66 @@ def start_backend():
         process = subprocess.Popen(
             [sys.executable, str(script_path)],
             stdout=subprocess.PIPE,
+
+            # Se já existe processo registrado e ainda está vivo, não reinicia.
+            existing = st.session_state.get("backend_process")
+            if existing is not None and getattr(existing, "poll", lambda: 0)() is None:
+                return
+
             stderr=subprocess.PIPE,
             text=True,
         )
+
+                log_buffer = deque(maxlen=200)
+
+                def _drain_output(proc: subprocess.Popen):
+                    try:
+                        if proc.stdout is None:
+                            return
+                        for line in proc.stdout:
+                            log_buffer.append(line.rstrip("\n"))
+                    except Exception:
+                        return
 
         # Aguarda inicialização
         with st.spinner("Iniciando servidor backend..."):
             for _ in range(20):  # Aumentado para 20s
                 # Verifica se o processo morreu
                 if process.poll() is not None:
-                    stdout, stderr = process.communicate()
+                    stderr=subprocess.STDOUT,
                     st.error(
+                    bufsize=1,
                         f"❌ Erro fatal ao iniciar backend:\n\nSTDOUT:\n{stdout}\n\nSTDERR:\n{stderr}"
+
+                st.session_state["backend_process"] = process
+
+                t = threading.Thread(target=_drain_output, args=(process,), daemon=True)
+                t.start()
+
+                def _cleanup_backend():
+                    try:
+                        if process.poll() is None:
+                            process.terminate()
+                    except Exception:
+                        pass
+
+                atexit.register(_cleanup_backend)
                     )
                     return
 
                 if is_port_open("127.0.0.1", 8000):
                     print("✅ Backend iniciado com sucesso!")
                     return
-                time.sleep(1)
+                            # Junta logs drenados + tentativa final de leitura
+                            try:
+                                remaining = process.communicate(timeout=1)[0] or ""
+                            except Exception:
+                                remaining = ""
 
-            # Se chegou aqui, não morreu mas não abriu porta
+                            buffered = "\n".join(list(log_buffer))
+                            stdout = (buffered + ("\n" if buffered and remaining else "") + remaining).strip()
+
+                                f"❌ Erro fatal ao iniciar backend:\n\nLOGS:\n{stdout}"
             st.warning("⚠️ Backend demorou para responder. Verifique os logs.")
             # Tenta ler o que já saiu
             try:
@@ -99,13 +141,10 @@ def start_backend():
                 pass
 
 
-# Iniciar backend na inicialização
-if "backend_started" not in st.session_state:
-    start_backend()
-    st.session_state["backend_started"] = True
-    # Aguardar inicialização
-    time.sleep(3)
-
+                    # Exibe logs parciais capturados até aqui
+                    buffered = "\n".join(list(log_buffer)).strip()
+                    if buffered:
+                        st.code(f"Logs parciais:\n{buffered}")
 # ============================================
 # CUSTOM CSS
 # ============================================

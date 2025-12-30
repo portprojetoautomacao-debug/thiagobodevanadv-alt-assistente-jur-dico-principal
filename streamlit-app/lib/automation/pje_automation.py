@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 # Constantes
 ERRO_LOGIN_NECESSARIO = "❌ É necessário fazer login primeiro"
-CLASS_NAME = "class name"
+CLASS_NAME = CLASS_NAME
 
 
 class PJeAutomation:
@@ -255,7 +255,7 @@ class PJeAutomation:
 
             # Buscar links de download
             links_download = self.scraper.driver.find_elements(
-                "class name", "btn-download"
+                CLASS_NAME, "btn-download"
             )
 
             arquivos_baixados = []
@@ -300,7 +300,7 @@ class PJeAutomation:
 
             # Aguardar lista carregar
             self.scraper.wait.until(
-                lambda d: d.find_element("class name", "intimacao-item")
+                lambda d: d.find_element(CLASS_NAME, "intimacao-item")
             )
 
             # Filtrar não lidas
@@ -315,13 +315,13 @@ class PJeAutomation:
                     intimacao = {
                         "id": item.get_attribute("data-id"),
                         "processo": item.find_element(
-                            "class name", "processo-numero"
+                            CLASS_NAME, "processo-numero"
                         ).text,
-                        "tipo": item.find_element("class name", "tipo").text,
-                        "data": item.find_element("class name", "data").text,
+                        "tipo": item.find_element(CLASS_NAME, "tipo").text,
+                        "data": item.find_element(CLASS_NAME, "data").text,
                         "prazo": (
-                            item.find_element("class name", "prazo").text
-                            if item.find_elements("class name", "prazo")
+                            item.find_element(CLASS_NAME, "prazo").text
+                            if item.find_elements(CLASS_NAME, "prazo")
                             else None
                         ),
                     }
@@ -357,7 +357,7 @@ class PJeAutomation:
             )
 
             # Clicar no botão "Marcar como lida"
-            btn_lida = intimacao.find_element("class name", "btn-marcar-lida")
+            btn_lida = intimacao.find_element(CLASS_NAME, "btn-marcar-lida")
             btn_lida.click()
 
             time.sleep(1)
