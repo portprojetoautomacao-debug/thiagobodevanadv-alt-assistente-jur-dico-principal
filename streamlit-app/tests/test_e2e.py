@@ -8,9 +8,8 @@ Para rodar os testes com o backend:
 3. Execute: pytest tests/test_e2e.py -v
 """
 
-import os
-
 import logging
+import os
 
 import pytest
 import requests

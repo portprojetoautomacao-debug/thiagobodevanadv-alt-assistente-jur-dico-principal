@@ -20,14 +20,14 @@ def safe_import_agent(agent_module, agent_class):
         return getattr(module, agent_class, None)
     except (ImportError, ModuleNotFoundError, AttributeError):
         pass
-    
+
     try:
         # Tentar importar diretamente do módulo agents
         module = __import__(f"agents.{agent_module}", fromlist=[agent_class])
         return getattr(module, agent_class, None)
     except (ImportError, ModuleNotFoundError, AttributeError):
         pass
-    
+
     return None
 
 

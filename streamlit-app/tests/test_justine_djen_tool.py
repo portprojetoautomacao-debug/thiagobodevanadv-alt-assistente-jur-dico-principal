@@ -97,34 +97,36 @@ class TestJustineDJENToolIntegration:
 
             # Criar agente
             agent = JustineAgent()
-            
+
             # Criar JSON mockado conforme a tool retorna
             mock_items = []
             for item in mock_djen_response["items"]:
-                mock_items.append({
-                    "id": item["id"],
-                    "tribunal": item["tribunal"],
-                    "tipo": item["tipo"],
-                    "orgao": item["orgao"],
-                    "numeroProcesso": item["numeroProcesso"],
-                    "dataDisponibilizacao": item["dataDisponibilizacao"],
-                    "dataPublicacao": "",
-                    "teor": item["teor"],
-                    "meio": item["meio"],
-                    "link": item["link"],
-                    "lawyerId": item.get("lawyerId"),
-                    "lawyerName": item.get("lawyerName"),
-                    "oab": item.get("oab"),
-                })
-            
+                mock_items.append(
+                    {
+                        "id": item["id"],
+                        "tribunal": item["tribunal"],
+                        "tipo": item["tipo"],
+                        "orgao": item["orgao"],
+                        "numeroProcesso": item["numeroProcesso"],
+                        "dataDisponibilizacao": item["dataDisponibilizacao"],
+                        "dataPublicacao": "",
+                        "teor": item["teor"],
+                        "meio": item["meio"],
+                        "link": item["link"],
+                        "lawyerId": item.get("lawyerId"),
+                        "lawyerName": item.get("lawyerName"),
+                        "oab": item.get("oab"),
+                    }
+                )
+
             mock_json = json.dumps({"count": len(mock_items), "items": mock_items})
-            
+
             # Substituir a djen_tool por um mock simples
             mock_tool = MagicMock()
             mock_tool.invoke = MagicMock(return_value=mock_json)
             original_tool = agent.djen_tool
             agent.djen_tool = mock_tool
-            
+
             try:
                 lawyers = [{"id": "1", "name": "Advogado Teste", "oab": "184404/MG"}]
                 data_inicio = "2025-12-22"
@@ -146,7 +148,7 @@ class TestJustineDJENToolIntegration:
                     assert "tribunal" in pub
                     assert "tipo" in pub
                     assert "numeroProcesso" in pub
-                    
+
             finally:
                 # Restaurar a tool original
                 agent.djen_tool = original_tool

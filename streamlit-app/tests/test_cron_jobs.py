@@ -40,6 +40,6 @@ class TestCronJobs:
         # Verificar que os jobs estão definidos na configuração
         # Não iniciamos o scheduler para evitar erro de event loop
         jobs = scheduler.get_jobs()
-        
+
         # Mesmo sem iniciar, podemos verificar se há jobs agendados
         assert isinstance(jobs, list)

@@ -15,8 +15,8 @@ _root = Path(__file__).parent.parent.resolve()
 sys.path.insert(0, str(_root))
 
 # Agora importar os módulos locais
-from lib.integrations.djen_api_client import DJENAPIClient
 from lib.integrations.datajud import DataJudClient
+from lib.integrations.djen_api_client import DJENAPIClient
 from lib.integrations.google_calendar import GoogleCalendarService
 
 
@@ -54,9 +54,9 @@ class TestDJENIntegration:
                     "meio": "D",
                 }
             ],
-            "count": 1
+            "count": 1,
         }
-        
+
         # Mock diretamente na sessão do cliente
         djen_client.session.get = Mock(return_value=mock_response)
 
@@ -65,7 +65,7 @@ class TestDJENIntegration:
             numero_oab="184404",
             uf_oab="MG",
             data_inicio="2024-01-15",
-            data_fim="2024-01-15"
+            data_fim="2024-01-15",
         )
 
         # Verificar resultado

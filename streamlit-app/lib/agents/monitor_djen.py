@@ -22,6 +22,7 @@ except ImportError:
             """Stub para busca de publicações DJEN"""
             return '{"count": 0, "items": []}'
 
+
 from .base_agent import BaseAgent
 
 logger = logging.getLogger(__name__)

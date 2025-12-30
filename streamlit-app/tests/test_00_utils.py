@@ -135,7 +135,11 @@ class TestParserUtils:
         assert len(prazos) > 0
         # Verifica se extraiu o prazo de 15 dias (número ou texto)
         prazo_encontrado = any(
-            "15" in str(p) or p.get("dias", 0) == 15 if isinstance(p, dict) else "15" in str(p)
+            (
+                "15" in str(p) or p.get("dias", 0) == 15
+                if isinstance(p, dict)
+                else "15" in str(p)
+            )
             for p in prazos
         )
         assert prazo_encontrado, f"Prazo de 15 dias não encontrado em: {prazos}"

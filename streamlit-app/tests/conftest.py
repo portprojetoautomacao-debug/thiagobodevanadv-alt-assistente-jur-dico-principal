@@ -16,17 +16,26 @@ load_dotenv()
 root_dir = Path(__file__).parent.parent.resolve()
 _original_path = sys.path.copy()
 
+
 def _setup_path():
     """Configura o sys.path com os diretórios necessários"""
     # Garantir que o root_dir está no início do path
     if str(root_dir) not in sys.path:
         sys.path.insert(0, str(root_dir))
-    
+
     # Adicionar outros caminhos necessários
-    for subdir in ["lib", "lib/agents", "lib/tools", "lib/integrations", "lib/utils", "backend"]:
+    for subdir in [
+        "lib",
+        "lib/agents",
+        "lib/tools",
+        "lib/integrations",
+        "lib/utils",
+        "backend",
+    ]:
         full_path = str(root_dir / subdir)
         if full_path not in sys.path:
             sys.path.insert(0, full_path)
+
 
 # Configurar path inicialmente
 _setup_path()

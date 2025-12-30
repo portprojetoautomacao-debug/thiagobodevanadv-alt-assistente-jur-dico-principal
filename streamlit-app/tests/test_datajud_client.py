@@ -11,6 +11,7 @@ def import_datajud_client():
     """Helper para importar DataJudClient"""
     try:
         from lib.integrations.datajud import DataJudClient
+
         return DataJudClient
     except ImportError:
         return None
@@ -24,7 +25,7 @@ class TestDataJudClient:
         DataJudClient = import_datajud_client()
         if DataJudClient is None:
             pytest.skip("DataJudClient não disponível")
-        
+
         client = DataJudClient()
 
         assert client.session is not None
@@ -36,7 +37,7 @@ class TestDataJudClient:
         DataJudClient = import_datajud_client()
         if DataJudClient is None:
             pytest.skip("DataJudClient não disponível")
-        
+
         client = DataJudClient(api_key="test-key-123")
 
         assert client.api_key == "test-key-123"
@@ -47,7 +48,7 @@ class TestDataJudClient:
         DataJudClient = import_datajud_client()
         if DataJudClient is None:
             pytest.skip("DataJudClient não disponível")
-        
+
         client = DataJudClient()
 
         # Salvar no cache
@@ -64,7 +65,7 @@ class TestDataJudClient:
         DataJudClient = import_datajud_client()
         if DataJudClient is None:
             pytest.skip("DataJudClient não disponível")
-        
+
         client = DataJudClient()
         client._cache_ttl = 0  # TTL zero
 
@@ -84,7 +85,7 @@ class TestDataJudClient:
         DataJudClient = import_datajud_client()
         if DataJudClient is None:
             pytest.skip("DataJudClient não disponível")
-        
+
         # Mock da resposta
         mock_response = Mock()
         mock_response.status_code = 200
@@ -117,7 +118,7 @@ class TestDataJudClient:
         DataJudClient = import_datajud_client()
         if DataJudClient is None:
             pytest.skip("DataJudClient não disponível")
-        
+
         mock_response = Mock()
         mock_response.status_code = 200
         mock_response.json.return_value = {"hits": {"hits": []}}
@@ -134,7 +135,7 @@ class TestDataJudClient:
         DataJudClient = import_datajud_client()
         if DataJudClient is None:
             pytest.skip("DataJudClient não disponível")
-        
+
         mock_response = Mock()
         mock_response.status_code = 200
         mock_response.json.return_value = {
@@ -174,7 +175,7 @@ class TestDataJudClient:
         DataJudClient = import_datajud_client()
         if DataJudClient is None:
             pytest.skip("DataJudClient não disponível")
-        
+
         mock_response = Mock()
         mock_response.status_code = 200
         mock_response.json.return_value = {
@@ -205,7 +206,7 @@ class TestDataJudClient:
         DataJudClient = import_datajud_client()
         if DataJudClient is None:
             pytest.skip("DataJudClient não disponível")
-        
+
         import requests
 
         # Primeira tentativa: timeout
@@ -227,7 +228,7 @@ class TestDataJudClient:
         DataJudClient = import_datajud_client()
         if DataJudClient is None:
             pytest.skip("DataJudClient não disponível")
-        
+
         import requests
 
         mock_response = Mock()
@@ -248,7 +249,7 @@ class TestDataJudClient:
         DataJudClient = import_datajud_client()
         if DataJudClient is None:
             pytest.skip("DataJudClient não disponível")
-        
+
         mock_response = Mock()
         mock_response.status_code = 200
         mock_get.return_value = mock_response
@@ -264,7 +265,7 @@ class TestDataJudClient:
         DataJudClient = import_datajud_client()
         if DataJudClient is None:
             pytest.skip("DataJudClient não disponível")
-        
+
         mock_get.side_effect = Exception("Connection error")
 
         client = DataJudClient()
@@ -276,7 +277,7 @@ class TestDataJudClient:
 class TestDataJudIntegracaoReal:
     """
     Testes de integração real com API DataJud
-    
+
     NOTA: Estes testes fazem chamadas reais à API e podem falhar
     se a API estiver indisponível ou se houver rate limiting.
     """
@@ -287,16 +288,16 @@ class TestDataJudIntegracaoReal:
         DataJudClient = import_datajud_client()
         if DataJudClient is None:
             pytest.skip("DataJudClient não disponível")
-        
+
         client = DataJudClient()
-        
+
         # Verificar se API está disponível
         if not client.health_check():
             pytest.skip("API DataJud não disponível")
-        
+
         # Usar número de processo de teste (pode não existir)
         resultado = client.buscar_processo("0001234-56.2024.8.02.0001")
-        
+
         # O resultado pode ser None se o processo não existir
         # O importante é que não deu erro
         assert resultado is None or isinstance(resultado, dict)
