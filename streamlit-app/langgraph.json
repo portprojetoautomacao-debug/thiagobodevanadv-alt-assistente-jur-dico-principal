@@ -7,6 +7,10 @@
         "legal_assistant": {
             "path": "./lib/langgraph_orchestrator.py:graph",
             "description": "Assistente jurídico inteligente para análise de processos, geração de documentos e consultas legais"
+        },
+        "legal_hybrid": {
+            "path": "./lib/langgraph_hybrid.py:graph",
+            "description": "Assistente híbrido que combina tools de 16 agentes especializados com workflows otimizados"
         }
     },
     "env": ".env",
