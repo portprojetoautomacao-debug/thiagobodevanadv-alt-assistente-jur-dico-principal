@@ -7,6 +7,9 @@ import streamlit as st
 
 # from lib.backend_client import BackendClient
 
+# Constantes
+AGUARDANDO_DADOS = "Aguardando dados"
+
 
 def render():
     """Renderiza página de análises ML."""
@@ -29,19 +32,19 @@ def render():
         st.markdown("### 🎯 Predição de Sucesso")
         st.caption("RandomForestClassifier")
         st.metric("Acurácia", "N/A")
-        st.info("Aguardando dados")
+        st.info(AGUARDANDO_DADOS)
 
     with col2:
         st.markdown("### ⏱️ Estimativa de Duração")
         st.caption("GradientBoostingRegressor")
         st.metric("MAE", "N/A")
-        st.info("Aguardando dados")
+        st.info(AGUARDANDO_DADOS)
 
     with col3:
         st.markdown("### 🔍 Clustering")
         st.caption("KMeans")
         st.metric("Score", "N/A")
-        st.info("Aguardando dados")
+        st.info(AGUARDANDO_DADOS)
 
     st.divider()
 

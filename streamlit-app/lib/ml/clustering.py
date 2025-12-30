@@ -17,6 +17,10 @@ from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 logger = logging.getLogger(__name__)
 
+# Constantes
+COMPLEXIDADES = ["baixa", "média", "alta"]
+COMPLEXIDADE_MEDIA = "média"
+
 
 class ProcessClusterer:
     """

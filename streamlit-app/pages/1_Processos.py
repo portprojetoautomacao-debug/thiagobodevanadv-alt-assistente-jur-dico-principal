@@ -10,6 +10,9 @@ import plotly.express as px
 import streamlit as st
 from lib.backend_client import BackendClient
 
+# Constantes
+FUNC_EM_DESENV = "Funcionalidade em desenvolvimento"
+
 
 def render():
     """Renderiza página de gestão de processos."""
@@ -205,15 +208,15 @@ def render():
 
             with col1:
                 if st.button("🗑️ Excluir selecionados", type="secondary"):
-                    st.warning("Funcionalidade em desenvolvimento")
+                    st.warning(FUNC_EM_DESENV)
 
             with col2:
                 if st.button("📁 Arquivar selecionados"):
-                    st.warning("Funcionalidade em desenvolvimento")
+                    st.warning(FUNC_EM_DESENV)
 
             with col3:
                 if st.button("📤 Exportar selecionados"):
-                    st.warning("Funcionalidade em desenvolvimento")
+                    st.warning(FUNC_EM_DESENV)
 
     else:
         st.info("Nenhum processo encontrado com os filtros aplicados.")
