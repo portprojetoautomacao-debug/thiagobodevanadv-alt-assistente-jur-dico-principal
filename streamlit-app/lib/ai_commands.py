@@ -1,12 +1,10 @@
-"""
-Comandos de IA para o Editor de Minutas
-=======================================
+"""Comandos de IA para o Editor de Minutas."""
 
-Módulo responsável por gerar texto jurídico usando Google Gemini.
-Implementa streaming para feedback em tempo real.
-"""
-
+import asyncio
 import os
+import random
+import re
+import time
 from typing import AsyncIterator
 
 from dotenv import load_dotenv
@@ -19,6 +17,26 @@ load_dotenv()
 # Configuração do modelo
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
 MODEL_NAME = "gemini-2.0-flash-exp"  # Modelo rápido e eficiente
+_MIN_INTERVAL_SECONDS = float(os.getenv("GEMINI_MIN_REQUEST_INTERVAL_SECONDS", "6.5"))
+_MAX_ATTEMPTS = int(os.getenv("GEMINI_MAX_RETRY_ATTEMPTS", "5"))
+_BASE_BACKOFF = float(os.getenv("GEMINI_RETRY_BASE_SECONDS", "6"))
+_RATE_LOCK = asyncio.Lock()
+_LAST_REQUEST_AT = 0.0
+
+
+def _is_rate_limit_error(err: Exception) -> bool:
+    msg = str(err)
+    return "Too Many Requests" in msg or "RESOURCE_EXHAUSTED" in msg or "quota" in msg.lower()
+
+
+def _extract_retry_delay_seconds(err: Exception) -> float | None:
+    match = re.search(r"retryDelay\"?:\s*\"?(\d+)(?:\.\d+)?s", str(err))
+    if not match:
+        return None
+    try:
+        return float(match.group(1))
+    except ValueError:
+        return None
 
 
 class AIMinutaCommands:
@@ -56,8 +74,36 @@ class AIMinutaCommands:
             HumanMessage(content=prompt),
         ]
 
-        async for chunk in self.llm.astream(messages):
-            yield chunk.content
+        # Garantir espaçamento mínimo entre requisições (quota 10 req/min)
+        async with _RATE_LOCK:
+            global _LAST_REQUEST_AT
+            now = time.monotonic()
+            wait = _MIN_INTERVAL_SECONDS - (now - _LAST_REQUEST_AT)
+            if wait > 0:
+                await asyncio.sleep(wait)
+            _LAST_REQUEST_AT = time.monotonic()
+
+        last_error: Exception | None = None
+        for attempt in range(1, _MAX_ATTEMPTS + 1):
+            try:
+                async for chunk in self.llm.astream(messages):
+                    yield chunk.content
+                return
+            except Exception as err:  # noqa: BLE001
+                last_error = err
+                if not _is_rate_limit_error(err) or attempt >= _MAX_ATTEMPTS:
+                    raise
+
+                retry_delay = _extract_retry_delay_seconds(err)
+                if retry_delay is None:
+                    retry_delay = _BASE_BACKOFF * attempt
+
+                # jitter para reduzir colisão
+                retry_delay += random.uniform(0.25, 1.0)
+                await asyncio.sleep(retry_delay)
+
+        if last_error is not None:
+            raise last_error
 
     async def continuar(self, texto_anterior: str) -> AsyncIterator[str]:
         """Continua escrevendo o texto a partir do ponto atual"""

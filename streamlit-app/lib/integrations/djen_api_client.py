@@ -149,8 +149,8 @@ class DJENAPIClient:
                 f"🔍 Buscando publicações DJEN para OAB {numero_oab}/{uf_oab}..."
             )
 
-            # Usar requests.get para permitir patch nos testes
-            response = requests.get(self.BASE_URL, params=params, timeout=timeout)
+            # Usar session.get para permitir mock direto nos testes
+            response = self.session.get(self.BASE_URL, params=params, timeout=timeout)
 
             # Log da URL completa (para debug)
             logger.debug(f"URL: {response.url}")
@@ -209,9 +209,11 @@ class DJENAPIClient:
             sigla_tribunal=data.get("siglaTribunal", ""),
             tipo_comunicacao=data.get("tipoComunicacao", ""),
             nome_orgao=data.get("nomeOrgao", ""),
-            numero_processo=data.get("numeroProcesso", ""),
-            data_disponibilizacao=data.get("dataDisponibilizacao", ""),
-            data_publicacao=data.get("dataPublicacao", ""),
+            numero_processo=data.get("numeroProcesso", "")
+            or data.get("numero_processo", ""),
+            data_disponibilizacao=data.get("dataDisponibilizacao", "")
+            or data.get("data_disponibilizacao", ""),
+            data_publicacao=data.get("dataPublicacao", "") or data.get("data_publicacao", ""),
             texto=data.get("texto", ""),
             destinatarios=destinatarios,
             advogados=advogados,

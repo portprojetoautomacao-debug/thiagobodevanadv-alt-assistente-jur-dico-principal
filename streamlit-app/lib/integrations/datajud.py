@@ -101,8 +101,8 @@ class DataJudClient:
                 logger.warning("⚠️ Rate limit atingido, aguardando...")
                 time.sleep(self.RETRY_DELAY * (retry + 1))
 
-                # MAX_RETRIES é o total de tentativas (compatível com os testes)
-                if (retry + 1) < self.MAX_RETRIES:
+                # Compatibilidade com testes: 1 chamada inicial + MAX_RETRIES novas tentativas
+                if retry < self.MAX_RETRIES:
                     return self._make_request(endpoint, params, retry + 1)
 
             logger.error(f"❌ HTTP Error {response.status_code}: {str(e)}")
@@ -111,7 +111,7 @@ class DataJudClient:
         except requests.exceptions.Timeout:
             logger.warning(f"⚠️ Timeout após {self.TIMEOUT}s")
 
-            if (retry + 1) < self.MAX_RETRIES:
+            if retry < self.MAX_RETRIES:
                 time.sleep(self.RETRY_DELAY)
                 return self._make_request(endpoint, params, retry + 1)
 
