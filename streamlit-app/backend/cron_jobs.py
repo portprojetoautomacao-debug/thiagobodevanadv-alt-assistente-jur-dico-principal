@@ -253,7 +253,6 @@ def start_scheduler():
         logger.info("🚀 Scheduler iniciado com sucesso")
 
 
-<<<<<<< HEAD
 def stop_scheduler():
     """Encerra o agendador de tarefas (best-effort)."""
     try:
@@ -262,12 +261,6 @@ def stop_scheduler():
             logger.info("🛑 Scheduler encerrado")
     except Exception as e:
         logger.warning(f"⚠️ Falha ao encerrar scheduler: {e}")
-=======
-def get_scheduler():
-    """Retorna o scheduler inicializado (compatível com testes)."""
-    if not scheduler.running:
-        start_scheduler()
-    return scheduler
 
 
 # Aliases para compatibilidade com testes/rotas legadas
@@ -277,4 +270,4 @@ async def cron_djen_monitor():
 
 async def cron_datajud_sync():
     return await run_datajud_monitor()
->>>>>>> cf888351e (fix(streamlit-app): estabiliza integrações e compatibilidade dos testes)
+
