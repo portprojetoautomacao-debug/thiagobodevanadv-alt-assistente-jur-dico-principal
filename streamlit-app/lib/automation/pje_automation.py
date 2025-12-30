@@ -12,6 +12,10 @@ from .form_filler import FormFiller
 
 logger = logging.getLogger(__name__)
 
+# Constantes
+ERRO_LOGIN_NECESSARIO = "❌ É necessário fazer login primeiro"
+CLASS_NAME = "class name"
+
 
 class PJeAutomation:
     """
@@ -84,7 +88,7 @@ class PJeAutomation:
             True se protocolo bem-sucedido
         """
         if not self.logged_in:
-            logger.error("❌ É necessário fazer login primeiro")
+            logger.error(ERRO_LOGIN_NECESSARIO)
             return False
 
         try:
@@ -166,7 +170,7 @@ class PJeAutomation:
 
             # Aguardar confirmação
             self.scraper.wait.until(
-                lambda d: d.find_element("class name", "mensagem-sucesso")
+                lambda d: d.find_element(CLASS_NAME, "mensagem-sucesso")
             )
 
             logger.info("✅ Petição protocolada com sucesso!")
@@ -246,7 +250,7 @@ class PJeAutomation:
 
             # Aguardar lista carregar
             self.scraper.wait.until(
-                lambda d: d.find_element("class name", "documento-item")
+                lambda d: d.find_element(CLASS_NAME, "documento-item")
             )
 
             # Buscar links de download
@@ -371,7 +375,7 @@ class PJeAutomation:
             self.scraper._close_driver()
             self.logged_in = False
             logger.info("✅ Automação PJe encerrada")
-        except:
+        except Exception:
             pass
 
 

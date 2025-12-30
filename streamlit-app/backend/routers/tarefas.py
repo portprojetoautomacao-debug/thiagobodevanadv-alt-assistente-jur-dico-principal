@@ -12,6 +12,9 @@ from pydantic import BaseModel, Field
 
 router = APIRouter()
 
+# Constantes
+TAREFA_NOT_FOUND = "Tarefa não encontrada"
+
 
 # Models
 class TarefaCreate(BaseModel):
@@ -70,7 +73,7 @@ async def buscar_tarefa(tarefa_id: str):
         if tarefa.get("id") == tarefa_id:
             return tarefa
 
-    raise HTTPException(status_code=404, detail="Tarefa não encontrada")
+    raise HTTPException(status_code=404, detail=TAREFA_NOT_FOUND)
 
 
 @router.patch("/tarefas/{tarefa_id}")
@@ -90,7 +93,7 @@ async def atualizar_status_tarefa(tarefa_id: str, status: str):
             redis.set("tarefas", tarefas)
             return tarefas[i]
 
-    raise HTTPException(status_code=404, detail="Tarefa não encontrada")
+    raise HTTPException(status_code=404, detail=TAREFA_NOT_FOUND)
 
 
 @router.delete("/tarefas/{tarefa_id}")

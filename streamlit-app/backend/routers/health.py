@@ -4,7 +4,7 @@ Endpoint de verificação de saúde do sistema
 """
 
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import APIRouter
 
@@ -23,7 +23,7 @@ async def health_check():
     return {
         "status": "ok",
         "environment": os.getenv("ENVIRONMENT", "development"),
-        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
         "service": "assistente-juridico-python",
         "version": "2.0.0",
         "components": {

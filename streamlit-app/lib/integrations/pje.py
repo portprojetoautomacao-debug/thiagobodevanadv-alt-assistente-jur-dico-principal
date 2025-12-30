@@ -114,7 +114,7 @@ class PJeScraper:
                 self.driver.quit()
                 self.logged_in = False
                 logger.info("✅ WebDriver fechado")
-            except:
+            except Exception:
                 pass
 
     def fazer_login(self, cpf: str, senha: str, certificado: bool = False) -> bool:
@@ -491,7 +491,7 @@ class PJeScraper:
         try:
             element = self.driver.find_element(by, value)
             return element.text.strip()
-        except:
+        except Exception:
             return ""
 
     def _get_text_safe_from_element(self, parent, by: By, value: str) -> str:
@@ -499,7 +499,7 @@ class PJeScraper:
         try:
             element = parent.find_element(by, value)
             return element.text.strip()
-        except:
+        except Exception:
             return ""
 
 

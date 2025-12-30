@@ -22,6 +22,9 @@ _minutas_db: Dict[str, Dict[str, Any]] = {}
 
 router = APIRouter(prefix="/api/minutas", tags=["Minutas"])
 
+# Constantes
+USUARIO = "Usuário"
+
 
 # ===========================
 # MODELOS PYDANTIC
@@ -40,7 +43,7 @@ class MinutaCreate(BaseModel):
         default="rascunho",
         pattern="^(rascunho|em-revisao|pendente-revisao|finalizada|arquivada)$",
     )
-    autor: str = "Usuário"
+    autor: str = USUARIO
     processId: Optional[str] = None
     expedienteId: Optional[str] = None
     criadoPorAgente: bool = False

@@ -390,7 +390,7 @@ class DataJudClient:
         try:
             response = self.session.get(f"{self.BASE_URL}/health", timeout=5)
             return response.status_code == 200
-        except:
+        except Exception:
             return False
 
 

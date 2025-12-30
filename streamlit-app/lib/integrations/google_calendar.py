@@ -8,7 +8,7 @@ Service for handling Google Calendar OAuth2 flow and API interactions.
 import json
 import logging
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 from google.auth.transport.requests import Request
@@ -104,7 +104,7 @@ class GoogleCalendarService:
         """Lists upcoming events"""
         service = self._get_service(token_info)
 
-        now = datetime.utcnow().isoformat() + "Z"  # 'Z' indicates UTC time
+        now = datetime.now(timezone.utc).isoformat() + "Z"  # 'Z' indicates UTC time
 
         events_result = (
             service.events()

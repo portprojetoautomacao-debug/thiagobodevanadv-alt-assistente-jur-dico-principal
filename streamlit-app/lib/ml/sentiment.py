@@ -107,7 +107,7 @@ class SentimentAnalyzer:
             from nltk.corpus import stopwords
 
             self.stopwords = set(stopwords.words("portuguese"))
-        except:
+        except Exception:
             self.stopwords = set()
 
         logger.info("✅ SentimentAnalyzer inicializado")

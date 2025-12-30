@@ -11,6 +11,9 @@ from database import RedisClient
 
 router = APIRouter()
 
+# Constantes
+KEY_REQUIRED = "Key is required"
+
 # Modelos
 class KVGetRequest(BaseModel):
     action: str = "get"
@@ -46,7 +49,7 @@ async def kv_operation(request: dict):
     if action == "get":
         key = request.get("key")
         if not key:
-            raise HTTPException(status_code=400, detail="Key is required")
+            raise HTTPException(status_code=400, detail=KEY_REQUIRED)
 
         value = redis.get(key)
         return {"value": value}
@@ -58,7 +61,7 @@ async def kv_operation(request: dict):
         ttl = request.get("ttl")
 
         if not key:
-            raise HTTPException(status_code=400, detail="Key is required")
+            raise HTTPException(status_code=400, detail=KEY_REQUIRED)
 
         success = redis.set(key, value, ttl)
         return {"success": success}
@@ -67,7 +70,7 @@ async def kv_operation(request: dict):
     elif action == "delete":
         key = request.get("key")
         if not key:
-            raise HTTPException(status_code=400, detail="Key is required")
+            raise HTTPException(status_code=400, detail=KEY_REQUIRED)
 
         success = redis.delete(key)
         return {"success": success}

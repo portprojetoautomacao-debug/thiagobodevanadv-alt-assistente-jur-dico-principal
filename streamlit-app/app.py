@@ -95,7 +95,7 @@ def start_backend():
                 outs, errs = process.communicate(timeout=1)
                 if outs or errs:
                     st.code(f"Logs parciais:\n{outs}\n{errs}")
-            except:
+            except Exception:
                 pass
 
 

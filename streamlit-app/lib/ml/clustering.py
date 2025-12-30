@@ -317,7 +317,7 @@ class ProcessClusterer:
             labels = self.model.predict(X_pca)
 
             # Filtrar processos do mesmo cluster
-            indices_mesmo_cluster = np.where(labels == cluster_id)[0]
+            indices_mesmo_cluster = np.nonzero(labels == cluster_id)[0]
 
             if len(indices_mesmo_cluster) == 0:
                 return []
@@ -330,7 +330,7 @@ class ProcessClusterer:
                         caso_X[col] = self.encoders[col].transform(
                             caso_X[col].astype(str)
                         )
-                    except:
+                    except Exception:
                         caso_X[col] = -1
 
             caso_scaled = self.scaler.transform(caso_X)
@@ -346,7 +346,7 @@ class ProcessClusterer:
             for idx in top_indices:
                 processo = df_processos.iloc[idx].to_dict()
                 processo["distancia"] = float(
-                    distancias[np.where(indices_mesmo_cluster == idx)[0][0]]
+                    distancias[np.nonzero(indices_mesmo_cluster == idx)[0][0]]
                 )
                 similares.append(processo)
 

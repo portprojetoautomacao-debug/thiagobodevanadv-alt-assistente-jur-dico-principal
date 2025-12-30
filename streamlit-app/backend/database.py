@@ -70,7 +70,7 @@ class RedisClient:
                 timeout=5
             )
             return response.status_code == 200
-        except:
+        except Exception:
             return False
 
     def get(self, key: str) -> Optional[Any]:
@@ -92,7 +92,7 @@ class RedisClient:
                     # Tentar parsear JSON
                     try:
                         return json.loads(result)
-                    except:
+                    except Exception:
                         return result
 
             return None
@@ -184,5 +184,5 @@ class RedisClient:
                 return data.get("result", 0) == 1
 
             return False
-        except:
+        except Exception:
             return False

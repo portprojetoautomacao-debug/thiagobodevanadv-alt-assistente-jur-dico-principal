@@ -18,6 +18,10 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 logger = logging.getLogger(__name__)
 
+# Constantes
+INPUT_SEARCH_SELECTOR = "input[type='search']"
+NENHUM_RESULTADO = "⚠️ Nenhum resultado encontrado"
+
 
 class DJENScraper:
     """
@@ -83,7 +87,7 @@ class DJENScraper:
             try:
                 self.driver.quit()
                 logger.info("✅ WebDriver fechado")
-            except:
+            except Exception:
                 pass
 
     def buscar_por_oab(self, numero_oab: str, uf: str = "AL") -> List[Dict]:
@@ -111,10 +115,10 @@ class DJENScraper:
                 campo_busca = self.wait.until(
                     EC.presence_of_element_located((By.NAME, "q"))
                 )
-            except:
+            except Exception:
                 # Fallback: tentar outros seletores comuns
                 campo_busca = self.driver.find_element(
-                    By.CSS_SELECTOR, "input[type='search']"
+                    By.CSS_SELECTOR, INPUT_SEARCH_SELECTOR
                 )
 
             # Preencher busca
@@ -130,8 +134,8 @@ class DJENScraper:
                 self.wait.until(
                     EC.presence_of_element_located((By.CLASS_NAME, "resultado"))
                 )
-            except:
-                logger.warning("⚠️ Nenhum resultado encontrado")
+            except Exception:
+                logger.warning(NENHUM_RESULTADO)
                 return []
 
             # Extrair publicações
@@ -171,9 +175,9 @@ class DJENScraper:
                 campo_busca = self.wait.until(
                     EC.presence_of_element_located((By.NAME, "q"))
                 )
-            except:
+            except Exception:
                 campo_busca = self.driver.find_element(
-                    By.CSS_SELECTOR, "input[type='search']"
+                    By.CSS_SELECTOR, INPUT_SEARCH_SELECTOR
                 )
 
             # Preencher busca
@@ -186,8 +190,8 @@ class DJENScraper:
                 self.wait.until(
                     EC.presence_of_element_located((By.CLASS_NAME, "resultado"))
                 )
-            except:
-                logger.warning("⚠️ Nenhum resultado encontrado")
+            except Exception:
+                logger.warning(NENHUM_RESULTADO)
                 return []
 
             # Extrair publicações
@@ -234,9 +238,9 @@ class DJENScraper:
                 campo_busca = self.wait.until(
                     EC.presence_of_element_located((By.NAME, "q"))
                 )
-            except:
+            except Exception:
                 campo_busca = self.driver.find_element(
-                    By.CSS_SELECTOR, "input[type='search']"
+                    By.CSS_SELECTOR, INPUT_SEARCH_SELECTOR
                 )
 
             # Preencher busca
@@ -252,8 +256,8 @@ class DJENScraper:
                 self.wait.until(
                     EC.presence_of_element_located((By.CLASS_NAME, "resultado"))
                 )
-            except:
-                logger.warning("⚠️ Nenhum resultado encontrado")
+            except Exception:
+                logger.warning(NENHUM_RESULTADO)
                 return []
 
             # Extrair publicações
@@ -329,7 +333,7 @@ class DJENScraper:
             try:
                 link = elemento.find_element(By.TAG_NAME, "a")
                 url = link.get_attribute("href")
-            except:
+            except Exception:
                 url = None
 
             # Detectar tipo de publicação
@@ -378,7 +382,7 @@ class DJENScraper:
             # Tentar classe específica
             data_elem = elemento.find_element(By.CLASS_NAME, "data")
             return data_elem.text.strip()
-        except:
+        except Exception:
             # Tentar regex no texto completo
             import re
 
@@ -394,7 +398,7 @@ class DJENScraper:
             # Tentar classe específica
             orgao_elem = elemento.find_element(By.CLASS_NAME, "orgao")
             return orgao_elem.text.strip()
-        except:
+        except Exception:
             # Tentar regex no texto
             import re
 

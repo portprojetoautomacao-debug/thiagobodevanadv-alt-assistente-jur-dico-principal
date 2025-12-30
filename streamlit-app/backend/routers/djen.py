@@ -270,7 +270,7 @@ async def djen_sync_trigger(request: Optional[DJENSyncRequest] = None):
                     new_pubs_count += 1
 
                 # Rate limit sleep
-                time.sleep(0.5)
+                await asyncio.sleep(0.5)
 
             except Exception as e:
                 error_msg = f"Erro ao processar {lawyer.get('name')}: {str(e)}"

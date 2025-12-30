@@ -12,6 +12,9 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/cron", tags=["cron"])
 
+# Constantes
+JOB_NOT_FOUND = "Job não encontrado"
+
 
 class CronJob(BaseModel):
     """Modelo de cron job"""
@@ -87,7 +90,7 @@ async def get_job(job_id: str):
     job = next((j for j in MOCK_JOBS if j["id"] == job_id), None)
 
     if not job:
-        raise HTTPException(status_code=404, detail="Job não encontrado")
+        raise HTTPException(status_code=404, detail=JOB_NOT_FOUND)
 
     return job
 
@@ -98,7 +101,7 @@ async def enable_job(job_id: str):
     job = next((j for j in MOCK_JOBS if j["id"] == job_id), None)
 
     if not job:
-        raise HTTPException(status_code=404, detail="Job não encontrado")
+        raise HTTPException(status_code=404, detail=JOB_NOT_FOUND)
 
     job["enabled"] = True
     logger.info(f"Job {job_id} habilitado")
@@ -112,7 +115,7 @@ async def disable_job(job_id: str):
     job = next((j for j in MOCK_JOBS if j["id"] == job_id), None)
 
     if not job:
-        raise HTTPException(status_code=404, detail="Job não encontrado")
+        raise HTTPException(status_code=404, detail=JOB_NOT_FOUND)
 
     job["enabled"] = False
     logger.info(f"Job {job_id} desabilitado")

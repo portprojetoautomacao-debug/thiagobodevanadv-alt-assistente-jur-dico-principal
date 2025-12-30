@@ -9,6 +9,13 @@ import sys
 import streamlit as st
 from lib.backend_client import BackendClient
 
+# Constantes
+BTN_SALVAR = "💾 Salvar"
+BTN_TESTAR = "🧪 Testar"
+TESTE_EM_DESENVOLVIMENTO = "ℹ️ Teste de conexão em desenvolvimento"
+TESTANDO = "Testando..."
+CONFIGURADO = "✅ Configurado"
+
 
 def render():
     """Renderiza página de configurações."""
@@ -51,14 +58,14 @@ def render():
             col1, col2, col3 = st.columns(3)
 
             with col1:
-                if st.button("💾 Salvar", key="save_gemini"):
+                if st.button(BTN_SALVAR, key="save_gemini"):
                     st.success("✅ Chave salva!")
 
             with col2:
-                if st.button("🧪 Testar", key="test_gemini"):
+                if st.button(BTN_TESTAR, key="test_gemini"):
                     if gemini_key:
-                        with st.spinner("Testando conexão..."):
-                            st.info("ℹ️ Teste de conexão em desenvolvimento")
+                        with st.spinner(TESTANDO):
+                            st.info(TESTE_EM_DESENVOLVIMENTO)
                     else:
                         st.error("❌ Chave não configurada")
 
@@ -85,14 +92,14 @@ def render():
             col1, col2, col3 = st.columns(3)
 
             with col1:
-                if st.button("💾 Salvar", key="save_redis"):
+                if st.button(BTN_SALVAR, key="save_redis"):
                     st.success("✅ Configuração salva!")
 
             with col2:
-                if st.button("🧪 Testar", key="test_redis"):
+                if st.button(BTN_TESTAR, key="test_redis"):
                     if redis_url and redis_token:
-                        with st.spinner("Testando conexão..."):
-                            st.info("ℹ️ Teste de conexão em desenvolvimento")
+                        with st.spinner(TESTANDO):
+                            st.info(TESTE_EM_DESENVOLVIMENTO)
                     else:
                         st.error("❌ Configurações incompletas")
 
@@ -117,12 +124,12 @@ def render():
             col1, col2 = st.columns(2)
 
             with col1:
-                if st.button("💾 Salvar", key="save_qdrant"):
+                if st.button(BTN_SALVAR, key="save_qdrant"):
                     st.success("✅ Qdrant configurado!")
 
             with col2:
-                if st.button("🧪 Testar", key="test_qdrant"):
-                    st.info("Testando...")
+                if st.button(BTN_TESTAR, key="test_qdrant"):
+                    st.info(TESTANDO)
 
     # ============================================
     # TAB 2: CONEXÕES
@@ -168,7 +175,7 @@ def render():
 
         with col2:
             if os.getenv("UPSTASH_REDIS_REST_URL"):
-                st.success("✅ Configurado")
+                st.success(CONFIGURADO)
             else:
                 st.warning("⚠️ Não configurado")
 
@@ -183,7 +190,7 @@ def render():
 
         with col2:
             if os.getenv("GEMINI_API_KEY"):
-                st.success("✅ Configurado")
+                st.success(CONFIGURADO)
             else:
                 st.error("❌ Não configurado")
 
@@ -198,7 +205,7 @@ def render():
 
         with col2:
             if os.getenv("QDRANT_URL"):
-                st.success("✅ Configurado")
+                st.success(CONFIGURADO)
             else:
                 st.info("ℹ️ Opcional")
 
@@ -227,13 +234,13 @@ def render():
 
         # Teste Gemini
         if st.button("🤖 Testar Gemini API", use_container_width=True):
-            with st.spinner("Testando..."):
-                st.info("ℹ️ Teste de conexão em desenvolvimento")
+            with st.spinner(TESTANDO):
+                st.info(TESTE_EM_DESENVOLVIMENTO)
 
         # Teste Redis
         if st.button("💾 Testar Redis", use_container_width=True):
-            with st.spinner("Testando..."):
-                st.info("ℹ️ Teste de conexão em desenvolvimento")
+            with st.spinner(TESTANDO):
+                st.info(TESTE_EM_DESENVOLVIMENTO)
 
         # Teste Completo
         st.divider()

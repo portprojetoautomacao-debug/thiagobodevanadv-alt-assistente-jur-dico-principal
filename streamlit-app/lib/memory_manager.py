@@ -92,7 +92,7 @@ class MemoryManager:
             try:
                 history = self.get_session_history(session_id)
                 history.clear()
-            except:
+            except Exception:
                 pass
 
         if session_id in self._local_memory:
