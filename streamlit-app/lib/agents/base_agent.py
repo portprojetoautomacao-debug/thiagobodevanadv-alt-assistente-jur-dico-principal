@@ -87,7 +87,6 @@ class BaseAgent:
             temperature=0.7,
             convert_system_message_to_human=True,  # Fix para Gemini
         )
-
         # Manter compatibilidade com agentes legados (que usam self.model.generate_content)
         # Projeto padronizado no SDK novo (google-genai).
         from google import genai as google_genai  # type: ignore
