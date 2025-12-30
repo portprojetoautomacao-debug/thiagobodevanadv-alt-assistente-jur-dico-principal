@@ -7,8 +7,6 @@ Compatível com a página Streamlit [pages/2_Expedientes.py](streamlit-app/pages
 
 import base64
 import io
-import json
-import re
 import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional
@@ -30,6 +28,23 @@ class ExpedienteUploadRequest(BaseModel):
 
 class ExpedienteAnalyzeRequest(BaseModel):
     ids: List[str] = Field(default_factory=list)
+
+
+class AnaliseExpediente(BaseModel):
+    """Esquema estruturado retornado pelo LLM."""
+
+    prazo: str = Field(
+        default="-",
+        description="Prazo identificado; use '-' quando ausente.",
+    )
+    resumo: str = Field(..., description="Resumo objetivo do expediente.")
+    urgencia: str = Field(
+        ...,
+        description="Nível de urgência (baixa|media|alta).",
+    )
+
+    def dump(self) -> Dict[str, Any]:
+        return self.model_dump()
 
 
 def _extract_text(filename: str, file_bytes: bytes) -> str:
@@ -88,39 +103,30 @@ def _get_extraction_note(filename: str, extracted_text: str) -> Optional[str]:
     return "Sem texto extraído."
 
 
-def _extract_json(text: str) -> Optional[Dict[str, Any]]:
-    """Tenta extrair um JSON puro de uma resposta do LLM."""
-    if not text:
-        return None
-
-    candidate = text.strip()
-
-    # Remover fences ```json ... ```
-    if candidate.startswith("```"):
-        candidate = re.sub(r"^```(?:json)?\s*", "", candidate, flags=re.IGNORECASE)
-        candidate = re.sub(r"```\s*$", "", candidate)
-        candidate = candidate.strip()
-
-    # Pegar primeiro bloco {...}
-    start = candidate.find("{")
-    end = candidate.rfind("}")
-    if start == -1 or end == -1 or end <= start:
-        return None
-
-    try:
-        return json.loads(candidate[start : end + 1])
-    except Exception:
-        return None
+def _guess_mime(filename: str) -> str:
+    lower = (filename or "").lower()
+    if lower.endswith(".pdf"):
+        return "application/pdf"
+    if lower.endswith(".docx"):
+        return "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    if lower.endswith(".txt"):
+        return "text/plain"
+    if lower.endswith(".png"):
+        return "image/png"
+    if lower.endswith((".jpg", ".jpeg")):
+        return "image/jpeg"
+    return "application/octet-stream"
 
 
 async def _analyze_expedientes_items(
     items: List[Dict[str, Any]],
 ) -> List[Dict[str, Any]]:
-    """Analisa expedientes em lote usando LangChain `abatch`.
+    """Analisa expedientes em lote usando LangChain `abatch` com saída estruturada.
 
     Retorna uma lista com updates (por item) contendo: prazo, analise e flags.
     """
 
+    from langchain.schema import HumanMessage, SystemMessage
     from langchain_google_genai import ChatGoogleGenerativeAI
 
     api_key = __import__("os").getenv("GEMINI_API_KEY") or __import__("os").getenv(
@@ -135,37 +141,65 @@ async def _analyze_expedientes_items(
         temperature=0.2,
         convert_system_message_to_human=True,
     )
+    structured_llm = llm.with_structured_output(AnaliseExpediente)
 
     system = (
         "Você é um assistente jurídico especializado em expedientes/intimações. "
-        "Extraia informações objetivas e retorne SOMENTE JSON válido."
+        "Extraia informações objetivas e responda no formato estruturado solicitado."
     )
 
     inputs = []
     for exp in items:
         texto = (exp.get("conteudoExtraido") or "").strip()
+        raw_b64 = exp.get("rawContentBase64")
+        filename = exp.get("filename") or "documento"
+
+        # Monta mensagem multimodal quando não há texto, senão usa texto puro.
+        if not texto and raw_b64:
+            content = [
+                {
+                    "type": "text",
+                    "text": (
+                        "Analise o documento e devolva somente os campos solicitados: "
+                        "prazo (string curta, '-' se não houver), resumo (string), "
+                        "urgencia (baixa|media|alta)."
+                    ),
+                },
+                {
+                    "type": "file",
+                    "source_type": "base64",
+                    "data": raw_b64,
+                    "mime_type": _guess_mime(filename),
+                },
+            ]
+        else:
+            content = (
+                "Analise o documento a seguir e devolva os campos: "
+                "prazo (string curta, '-' se não houver), resumo (string), "
+                "urgencia (baixa|media|alta).\n\nDOCUMENTO:\n" + texto
+            )
+
         inputs.append(
             [
-                ("system", system),
-                (
-                    "human",
-                    "Analise o documento a seguir e retorne JSON estrito com as chaves: "
-                    "prazo (string curta), resumo (string), urgencia (baixa|media|alta). "
-                    "Se não houver prazo, use prazo='-'.\n\nDOCUMENTO:\n" + texto,
-                ),
+                SystemMessage(content=system),
+                HumanMessage(content=content),
             ]
         )
 
-    results = await llm.abatch(inputs)
+    results = await structured_llm.abatch(inputs)
 
     updates: List[Dict[str, Any]] = []
     for exp, res in zip(items, results):
-        content = getattr(res, "content", "")
-        parsed = _extract_json(content) or {}
+        parsed = {}
+        prazo = "-"
 
-        prazo = parsed.get("prazo") if isinstance(parsed, dict) else None
-        if not prazo:
-            prazo = "-"
+        if isinstance(res, AnaliseExpediente):
+            parsed = res.dump()
+            prazo = parsed.get("prazo") or "-"
+        else:
+            # fallback defensivo em caso de comportamento inesperado
+            content = getattr(res, "content", "")
+            parsed = {"raw": content}
 
         updates.append(
             {
@@ -201,6 +235,12 @@ async def create_expediente(payload: ExpedienteUploadRequest):
 
     extracted = _extract_text(payload.filename, file_bytes)
     extraction_note = _get_extraction_note(payload.filename, extracted)
+    raw_b64 = None
+
+    # Guardar o conteúdo base64 apenas se não houver texto extraído,
+    # para permitir análise multimodal posterior sem inflar o Redis para casos comuns.
+    if not (extracted or "").strip():
+        raw_b64 = payload.content
 
     exp_id = f"exp-{uuid.uuid4().hex[:10]}"
     now = datetime.now().isoformat()
@@ -215,14 +255,15 @@ async def create_expediente(payload: ExpedienteUploadRequest):
         "prazo": "-",
         "conteudoExtraido": extracted,
         "extractionNote": extraction_note,
+        "rawContentBase64": raw_b64,
     }
 
     expedientes = redis.get("expedientes") or []
     expedientes.append(expediente)
     redis.set("expedientes", expedientes)
 
-    # Análise automática (se solicitado e se houver texto extraído)
-    if payload.analisarAutomaticamente and extracted.strip():
+    # Análise automática (se solicitado e se houver material para analisar)
+    if payload.analisarAutomaticamente and (extracted.strip() or raw_b64):
         try:
             updates = await _analyze_expedientes_items([expediente])
             update = updates[0] if updates else None
@@ -257,8 +298,12 @@ async def analyze_expedientes(request: ExpedienteAnalyzeRequest):
     if not selected:
         raise HTTPException(status_code=404, detail="Nenhum expediente encontrado")
 
-    # Filtrar os que têm texto
-    analyzable = [e for e in selected if (e.get("conteudoExtraido") or "").strip()]
+    # Filtrar os que têm texto ou conteúdo bruto para análise multimodal
+    analyzable = [
+        e
+        for e in selected
+        if (e.get("conteudoExtraido") or "").strip() or e.get("rawContentBase64")
+    ]
     skipped_ids = [e.get("id") for e in selected if e not in analyzable]
     if not analyzable:
         return {
