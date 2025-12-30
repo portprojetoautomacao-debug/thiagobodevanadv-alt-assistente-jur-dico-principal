@@ -22,6 +22,7 @@ sys.path.append(str(Path(__file__).parent.parent / "lib"))
 logger = logging.getLogger(__name__)
 SAO_PAULO_TZ = ZoneInfo("America/Sao_Paulo")
 
+
 def _run_async(coro):
     """Executa coroutine em contexto síncrono (thread do scheduler)."""
 
@@ -34,7 +35,7 @@ def _run_async(coro):
         return asyncio.create_task(coro)
 
 
-    scheduler = BackgroundScheduler(timezone=SAO_PAULO_TZ)
+scheduler = BackgroundScheduler(timezone=SAO_PAULO_TZ)
 # Orquestrador será importado quando necessário para evitar dependências circulares
 
 # API pública mínima para compatibilidade com testes legados
