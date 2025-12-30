@@ -10,7 +10,7 @@ fastapi==0.128.0
 uvicorn==0.40.0
 python-dotenv==1.2.1
 pydantic==2.12.5
-email-validator==2.2.0
+email-validator==2.3.0
 
 # --- Database & Cache ---
 redis==7.1.0
@@ -45,17 +45,18 @@ python-dateutil==2.9.0.post0
 pytz==2025.2
 beautifulsoup4==4.14.3
 lxml==6.0.2
-python-multipart==0.0.9
+python-multipart==0.0.21
 APScheduler==3.11.2
 
 # --- Optional - Vector DB ---
 qdrant-client==1.16.2
 
 # --- Google APIs (principal fonte de backtracking no pip) ---
-# google-auth-oauthlib 1.2.x funciona bem com google-auth 2.41.x
+# google-auth-oauthlib 1.2.x requer google-auth < 2.42.0, mas google-genai 1.56+ requer >= 2.45.0
+# Mantendo google-genai 1.55.0 para evitar conflito
 google-auth==2.41.1
 google-auth-oauthlib==1.2.3
-google-auth-httplib2==0.2.0
+google-auth-httplib2==0.3.0
 
 # Mantém o stack de API Core/Client estável
 google-api-core==2.28.1
