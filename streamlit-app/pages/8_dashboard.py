@@ -23,15 +23,34 @@ def render():
     # Buscar dados
     with st.spinner("Carregando dados..."):
         try:
-            response = backend.get("/kv/publications")
-            publications = response if isinstance(response, list) else []
-
-            tasks_response = backend.get("/kv/tasks")
-            tasks = tasks_response if isinstance(tasks_response, list) else []
+            publications = backend.kv_get("publications") or []
+            tasks = backend.kv_get("tasks") or []
+            djen_heartbeat = backend.kv_get("djen:heartbeat") or {}
         except Exception as e:
             st.error(f"Erro ao carregar dados: {e}")
             publications = []
             tasks = []
+            djen_heartbeat = {}
+
+    # Status DJEN (heartbeat)
+    if isinstance(djen_heartbeat, dict) and djen_heartbeat:
+        status = djen_heartbeat.get("status")
+        ran_at = djen_heartbeat.get("ranAt")
+        window = (
+            djen_heartbeat.get("window")
+            if isinstance(djen_heartbeat.get("window"), dict)
+            else {}
+        )
+        msg = f"DJEN: {status}"
+        if ran_at:
+            msg += f" • última execução: {ran_at}"
+        if window.get("start") and window.get("end"):
+            msg += f" • janela: {window.get('start')} → {window.get('end')}"
+
+        if status == "error":
+            st.warning(msg)
+        else:
+            st.caption(msg)
 
     # ============================================
     # CARDS DE RESUMO
@@ -76,7 +95,7 @@ def render():
                     prazo_date = datetime.fromisoformat(prazo.replace("Z", "+00:00"))
                     if hoje <= prazo_date <= hoje + timedelta(days=7):
                         prazos_proximos += 1
-                except:
+                except Exception:
                     pass
 
         st.metric(
@@ -185,7 +204,7 @@ def render():
                     x=tipo_counts.values,
                     y=tipo_counts.index,
                     orientation="h",
-                    marker=dict(color=tipo_counts.values, colorscale="Viridis"),
+                    marker={"color": tipo_counts.values, "colorscale": "Viridis"},
                 )
             ]
         )

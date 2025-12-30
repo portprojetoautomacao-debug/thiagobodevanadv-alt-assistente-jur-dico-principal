@@ -6,9 +6,21 @@ from typing import Any, Dict, Optional
 from langchain_core.tools import tool
 
 try:
-    from lib.tools.djen_tools import buscar_publicacoes_djen
+    from lib.tools.djen_tools import buscar_publicacoes_djen_por_oab
 except ImportError:
-    from tools.djen_tools import buscar_publicacoes_djen
+    try:
+        from tools.djen_tools import buscar_publicacoes_djen_por_oab
+    except ImportError:
+        # Criar ferramenta stub se não disponível
+        @tool
+        def buscar_publicacoes_djen_por_oab(
+            numero_oab: str,
+            uf_oab: str,
+            data_inicio: str = None,
+            data_fim: str = None,
+        ) -> str:
+            """Stub para busca de publicações DJEN"""
+            return '{"count": 0, "items": []}'
 
 from .base_agent import BaseAgent
 
@@ -24,7 +36,7 @@ class MonitorDJENAgent(BaseAgent):
             capabilities=["djen-monitoring", "publication-detection", "notification"],
         )
 
-        self.tools = [buscar_publicacoes_djen]
+        self.tools = [buscar_publicacoes_djen_por_oab]
 
     async def execute(
         self, task: str, context: Optional[Dict[str, Any]] = None
@@ -37,7 +49,7 @@ class MonitorDJENAgent(BaseAgent):
             system_prompt = f"""Você é {self.name}, {self.role}.
 
             Sua função é monitorar o Diário de Justiça Eletrônico Nacional (DJEN) em busca de novas publicações.
-            Use a ferramenta 'buscar_publicacoes_djen' para verificar se há novidades.
+            Use a ferramenta 'buscar_publicacoes_djen_por_oab' para verificar se há novidades.
 
             Se encontrar publicações, analise-as brevemente e relate.
             """

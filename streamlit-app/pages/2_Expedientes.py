@@ -76,12 +76,15 @@ def render():
                 )
 
             with col2:
-                limpar = st.form_submit_button("🗑️ Limpar", use_container_width=True)
+                st.form_submit_button("🗑️ Limpar", use_container_width=True)
 
         # Processar upload
         if submitted and uploaded_files:
             sucesso = 0
             erro = 0
+
+            ids_para_analise = []
+            usar_batch = analisar_automaticamente and len(uploaded_files) > 1
 
             progress_bar = st.progress(0)
             status_text = st.empty()
@@ -104,7 +107,10 @@ def render():
                             if processo_selecionado != "Nenhum"
                             else None
                         ),
-                        "analisarAutomaticamente": analisar_automaticamente,
+                        # Para múltiplos uploads, fazemos batch no final (mais eficiente)
+                        "analisarAutomaticamente": (
+                            analisar_automaticamente and not usar_batch
+                        ),
                     }
 
                     # Enviar para backend
@@ -112,6 +118,13 @@ def render():
 
                     if result:
                         sucesso += 1
+                        if usar_batch:
+                            try:
+                                exp_id = result.get("expediente", {}).get("id")
+                                if exp_id:
+                                    ids_para_analise.append(exp_id)
+                            except Exception:
+                                pass
                     else:
                         erro += 1
 
@@ -133,9 +146,47 @@ def render():
                 st.error(f"❌ {erro} arquivo(s) com erro")
 
             if analisar_automaticamente:
-                st.info(
-                    "🤖 Agentes de análise foram acionados. Resultados disponíveis em breve."
-                )
+                if usar_batch and ids_para_analise:
+                    with st.spinner("🤖 Analisando em lote..."):
+                        try:
+                            result = backend.post(
+                                "/expedientes/analyze", {"ids": ids_para_analise}
+                            )
+                            updated = (
+                                result.get("updated")
+                                if isinstance(result, dict)
+                                else None
+                            )
+                            skipped = (
+                                result.get("skipped")
+                                if isinstance(result, dict)
+                                else None
+                            )
+                            skip_msg = (
+                                result.get("message")
+                                if isinstance(result, dict)
+                                else None
+                            )
+                            if updated is not None:
+                                msg = f"✅ Análise concluída! ({updated} atualizado(s))"
+                                if skipped is not None and skipped > 0:
+                                    msg += f" • {skipped} ignorado(s)"
+                                st.success(msg)
+                                if skipped is not None and skipped > 0:
+                                    st.warning(
+                                        skip_msg
+                                        or "Alguns itens foram ignorados por falta de texto extraído (OCR não habilitado)."
+                                    )
+                            else:
+                                st.success("✅ Análise concluída!")
+                        except Exception as e:
+                            st.warning(
+                                f"⚠️ Upload concluído, mas a análise em lote falhou: {str(e)}"
+                            )
+                else:
+                    st.info(
+                        "🤖 Agentes de análise foram acionados. Resultados disponíveis em breve."
+                    )
 
     # ============================================
     # TAB 2: LISTA DE EXPEDIENTES
@@ -160,7 +211,7 @@ def render():
             )
 
         with col3:
-            filtro_data = st.date_input("Data:")
+            st.date_input("Data:")
 
         # Buscar expedientes
         with st.spinner("Carregando expedientes..."):
@@ -215,6 +266,9 @@ def render():
                             "✅ Processado" if e.get("processado") else "⏳ Pendente"
                         ),
                         "Prazo": e.get("prazo", "-"),
+                        "Texto": (
+                            "✅" if (e.get("conteudoExtraido") or "").strip() else "—"
+                        ),
                         "ID": e.get("id"),
                     }
                 )
@@ -222,7 +276,7 @@ def render():
             df = pd.DataFrame(data)
 
             # Exibir tabela
-            selected_rows = st.dataframe(
+            selection = st.dataframe(
                 df.drop("ID", axis=1),
                 use_container_width=True,
                 hide_index=True,
@@ -230,16 +284,43 @@ def render():
                 selection_mode="multi-row",
             )
 
+            selected_indices = []
+            try:
+                selected_indices = selection.selection.rows
+            except Exception:
+                selected_indices = []
+
+            selected_ids = []
+            if selected_indices:
+                selected_ids = df.iloc[selected_indices]["ID"].tolist()
+
             # Ações em expedientes selecionados
-            if selected_rows:
-                st.info(f"✅ {len(selected_rows)} expediente(s) selecionado(s)")
+            if selected_ids:
+                st.info(f"✅ {len(selected_ids)} expediente(s) selecionado(s)")
 
                 col1, col2, col3, col4 = st.columns(4)
 
                 with col1:
                     if st.button("🤖 Analisar com IA", use_container_width=True):
                         with st.spinner("Analisando..."):
-                            st.success("✅ Análise concluída!")
+                            try:
+                                result = backend.post(
+                                    "/expedientes/analyze", {"ids": selected_ids}
+                                )
+                                updated = (
+                                    result.get("updated")
+                                    if isinstance(result, dict)
+                                    else None
+                                )
+                                if updated is not None:
+                                    st.success(
+                                        f"✅ Análise concluída! ({updated} atualizado(s))"
+                                    )
+                                else:
+                                    st.success("✅ Análise concluída!")
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"❌ Falha ao analisar: {str(e)}")
 
                 with col2:
                     if st.button("📥 Baixar", use_container_width=True):

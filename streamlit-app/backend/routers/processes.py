@@ -9,9 +9,11 @@ from typing import List, Optional
 
 from database import RedisClient
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 router = APIRouter()
+
+PROCESSO_NOT_FOUND = "Processo não encontrado"
 
 
 # Models Pydantic para validação REAL
@@ -29,8 +31,9 @@ class ProcessoCreate(BaseModel):
     comarca: Optional[str] = None
     vara: Optional[str] = None
 
-    @validator("numero_cnj")
-    def validar_numero_cnj(cls, v):
+    @field_validator("numero_cnj")
+    @classmethod
+    def validar_numero_cnj(cls, v: str) -> str:
         """Validar formato CNJ real."""
         # Formato: 0000000-00.0000.0.00.0000
         pattern = r"^\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}$"
@@ -73,7 +76,7 @@ async def criar_processo(processo: ProcessoCreate):
     now = datetime.now().isoformat()
 
     # Criar objeto completo
-    processo_dict = processo.dict()
+    processo_dict = processo.model_dump()
     processo_dict.update({"id": processo_id, "created_at": now, "updated_at": now})
 
     # Buscar lista atual
@@ -99,7 +102,7 @@ async def buscar_processo(processo_id: str):
         if proc.get("id") == processo_id or proc.get("numero_cnj") == processo_id:
             return proc
 
-    raise HTTPException(status_code=404, detail="Processo não encontrado")
+    raise HTTPException(status_code=404, detail=PROCESSO_NOT_FOUND)
 
 
 @router.put("/processos/{processo_id}")
@@ -113,7 +116,7 @@ async def atualizar_processo(processo_id: str, processo: ProcessoCreate):
     for i, proc in enumerate(processos):
         if proc.get("id") == processo_id:
             # Atualizar mantendo id e created_at
-            processo_dict = processo.dict()
+            processo_dict = processo.model_dump()
             processo_dict["id"] = proc["id"]
             processo_dict["created_at"] = proc["created_at"]
             processo_dict["updated_at"] = datetime.now().isoformat()
@@ -123,7 +126,7 @@ async def atualizar_processo(processo_id: str, processo: ProcessoCreate):
             break
 
     if not updated:
-        raise HTTPException(status_code=404, detail="Processo não encontrado")
+        raise HTTPException(status_code=404, detail=PROCESSO_NOT_FOUND)
 
     redis.set("processos", processos)
 
@@ -139,7 +142,7 @@ async def deletar_processo(processo_id: str):
     processos_filtrados = [p for p in processos if p.get("id") != processo_id]
 
     if len(processos) == len(processos_filtrados):
-        raise HTTPException(status_code=404, detail="Processo não encontrado")
+        raise HTTPException(status_code=404, detail=PROCESSO_NOT_FOUND)
 
     redis.set("processos", processos_filtrados)
 

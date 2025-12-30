@@ -44,7 +44,8 @@ REDIS_CONFIG = {
 
 # LLM Providers
 LLM_CONFIG = {
-    "gemini_api_key": os.getenv("GEMINI_API_KEY", ""),
+    "gemini_api_key": os.getenv("GEMINI_API_KEY", "")
+    or os.getenv("GOOGLE_API_KEY", ""),
     "openai_api_key": os.getenv("OPENAI_API_KEY", ""),
     "default_provider": "gemini",
     "temperature": 0.7,

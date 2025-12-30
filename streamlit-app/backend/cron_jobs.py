@@ -9,6 +9,7 @@ Dependências:
 import logging
 import sys
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 # APScheduler para agendamento de tarefas
 from apscheduler.schedulers.asyncio import AsyncIOScheduler  # type: ignore
@@ -19,8 +20,20 @@ sys.path.append(str(Path(__file__).parent.parent / "lib"))
 
 logger = logging.getLogger(__name__)
 
-scheduler = AsyncIOScheduler()
+SAO_PAULO_TZ = ZoneInfo("America/Sao_Paulo")
+
+scheduler = AsyncIOScheduler(timezone=SAO_PAULO_TZ)
 # Orquestrador será importado quando necessário para evitar dependências circulares
+
+
+def _set_djen_heartbeat(payload: dict) -> None:
+    try:
+        from database import RedisClient
+
+        redis = RedisClient()
+        redis.set("djen:heartbeat", payload)
+    except Exception:
+        pass
 
 
 async def run_djen_monitor():
@@ -29,11 +42,13 @@ async def run_djen_monitor():
     try:
         from datetime import datetime, timedelta
 
+        from agents.justine import JustineAgent
         from database import RedisClient
-        from integrations.djen_api_client import DJENAPIClient  # type: ignore
 
         redis = RedisClient()
-        client = DJENAPIClient()
+
+        # Mrs. Justin-e chama a tool do DJEN para coletar publicações do dia
+        justine = JustineAgent()
 
         # Buscar advogados monitorados
         lawyers = redis.get("monitored-lawyers") or []
@@ -50,63 +65,87 @@ async def run_djen_monitor():
 
         enabled_lawyers = [lawyer for lawyer in lawyers if lawyer.get("enabled", True)]
 
-        # Datas: últimos 7 dias
-        today = datetime.now()
-        data_fim = today.strftime("%Y-%m-%d")
-        data_inicio = (today - timedelta(days=7)).strftime("%Y-%m-%d")
+        # Datas: do último horário até agora (por data de disponibilização)
+        now = datetime.now(SAO_PAULO_TZ)
+        last_run_key = "djen:last_run_at"
+        heartbeat_key = "djen:heartbeat"
+        last_run_raw = redis.get(last_run_key)
+
+        last_run = None
+        if isinstance(last_run_raw, str) and last_run_raw:
+            try:
+                last_run = datetime.fromisoformat(last_run_raw)
+            except Exception:
+                last_run = None
+
+        # Limite de segurança: no máximo últimos 7 dias
+        min_start = now - timedelta(days=7)
+        start_dt = last_run if last_run and last_run > min_start else min_start
+
+        data_inicio = start_dt.strftime("%Y-%m-%d")
+        data_fim = now.strftime("%Y-%m-%d")
 
         new_count = 0
         total_found = 0
 
-        for lawyer in enabled_lawyers:
-            # Parse OAB
-            oab_value = lawyer.get("oab", "")
-            if not isinstance(oab_value, str):
-                logger.warning(f"OAB inválida para {lawyer.get('name')}: {oab_value}")
+        existing_pubs = redis.get("publications") or []
+        existing_hashes = {p.get("hash") for p in existing_pubs if p.get("hash")}
+
+        items = justine.coletar_publicacoes_djen_diarias(
+            enabled_lawyers,
+            data_inicio=data_inicio,
+            data_fim=data_fim,
+        )
+
+        total_found = len(items)
+
+        for it in items:
+            tribunal = it.get("tribunal")
+            data_disp = it.get("dataDisponibilizacao")
+            numero_processo = it.get("numeroProcesso")
+            pub_hash = f"{tribunal}-{data_disp}-{numero_processo}"
+
+            if pub_hash in existing_hashes:
                 continue
-            oab_parts = oab_value.replace("/", " ").split()
-            if len(oab_parts) < 2:
-                continue
 
-            numero_oab = oab_parts[0]
-            uf_oab = oab_parts[1]
+            new_pub = {
+                "id": it.get("id"),
+                "tribunal": tribunal,
+                "data": data_disp,
+                "numeroProcesso": numero_processo,
+                "processo": numero_processo,  # compat
+                "tipo": it.get("tipo"),
+                "orgao": it.get("orgao"),
+                "teor": (it.get("teor") or "")[:2000],
+                "hash": pub_hash,
+                "lawyerId": it.get("lawyerId"),
+                "lawyerName": it.get("lawyerName"),
+                "oab": it.get("oab"),
+                "notified": False,
+                "createdAt": datetime.now(SAO_PAULO_TZ).isoformat(),
+            }
 
-            # Buscar publicações
-            publicacoes = client.buscar_publicacoes(
-                numero_oab=numero_oab,
-                uf_oab=uf_oab,
-                data_inicio=data_inicio,
-                data_fim=data_fim,
-            )
+            existing_pubs.insert(0, new_pub)
+            existing_hashes.add(pub_hash)
+            new_count += 1
 
-            total_found += len(publicacoes)
+        redis.set("publications", existing_pubs[:1000])
 
-            # Salvar no Redis (evitar duplicatas)
-            existing_pubs = redis.get("publications") or []
-            existing_hashes = {p.get("hash") for p in existing_pubs if p.get("hash")}
+        # Persistir última execução apenas após completar a coleta
+        redis.set(last_run_key, now.isoformat())
 
-            for pub in publicacoes:
-                pub_hash = f"{pub.sigla_tribunal}-{pub.data_disponibilizacao}-{pub.numero_processo}"
-                if pub_hash not in existing_hashes:
-                    new_pub = {
-                        "id": pub.id,
-                        "tribunal": pub.sigla_tribunal,
-                        "data": pub.data_disponibilizacao,
-                        "processo": pub.numero_processo,
-                        "tipo": pub.tipo_comunicacao,
-                        "teor": pub.texto[:2000],
-                        "hash": pub_hash,
-                        "lawyerId": lawyer.get("id"),
-                        "lawyerName": lawyer.get("name"),
-                        "notified": False,
-                        "createdAt": datetime.now().isoformat(),
-                    }
-                    existing_pubs.insert(0, new_pub)
-                    existing_hashes.add(pub_hash)
-                    new_count += 1
-
-            # Salvar atualizado
-            redis.set("publications", existing_pubs[:1000])
+        # Heartbeat para observabilidade no dashboard
+        redis.set(
+            heartbeat_key,
+            {
+                "status": "ok",
+                "ranAt": now.isoformat(),
+                "window": {"start": data_inicio, "end": data_fim},
+                "totalFound": total_found,
+                "newCount": new_count,
+                "lawyers": len(enabled_lawyers),
+            },
+        )
 
         logger.info(f"✅ CRON DJEN: {new_count} novas de {total_found} encontradas")
 
@@ -121,9 +160,18 @@ async def run_djen_monitor():
 
     except Exception as e:
         logger.error(f"❌ CRON: Erro no monitoramento DJEN: {e}")
+        from datetime import datetime
+
+        _set_djen_heartbeat(
+            {
+                "status": "error",
+                "ranAt": datetime.now(SAO_PAULO_TZ).isoformat(),
+                "error": str(e),
+            }
+        )
 
 
-async def run_datajud_monitor():
+def run_datajud_monitor():
     """Executa atualização de dados via DataJud."""
     logger.info("⏰ CRON: Iniciando monitoramento DataJud...")
     try:
@@ -140,23 +188,19 @@ async def run_datajud_monitor():
 def start_scheduler():
     """Inicia o agendador de tarefas."""
     if not scheduler.running:
-        # DJEN: 2x por dia (12:00 e 20:00 BRT = 15:00 e 23:00 UTC)
+        # DJEN: 2x por dia (00:30 e 09:00 horário de São Paulo)
+        # - 00:30: pega o lote assim que o DJEN começa a disponibilizar (a partir de 0h)
+        # - 09:00: redundância/recuperação em horário útil
         scheduler.add_job(
             run_djen_monitor,
-            CronTrigger(hour=15, minute=0),  # 12:00 BRT
-            id="djen_noon",
+            CronTrigger(hour=0, minute=30, timezone=SAO_PAULO_TZ),
+            id="djen_midnight",
             replace_existing=True,
         )
         scheduler.add_job(
             run_djen_monitor,
-            CronTrigger(hour=23, minute=0),  # 20:00 BRT
-            id="djen_evening",
-            replace_existing=True,
-        )
-        scheduler.add_job(
-            run_djen_monitor,
-            CronTrigger(hour=16, minute=0),
-            id="djen_afternoon",
+            CronTrigger(hour=9, minute=0, timezone=SAO_PAULO_TZ),
+            id="djen_morning",
             replace_existing=True,
         )
 
@@ -173,3 +217,13 @@ def start_scheduler():
 
         scheduler.start()
         logger.info("🚀 Scheduler iniciado com sucesso")
+
+
+def stop_scheduler():
+    """Encerra o agendador de tarefas (best-effort)."""
+    try:
+        if scheduler.running:
+            scheduler.shutdown(wait=False)
+            logger.info("🛑 Scheduler encerrado")
+    except Exception as e:
+        logger.warning(f"⚠️ Falha ao encerrar scheduler: {e}")

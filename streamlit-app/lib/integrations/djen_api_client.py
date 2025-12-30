@@ -162,9 +162,6 @@ class DJENAPIClient:
             # Converter para objetos Publicacao
             publicacoes = [self._parse_publicacao(item) for item in items]
 
-            # Atualizar cache
-            self._last_request_time[cache_key] = time.time()
-
             return publicacoes
 
         except requests.exceptions.Timeout:

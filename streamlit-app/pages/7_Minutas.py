@@ -24,6 +24,7 @@ STATUS_MINUTA = [
     "finalizada",
     "arquivada",
 ]
+MSG_EDITOR_VAZIO = "⚠️ O editor está vazio."
 
 # ===========================
 # FUNÇÕES AUXILIARES
@@ -446,7 +447,7 @@ with col_editor:
                         help="Desenvolve e detalha o texto",
                     ):
                         if not conteudo:
-                            st.warning("⚠️ O editor está vazio.")
+                            st.warning(MSG_EDITOR_VAZIO)
                         else:
                             asyncio.run(run_ai_command("expandir", conteudo))
 
@@ -457,7 +458,7 @@ with col_editor:
                         help="Melhora gramática e coesão",
                     ):
                         if not conteudo:
-                            st.warning("⚠️ O editor está vazio.")
+                            st.warning(MSG_EDITOR_VAZIO)
                         else:
                             asyncio.run(run_ai_command("revisar", conteudo))
 
@@ -467,7 +468,7 @@ with col_editor:
                         help="Reescreve em linguagem formal",
                     ):
                         if not conteudo:
-                            st.warning("⚠️ O editor está vazio.")
+                            st.warning(MSG_EDITOR_VAZIO)
                         else:
                             asyncio.run(run_ai_command("formalizar", conteudo))
 

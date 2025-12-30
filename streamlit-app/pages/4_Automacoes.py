@@ -13,6 +13,7 @@ from lib.backend_client import BackendClient
 
 # Fuso horário de Brasília
 BRAZIL_TZ = pytz.timezone("America/Sao_Paulo")
+DATE_TIME_FORMAT = "%d/%m/%Y %H:%M"
 
 
 def render():
@@ -21,7 +22,7 @@ def render():
     st.title("🔍 Automações e Scraping")
     st.caption("Selenium WebDriver | PyAutoGUI | Monitoramento DJEN/PJe")
 
-    backend = BackendClient()
+    _backend = BackendClient()  # noqa: F841
 
     # ============================================
     # STATUS DOS SERVIÇOS
@@ -109,7 +110,7 @@ def render():
                 "Ação",
                 ["Consultar Processo", "Protocolar Petição", "Baixar Documentos"],
             )
-            numero_processo = st.text_input("Número do Processo")
+            _numero_processo = st.text_input("Número do Processo")  # noqa: F841
 
             submitted_pje = st.form_submit_button("🤖 Executar Bot PJe")
 
@@ -131,9 +132,9 @@ def render():
     now_brazil = datetime.now(BRAZIL_TZ)
     logs_data = {
         "Data/Hora": [
-            now_brazil.strftime("%d/%m/%Y %H:%M"),
-            (now_brazil - timedelta(minutes=15)).strftime("%d/%m/%Y %H:%M"),
-            (now_brazil - timedelta(hours=1)).strftime("%d/%m/%Y %H:%M"),
+            now_brazil.strftime(DATE_TIME_FORMAT),
+            (now_brazil - timedelta(minutes=15)).strftime(DATE_TIME_FORMAT),
+            (now_brazil - timedelta(hours=1)).strftime(DATE_TIME_FORMAT),
         ],
         "Automação": ["Monitor DJEN", "Bot PJe", "Monitor DJEN"],
         "Status": ["Sucesso", "Sucesso", "Sucesso"],

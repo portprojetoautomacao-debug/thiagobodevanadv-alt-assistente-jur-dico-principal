@@ -69,7 +69,7 @@ Características:
     ) -> Dict[str, Any]:
         """Pesquisa precedentes"""
         try:
-            logger.info(f"🔍 Pesquisador buscando precedentes")
+            logger.info("🔍 Pesquisador buscando precedentes")
 
             # 1. Executar ferramentas
             stf_result = buscar_stf.invoke({"termo": task})
@@ -89,7 +89,7 @@ Características:
             ]
             response = await self.llm.ainvoke(messages)
 
-            logger.info(f"✅ Pesquisa concluída")
+            logger.info("✅ Pesquisa concluída")
 
             return {
                 "agentId": self.agent_id,
