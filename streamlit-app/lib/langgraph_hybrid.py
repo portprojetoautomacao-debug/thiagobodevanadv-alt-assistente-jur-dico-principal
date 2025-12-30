@@ -10,14 +10,15 @@ Este é o grafo principal que integra todos os 16 agentes de forma inteligente:
 import os
 import sys
 from pathlib import Path
-from typing import Literal, TypedDict, Annotated, Sequence
+from typing import Literal, Annotated, Sequence, TypedDict
+from dataclasses import dataclass, field
 from operator import add
 import logging
 
 # Adicionar lib ao path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from langgraph.graph import StateGraph, MessagesState, START, END
+from langgraph.graph import StateGraph, START, END
 from langgraph.prebuilt import ToolNode
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -35,11 +36,12 @@ logger = logging.getLogger(__name__)
 # ESTADO DO GRAFO
 # ============================================================================
 
-class LegalAssistantState(TypedDict):
+@dataclass
+class LegalAssistantState:
     """Estado do assistente jurídico"""
     messages: Annotated[Sequence[BaseMessage], add]
-    task_type: str  # tipo de tarefa identificada
-    workflow_mode: str  # modo: generic, specialized, hybrid
+    task_type: str = field(default="generic")  # tipo de tarefa (default: generic)
+    workflow_mode: str = field(default="auto")  # modo: workflow, tools, auto (default: auto)
 
 
 # ============================================================================
