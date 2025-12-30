@@ -210,16 +210,12 @@ class DJENScraper:
     def buscar_por_palavras_chave(
         self,
         palavras_chave: str,
-        data_inicio: Optional[str] = None,
-        data_fim: Optional[str] = None,
     ) -> List[Dict]:
         """
         Buscar publicações por palavras-chave
 
         Args:
             palavras_chave: Termos de busca
-            data_inicio: Data inicial (formato: YYYY-MM-DD)
-            data_fim: Data final (formato: YYYY-MM-DD)
 
         Returns:
             Lista de publicações encontradas

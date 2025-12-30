@@ -138,7 +138,7 @@ class PJEScraper(SeleniumScraper):
     def buscar_processos(self, filtros: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Busca processos no PJe."""
         if not self.driver:
-            raise Exception("Driver não iniciado. Faça login primeiro.")
+            raise ValueError("Driver não iniciado. Faça login primeiro.")
 
         try:
             # Navegar para busca

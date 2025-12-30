@@ -375,7 +375,7 @@ class FormFiller:
 
             time.sleep(0.5)
 
-        logger.warning(f"⚠️ Timeout ao aguardar imagem")
+        logger.warning("⚠️ Timeout ao aguardar imagem")
         return None
 
     def desabilitar_failsafe(self):

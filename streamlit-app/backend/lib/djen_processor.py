@@ -119,7 +119,7 @@ async def processar_intimacoes_pendentes():
         return {"processed": 0, "tasks": 0, "error": str(e)}
 
 
-async def gerar_minutas_automaticas():
+def gerar_minutas_automaticas():
     """
     Gera minutas sugeridas para tarefas pendentes.
 

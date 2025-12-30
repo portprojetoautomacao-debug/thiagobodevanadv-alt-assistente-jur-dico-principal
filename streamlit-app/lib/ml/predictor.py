@@ -53,6 +53,7 @@ class SuccessPredictor:
             max_depth=10,
             min_samples_split=5,
             min_samples_leaf=2,
+            max_features='sqrt',
             class_weight="balanced",  # Lidar com classes desbalanceadas
         )
 
@@ -183,7 +184,7 @@ class SuccessPredictor:
                 "n_test": len(X_test),
             }
 
-            logger.info(f"✅ Modelo treinado!")
+            logger.info("✅ Modelo treinado!")
             logger.info(f"  Acurácia: {accuracy:.2%}")
             logger.info(
                 f"  CV Score: {cv_scores.mean():.2%} (+/- {cv_scores.std():.2%})"
@@ -245,11 +246,16 @@ class SuccessPredictor:
                 "probabilidade_insucesso": float(probabilidade[0]),
                 # Alias para compatibilidade com diferentes consumidores
                 "probabilidade": float(probabilidade[1]),
-                "confianca": (
-                    "alta"
-                    if max(probabilidade) > 0.8
-                    else "média" if max(probabilidade) > 0.6 else "baixa"
-                ),
+            }
+
+            # Calcular confiança
+            max_prob = max(probabilidade)
+            if max_prob > 0.8:
+                resultado["confianca"] = "alta"
+            elif max_prob > 0.6:
+                resultado["confianca"] = "média"
+            else:
+                resultado["confianca"] = "baixa"
             }
 
             logger.info(
@@ -361,18 +367,21 @@ class SuccessPredictor:
         tribunais = ["TJAL", "TRT19", "TRF5", "STJ", "STF"]
         complexidades = ["baixa", "média", "alta"]
 
+        # Usar numpy.random.Generator moderno
+        rng = np.random.default_rng(42)
+
         data = {
-            "tipo_acao": np.random.choice(tipos_acao, n_samples),
-            "valor_causa": np.random.lognormal(
+            "tipo_acao": rng.choice(tipos_acao, n_samples),
+            "valor_causa": rng.lognormal(
                 10, 2, n_samples
             ),  # Distribuição log-normal
-            "tribunal": np.random.choice(tribunais, n_samples),
-            "tempo_tramitacao": np.random.randint(
+            "tribunal": rng.choice(tribunais, n_samples),
+            "tempo_tramitacao": rng.integers(
                 30, 1800, n_samples
             ),  # 1 mês a 5 anos
-            "complexidade": np.random.choice(complexidades, n_samples),
-            "num_partes": np.random.randint(2, 10, n_samples),
-            "tem_advogado": np.random.choice(
+            "complexidade": rng.choice(complexidades, n_samples),
+            "num_partes": rng.integers(2, 10, n_samples),
+            "tem_advogado": rng.choice(
                 [0, 1], n_samples, p=[0.1, 0.9]
             ),  # 90% têm advogado
         }
@@ -391,7 +400,7 @@ class SuccessPredictor:
             + (df["valor_causa"] > df["valor_causa"].median()).astype(int) * 0.2
             + (df["complexidade"] == "baixa").astype(int) * 0.3
             + (df["tempo_tramitacao"] < 365).astype(int) * 0.2
-            + np.random.normal(0, 0.15, n_samples)  # Ruído
+            + rng.normal(0, 0.15, n_samples)  # Ruído
         )
 
         df["sucesso"] = (sucesso_score > 0.5).astype(int)

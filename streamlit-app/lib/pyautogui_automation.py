@@ -128,7 +128,7 @@ class PyAutoGUIAutomation:
     # Automações Específicas para PJe
     # ============================================
 
-    def pje_login(self, usuario: str, senha: str, certificado_digital: bool = False) -> bool:
+    def pje_login(self, usuario: str, senha: str) -> bool:
         """Automatiza login no PJe."""
         try:
             logger.info("Iniciando automação de login PJe...")

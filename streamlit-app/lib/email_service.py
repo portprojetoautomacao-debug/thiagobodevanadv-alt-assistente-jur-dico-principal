@@ -28,13 +28,10 @@ class EmailService:
         """Verifica se o serviço está configurado"""
         return self._configured
 
-    async def send_email(
+    def send_email(
         self,
         to: str,
         subject: str,
-        body: str,
-        html_body: Optional[str] = None,
-        attachments: Optional[List[Dict[str, Any]]] = None,
     ) -> bool:
         """
         Envia um email.
@@ -42,9 +39,6 @@ class EmailService:
         Args:
             to: Destinatário
             subject: Assunto
-            body: Corpo do email (texto plano)
-            html_body: Corpo do email (HTML)
-            attachments: Lista de anexos
 
         Returns:
             True se enviado com sucesso, False caso contrário

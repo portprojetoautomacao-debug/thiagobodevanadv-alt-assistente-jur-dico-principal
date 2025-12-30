@@ -84,12 +84,15 @@ async def lifespan(app: FastAPI):
     print("👋 Assistente Jurídico API encerrando...")
 
 
+# Constantes
+API_DOCS_URL = "/api/docs"
+
 # Criar app FastAPI
 app = FastAPI(
     title="Assistente Jurídico API",
     description="Backend Python nativo para Streamlit",
     version="2.0.0",
-    docs_url="/api/docs",
+    docs_url=API_DOCS_URL,
     redoc_url="/api/redoc",
     lifespan=lifespan,
 )
@@ -136,7 +139,7 @@ def _should_skip_auth(request: Request) -> bool:
     # Health/root/docs devem continuar acessíveis para diagnósticos locais.
     if path in {"/", "/api/health"}:
         return True
-    if path.startswith("/api/docs") or path.startswith("/api/redoc"):
+    if path.startswith(API_DOCS_URL) or path.startswith("/api/redoc"):
         return True
     if path.startswith("/openapi.json"):
         return True
@@ -211,7 +214,7 @@ async def root():
     return {
         "message": "Assistente Jurídico API - Python Backend",
         "version": "2.0.0",
-        "docs": "/api/docs",
+        "docs": API_DOCS_URL,
         "health": "/api/health",
     }
 

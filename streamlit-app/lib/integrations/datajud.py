@@ -157,7 +157,7 @@ class DataJudClient:
                     return cached
 
             # Fazer requisição
-            data = self._make_request(f"/_search", params={
+            data = self._make_request("/_search", params={
                 'numeroProcesso': numero_cnj
             })
 
@@ -203,10 +203,10 @@ class DataJudClient:
                 params['dataFim'] = data_fim
 
             # Fazer requisição
-            data = self._make_request(f"/_search/movimentacoes", params=params)
+            data = self._make_request("/_search/movimentacoes", params=params)
 
             if not data:
-                logger.warning(f"⚠️ Nenhuma movimentação encontrada")
+                logger.warning("\u26a0\ufe0f Nenhuma movimentação encontrada")
                 return []
 
             # Processar movimentações
@@ -244,10 +244,10 @@ class DataJudClient:
             }
 
             # Fazer requisição
-            data = self._make_request(f"/_search", params=params)
+            data = self._make_request("/_search", params=params)
 
             if not data:
-                logger.warning(f"⚠️ Nenhum processo encontrado")
+                logger.warning("\u26a0\ufe0f Nenhum processo encontrado")
                 return []
 
             # Processar processos

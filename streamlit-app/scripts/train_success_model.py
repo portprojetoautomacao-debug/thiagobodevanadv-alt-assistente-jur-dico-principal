@@ -37,6 +37,7 @@ class SuccessPredictor:
             max_depth=15,
             min_samples_split=5,
             min_samples_leaf=2,
+            max_features='sqrt',
             random_state=42,
             n_jobs=-1,
         )
@@ -57,23 +58,24 @@ class SuccessPredictor:
         """
         logger.info(f"Gerando {n_samples} amostras sintéticas...")
 
-        np.random.seed(42)
+        # Usar numpy.random.Generator moderno
+        rng = np.random.default_rng(42)
 
         tipos = ["Trabalhista", "Cível", "Tributário", "Previdenciário", "Criminal"]
         tribunais = ["TRT2", "TRT15", "TJSP", "TJAL", "STJ"]
         instancias = ["1ª Instância", "2ª Instância", "Tribunal Superior"]
 
         data = {
-            "tipo_acao": np.random.choice(tipos, n_samples),
-            "tribunal": np.random.choice(tribunais, n_samples),
-            "instancia": np.random.choice(instancias, n_samples),
-            "valor_causa": np.random.lognormal(10, 2, n_samples),  # Valores realistas
-            "complexidade": np.random.randint(1, 11, n_samples),
-            "prazo_meses": np.random.randint(6, 60, n_samples),
-            "tem_precedente": np.random.choice([0, 1], n_samples, p=[0.3, 0.7]),
-            "advogado_experiencia": np.random.randint(1, 31, n_samples),
-            "num_testemunhas": np.random.randint(0, 11, n_samples),
-            "provas_documentais": np.random.randint(0, 21, n_samples),
+            "tipo_acao": rng.choice(tipos, n_samples),
+            "tribunal": rng.choice(tribunais, n_samples),
+            "instancia": rng.choice(instancias, n_samples),
+            "valor_causa": rng.lognormal(10, 2, n_samples),  # Valores realistas
+            "complexidade": rng.integers(1, 11, n_samples),
+            "prazo_meses": rng.integers(6, 60, n_samples),
+            "tem_precedente": rng.choice([0, 1], n_samples, p=[0.3, 0.7]),
+            "advogado_experiencia": rng.integers(1, 31, n_samples),
+            "num_testemunhas": rng.integers(0, 11, n_samples),
+            "provas_documentais": rng.integers(0, 21, n_samples),
         }
 
         df = pd.DataFrame(data)
@@ -88,7 +90,7 @@ class SuccessPredictor:
         )
 
         # Adicionar ruído
-        sucesso_prob += np.random.normal(0, 0.1, n_samples)
+        sucesso_prob += rng.normal(0, 0.1, n_samples)
         sucesso_prob = np.clip(sucesso_prob, 0, 1)
 
         df["sucesso"] = (sucesso_prob > 0.5).astype(int)
@@ -259,12 +261,18 @@ class SuccessPredictor:
         return {
             "sucesso": bool(predicao),
             "probabilidade": float(probabilidade),
-            "confianca": (
-                "Alta"
-                if abs(probabilidade - 0.5) > 0.3
-                else "Média" if abs(probabilidade - 0.5) > 0.15 else "Baixa"
-            ),
         }
+
+        # Calcular confiança
+        diff_from_half = abs(probabilidade - 0.5)
+        if diff_from_half > 0.3:
+            resultado["confianca"] = "Alta"
+        elif diff_from_half > 0.15:
+            resultado["confianca"] = "Média"
+        else:
+            resultado["confianca"] = "Baixa"
+
+        return resultado
 
 
 # Script principal

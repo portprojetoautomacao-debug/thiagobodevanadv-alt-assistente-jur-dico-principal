@@ -47,44 +47,54 @@ class AnaliseExpediente(BaseModel):
         return self.model_dump()
 
 
+def _extract_from_txt(file_bytes: bytes) -> str:
+    """Extrai texto de arquivo TXT."""
+    try:
+        return file_bytes.decode("utf-8")
+    except Exception:
+        return file_bytes.decode("latin-1", errors="ignore")
+
+
+def _extract_from_pdf(file_bytes: bytes) -> str:
+    """Extrai texto de arquivo PDF."""
+    try:
+        from PyPDF2 import PdfReader
+
+        reader = PdfReader(io.BytesIO(file_bytes))
+        pages_text = []
+        for page in reader.pages:
+            try:
+                pages_text.append(page.extract_text() or "")
+            except Exception:
+                pages_text.append("")
+        return "\n".join(pages_text).strip()
+    except Exception:
+        return ""
+
+
+def _extract_from_docx(file_bytes: bytes) -> str:
+    """Extrai texto de arquivo DOCX."""
+    try:
+        from docx import Document
+
+        doc = Document(io.BytesIO(file_bytes))
+        return "\n".join(p.text for p in doc.paragraphs).strip()
+    except Exception:
+        return ""
+
+
 def _extract_text(filename: str, file_bytes: bytes) -> str:
     lower = (filename or "").lower()
 
-    # TXT
     if lower.endswith(".txt"):
-        try:
-            return file_bytes.decode("utf-8")
-        except Exception:
-            return file_bytes.decode("latin-1", errors="ignore")
-
-    # PDF
-    if lower.endswith(".pdf"):
-        try:
-            from PyPDF2 import PdfReader
-
-            reader = PdfReader(io.BytesIO(file_bytes))
-            pages_text = []
-            for page in reader.pages:
-                try:
-                    pages_text.append(page.extract_text() or "")
-                except Exception:
-                    pages_text.append("")
-            return "\n".join(pages_text).strip()
-        except Exception:
-            return ""
-
-    # DOCX
-    if lower.endswith(".docx"):
-        try:
-            from docx import Document
-
-            doc = Document(io.BytesIO(file_bytes))
-            return "\n".join(p.text for p in doc.paragraphs).strip()
-        except Exception:
-            return ""
-
-    # Imagens (OCR não implementado aqui)
-    return ""
+        return _extract_from_txt(file_bytes)
+    elif lower.endswith(".pdf"):
+        return _extract_from_pdf(file_bytes)
+    elif lower.endswith(".docx"):
+        return _extract_from_docx(file_bytes)
+    else:
+        # Imagens (OCR não implementado aqui)
+        return ""
 
 
 def _get_extraction_note(filename: str, extracted_text: str) -> Optional[str]:
@@ -116,6 +126,38 @@ def _guess_mime(filename: str) -> str:
     if lower.endswith((".jpg", ".jpeg")):
         return "image/jpeg"
     return "application/octet-stream"
+
+
+def _prepare_analysis_content(exp: Dict[str, Any]) -> Any:
+    """Prepara o conteúdo para análise (texto ou multimodal)."""
+    texto = (exp.get("conteudoExtraido") or "").strip()
+    raw_b64 = exp.get("rawContentBase64")
+    filename = exp.get("filename") or "documento"
+
+    # Monta mensagem multimodal quando não há texto, senão usa texto puro.
+    if not texto and raw_b64:
+        return [
+            {
+                "type": "text",
+                "text": (
+                    "Analise o documento e devolva somente os campos solicitados: "
+                    "prazo (string curta, '-' se não houver), resumo (string), "
+                    "urgencia (baixa|media|alta)."
+                ),
+            },
+            {
+                "type": "file",
+                "source_type": "base64",
+                "data": raw_b64,
+                "mime_type": _guess_mime(filename),
+            },
+        ]
+    else:
+        return (
+            "Analise o documento a seguir e devolva os campos: "
+            "prazo (string curta, '-' se não houver), resumo (string), "
+            "urgencia (baixa|media|alta).\n\nDOCUMENTO:\n" + texto
+        )
 
 
 async def _analyze_expedientes_items(
@@ -150,34 +192,7 @@ async def _analyze_expedientes_items(
 
     inputs = []
     for exp in items:
-        texto = (exp.get("conteudoExtraido") or "").strip()
-        raw_b64 = exp.get("rawContentBase64")
-        filename = exp.get("filename") or "documento"
-
-        # Monta mensagem multimodal quando não há texto, senão usa texto puro.
-        if not texto and raw_b64:
-            content = [
-                {
-                    "type": "text",
-                    "text": (
-                        "Analise o documento e devolva somente os campos solicitados: "
-                        "prazo (string curta, '-' se não houver), resumo (string), "
-                        "urgencia (baixa|media|alta)."
-                    ),
-                },
-                {
-                    "type": "file",
-                    "source_type": "base64",
-                    "data": raw_b64,
-                    "mime_type": _guess_mime(filename),
-                },
-            ]
-        else:
-            content = (
-                "Analise o documento a seguir e devolva os campos: "
-                "prazo (string curta, '-' se não houver), resumo (string), "
-                "urgencia (baixa|media|alta).\n\nDOCUMENTO:\n" + texto
-            )
+        content = _prepare_analysis_content(exp)
 
         inputs.append(
             [

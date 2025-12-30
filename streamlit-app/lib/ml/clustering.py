@@ -126,7 +126,7 @@ class ProcessClusterer:
             labels = self.model.labels_
 
             # Métricas
-            silhouette = silhouette_score(X_pca, labels)
+            silhouette = silhouette_score(X_pca, labels, random_state=42)
             calinski = calinski_harabasz_score(X_pca, labels)
 
             # Análise de clusters
@@ -144,7 +144,7 @@ class ProcessClusterer:
                 "n_samples": len(df),
             }
 
-            logger.info(f"✅ Clustering concluído!")
+            logger.info("✅ Clustering concluído!")
             logger.info(f"  Silhouette Score: {silhouette:.3f}")
             logger.info(f"  Distribuição: {cluster_info['sizes']}")
 
@@ -431,15 +431,18 @@ class ProcessClusterer:
         tribunais = ["TJAL", "TRT19", "TRF5", "STJ"]
         complexidades = ["baixa", "média", "alta"]
 
+        # Usar numpy.random.Generator moderno
+        rng = np.random.default_rng(42)
+
         data = {
-            "tipo_acao": np.random.choice(tipos_acao, n_samples),
-            "valor_causa": np.random.lognormal(10, 2, n_samples),
-            "tempo_tramitacao": np.random.randint(30, 1800, n_samples),
-            "num_movimentacoes": np.random.randint(5, 100, n_samples),
-            "complexidade": np.random.choice(complexidades, n_samples),
-            "tribunal": np.random.choice(tribunais, n_samples),
-            "tem_sentenca": np.random.choice([0, 1], n_samples),
-            "num_partes": np.random.randint(2, 10, n_samples),
+            "tipo_acao": rng.choice(tipos_acao, n_samples),
+            "valor_causa": rng.lognormal(10, 2, n_samples),
+            "tempo_tramitacao": rng.integers(30, 1800, n_samples),
+            "num_movimentacoes": rng.integers(5, 100, n_samples),
+            "complexidade": rng.choice(complexidades, n_samples),
+            "tribunal": rng.choice(tribunais, n_samples),
+            "tem_sentenca": rng.choice([0, 1], n_samples),
+            "num_partes": rng.integers(2, 10, n_samples),
         }
 
         return pd.DataFrame(data)

@@ -72,7 +72,7 @@ class QdrantService:
         except Exception as e:
             logger.error(f"❌ Erro ao inserir no Qdrant: {e}")
 
-    def search(self, query_text: str, limit: int = 5) -> List[Dict[str, Any]]:
+    def search(self, query_text: str) -> List[Dict[str, Any]]:
         """Busca semântica no Qdrant."""
         if not self.client:
             return [{"error": "Qdrant não configurado"}]

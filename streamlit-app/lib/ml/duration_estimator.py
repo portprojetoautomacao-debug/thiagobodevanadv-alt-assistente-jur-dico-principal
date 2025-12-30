@@ -161,7 +161,7 @@ class DurationEstimator:
                 "n_test": len(X_test),
             }
 
-            logger.info(f"✅ Modelo treinado!")
+            logger.info("✅ Modelo treinado!")
             logger.info(f"  MAE: {mae:.0f} dias")
             logger.info(f"  RMSE: {rmse:.0f} dias")
             logger.info(f"  R²: {r2:.3f}")
@@ -320,15 +320,18 @@ class DurationEstimator:
             "Delmiro Gouveia",
         ]
 
+        # Usar numpy.random.Generator moderno
+        rng = np.random.default_rng(42)
+
         data = {
-            "tipo_acao": np.random.choice(tipos_acao, n_samples),
-            "tribunal": np.random.choice(tribunais, n_samples),
-            "grau": np.random.choice([1, 2], n_samples, p=[0.7, 0.3]),
-            "complexidade": np.random.choice(complexidades, n_samples),
-            "num_partes": np.random.randint(2, 8, n_samples),
-            "valor_causa": np.random.lognormal(10, 2, n_samples),
-            "tem_recurso": np.random.choice([0, 1], n_samples, p=[0.6, 0.4]),
-            "comarca": np.random.choice(comarcas, n_samples),
+            "tipo_acao": rng.choice(tipos_acao, n_samples),
+            "tribunal": rng.choice(tribunais, n_samples),
+            "grau": rng.choice([1, 2], n_samples, p=[0.7, 0.3]),
+            "complexidade": rng.choice(complexidades, n_samples),
+            "num_partes": rng.integers(2, 8, n_samples),
+            "valor_causa": rng.lognormal(10, 2, n_samples),
+            "tem_recurso": rng.choice([0, 1], n_samples, p=[0.6, 0.4]),
+            "comarca": rng.choice(comarcas, n_samples),
         }
 
         df = pd.DataFrame(data)
@@ -343,7 +346,7 @@ class DurationEstimator:
             + (df["complexidade"] == "média").astype(int) * 150
             + df["tem_recurso"] * 180
             + df["num_partes"] * 30
-            + np.random.normal(0, 90, n_samples)  # Variação aleatória
+            + rng.normal(0, 90, n_samples)  # Variação aleatória
         )
 
         df["duracao_dias"] = np.maximum(30, duracao).astype(int)  # Mínimo 30 dias

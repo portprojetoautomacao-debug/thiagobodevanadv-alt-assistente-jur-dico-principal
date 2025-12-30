@@ -654,19 +654,12 @@ class DJENService:
 
     def _get_existing_publications(self) -> List[StoredPublication]:
         """Busca publicações existentes (Redis ou banco)."""
-        # Implementar busca no Redis/banco
-        if self.redis_client:
-            # pubs = self.redis_client.get("publications")
-            # return pubs or []
-            pass
+        # TODO: Implementar busca no Redis/banco
         return []
 
     def _save_publications(self, publications: List[StoredPublication]):
         """Salva publicações (Redis ou banco)."""
-        # Implementar salvamento
-        if self.redis_client:
-            # self.redis_client.set("publications", publications)
-            pass
+        # TODO: Implementar salvamento no Redis/banco
         logger.info(f"💾 {len(publications)} publicações salvas")
 
     def get_tribunais_disponiveis(self) -> List[str]:
@@ -734,7 +727,7 @@ if __name__ == "__main__":
         print(f"👥 Advogados processados: {resultado['lawyers_processed']}")
 
         if resultado["errors"]:
-            print(f"\n⚠️ Erros encontrados:")
+            print("\n⚠️ Erros encontrados:")
             for error in resultado["errors"]:
                 print(f"   - {error}")
 

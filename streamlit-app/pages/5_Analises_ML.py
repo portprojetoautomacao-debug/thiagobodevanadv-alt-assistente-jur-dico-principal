@@ -5,8 +5,6 @@ Migração Python - scikit-learn | Predição de sucesso | Estimativa de duraç�
 
 import streamlit as st
 
-# from lib.backend_client import BackendClient
-
 # Constantes
 AGUARDANDO_DADOS = "Aguardando dados"
 

@@ -34,6 +34,27 @@ def extrair_numero_cnj(texto: str) -> List[str]:
     return numeros_unicos
 
 
+def _processar_match_prazo(match: re.Match, tipo: str) -> Dict[str, Any]:
+    """Processa um match de prazo e retorna informações estruturadas."""
+    prazo_info = {
+        "texto_original": match.group(0),
+        "tipo": tipo,
+        "posicao": match.start(),
+    }
+
+    if tipo == "dias":
+        prazo_info["quantidade"] = int(match.group(1))
+        prazo_info["tipo_dias"] = (
+            match.group(2) if len(match.groups()) > 1 else "corridos"
+        )
+    elif tipo == "horas":
+        prazo_info["quantidade"] = int(match.group(1))
+    elif tipo == "data":
+        prazo_info["data"] = match.group(1)
+
+    return prazo_info
+
+
 def extrair_prazos(texto: str) -> List[Dict[str, Any]]:
     """
     Extrai menções a prazos de um texto jurídico.
@@ -68,22 +89,7 @@ def extrair_prazos(texto: str) -> List[Dict[str, Any]]:
     for padrao, tipo in padroes:
         matches = re.finditer(padrao, texto_lower)
         for match in matches:
-            prazo_info = {
-                "texto_original": match.group(0),
-                "tipo": tipo,
-                "posicao": match.start(),
-            }
-
-            if tipo == "dias":
-                prazo_info["quantidade"] = int(match.group(1))
-                prazo_info["tipo_dias"] = (
-                    match.group(2) if len(match.groups()) > 1 else "corridos"
-                )
-            elif tipo == "horas":
-                prazo_info["quantidade"] = int(match.group(1))
-            elif tipo == "data":
-                prazo_info["data"] = match.group(1)
-
+            prazo_info = _processar_match_prazo(match, tipo)
             prazos.append(prazo_info)
 
     # Remove duplicatas baseado na posição

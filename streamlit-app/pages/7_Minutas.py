@@ -261,7 +261,8 @@ with col_lista:
                         key=f"delete_{minuta.get('id')}",
                         use_container_width=True,
                     ):
-                        if deletar_minuta(minuta["id"]):
+                        result = deletar_minuta(minuta["id"])
+                        if result:
                             st.success("✅ Minuta excluída!")
                             st.session_state.refresh_trigger += 1
                             st.rerun()

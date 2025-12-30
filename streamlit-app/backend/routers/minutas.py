@@ -124,7 +124,7 @@ async def listar_minutas(
 
 
 @router.post("", response_model=MinutaResponse, status_code=status.HTTP_201_CREATED)
-async def criar_minuta(minuta: MinutaCreate) -> MinutaResponse:
+async def criar_minuta(minuta: MinutaCreate) -> Dict[str, Any]:
     """
     Cria uma nova minuta
 
@@ -160,7 +160,7 @@ async def criar_minuta(minuta: MinutaCreate) -> MinutaResponse:
 
 
 @router.get("/{minuta_id}", response_model=MinutaResponse)
-async def buscar_minuta(minuta_id: str) -> MinutaResponse:
+async def buscar_minuta(minuta_id: str) -> Dict[str, Any]:
     """
     Busca uma minuta específica por ID
 
@@ -234,7 +234,7 @@ async def deletar_minuta(minuta_id: str):
     response_model=MinutaResponse,
     status_code=status.HTTP_201_CREATED,
 )
-async def duplicar_minuta(minuta_id: str) -> MinutaResponse:
+async def duplicar_minuta(minuta_id: str) -> Dict[str, Any]:
     """
     Duplica uma minuta existente
 

@@ -277,7 +277,7 @@ def render():
         with col2:
             st.markdown("### 💻 Ambiente")
             st.code(
-                f"""
+                """
 Sistema: Linux/Debian
 Backend: FastAPI 0.109.0
 Frontend: Streamlit 1.41.1

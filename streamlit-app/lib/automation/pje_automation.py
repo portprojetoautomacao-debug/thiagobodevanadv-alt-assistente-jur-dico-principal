@@ -14,7 +14,6 @@ logger = logging.getLogger(__name__)
 
 # Constantes
 ERRO_LOGIN_NECESSARIO = "❌ É necessário fazer login primeiro"
-CLASS_NAME = CLASS_NAME
 
 
 class PJeAutomation:

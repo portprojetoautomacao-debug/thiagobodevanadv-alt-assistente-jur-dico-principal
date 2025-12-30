@@ -86,6 +86,8 @@ class LegalMLModels:
         model = RandomForestClassifier(
             n_estimators=100,
             max_depth=10,
+            min_samples_leaf=2,
+            max_features='sqrt',
             random_state=42,
             class_weight='balanced'
         )
@@ -260,7 +262,7 @@ class LegalMLModels:
             'cluster_distribution': pd.Series(clusters).value_counts().to_dict()
         }
 
-    def find_similar_cases(self, caso: Dict[str, Any], n_similar: int = 5) -> List[int]:
+    def find_similar_cases(self, caso: Dict[str, Any]) -> Dict[str, Any]:
         """Encontra casos similares ao fornecido."""
 
         if 'clustering' not in self.models:
@@ -366,23 +368,24 @@ class LegalMLModels:
 
     def generate_sample_data(self, n_samples: int = 1000) -> pd.DataFrame:
         """Gera dados sintéticos para treinamento (demo)."""
-        np.random.seed(42)
+        # Usar numpy.random.Generator moderno
+        rng = np.random.default_rng(42)
 
         tipos_acao = ['Trabalhista', TIPO_ACAO_PADRAO, 'Criminal', 'Tributária', 'Família']
         tribunais = ['TJSP', 'TJRJ', 'TJMG', 'TJRS', 'TJDF']
         complexidades = ['baixa', 'média', 'alta']
 
         df = pd.DataFrame({
-            'tipo_acao': np.random.choice(tipos_acao, n_samples),
-            'tribunal': np.random.choice(tribunais, n_samples),
-            'complexidade': np.random.choice(complexidades, n_samples),
-            'valor_causa': np.random.lognormal(10, 2, n_samples),
-            'tempo_tramitacao': np.random.normal(365, 180, n_samples),
-            'qtd_recursos': np.random.poisson(2, n_samples),
-            'qtd_partes': np.random.randint(2, 10, n_samples),
-            'experiencia_advogado': np.random.normal(10, 5, n_samples),
-            'duracao_dias': np.random.normal(500, 200, n_samples),
-            'sucesso': np.random.binomial(1, 0.6, n_samples)
+            'tipo_acao': rng.choice(tipos_acao, n_samples),
+            'tribunal': rng.choice(tribunais, n_samples),
+            'complexidade': rng.choice(complexidades, n_samples),
+            'valor_causa': rng.lognormal(10, 2, n_samples),
+            'tempo_tramitacao': rng.normal(365, 180, n_samples),
+            'qtd_recursos': rng.poisson(2, n_samples),
+            'qtd_partes': rng.integers(2, 10, n_samples),
+            'experiencia_advogado': rng.normal(10, 5, n_samples),
+            'duracao_dias': rng.normal(500, 200, n_samples),
+            'sucesso': rng.binomial(1, 0.6, n_samples)
         })
 
         # Ajustar valores negativos

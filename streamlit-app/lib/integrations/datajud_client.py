@@ -88,8 +88,6 @@ class DataJudClient:
         tribunal: Optional[str],
         classe: Optional[str],
         assunto: Optional[str],
-        data_inicio: Optional[str],
-        data_fim: Optional[str],
         limit: int,
     ) -> Dict[str, Any]:
         """Constrói query para API."""
@@ -122,22 +120,6 @@ class DataJudClient:
             "grau": data.get("grau"),
             "orgao_julgador": data.get("orgaoJulgador", {}).get("nome"),
         }
-
-        if classe:
-            filters.append({"term": {"classe.codigo": classe}})
-
-        if data_inicio or data_fim:
-            date_filter = {"range": {"dataAjuizamento": {}}}
-            if data_inicio:
-                date_filter["range"]["dataAjuizamento"]["gte"] = data_inicio
-            if data_fim:
-                date_filter["range"]["dataAjuizamento"]["lte"] = data_fim
-            filters.append(date_filter)
-
-        if filters:
-            query["query"] = {"bool": {"must": filters}}
-
-        return query
 
     def _parse_processo(self, raw_data: Dict[str, Any]) -> Dict[str, Any]:
         """Parseia dados do processo da API."""
