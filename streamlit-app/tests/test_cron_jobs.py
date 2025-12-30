@@ -21,25 +21,21 @@ class TestCronJobs:
         """Testar que o scheduler está definido"""
         assert scheduler is not None
 
-    @pytest.mark.asyncio
-    async def test_start_scheduler(self):
-        """Testar inicialização do scheduler (requer event loop)"""
-        # AsyncIOScheduler precisa de um event loop
-        # Este teste verifica que o scheduler pode ser iniciado
+    def test_start_scheduler(self):
+        """Testar inicialização do scheduler"""
+        # Scheduler pode já estar rodando de outro teste
         if not scheduler.running:
-            try:
-                start_scheduler()
-            except RuntimeError:
-                # Expected em alguns ambientes de teste
-                pass
-        # Se já está rodando, ok também
-        assert scheduler is not None
+            start_scheduler()
+        assert scheduler.running
 
     def test_jobs_configurados(self):
         """Testar que jobs estão configurados"""
-        # Verificar que os jobs estão definidos na configuração
-        # Não iniciamos o scheduler para evitar erro de event loop
-        jobs = scheduler.get_jobs()
+        if not scheduler.running:
+            start_scheduler()
 
-        # Mesmo sem iniciar, podemos verificar se há jobs agendados
-        assert isinstance(jobs, list)
+        jobs = scheduler.get_jobs()
+        job_ids = [job.id for job in jobs]
+
+        # Verificar jobs principais
+        assert "djen_noon" in job_ids or "djen_evening" in job_ids or len(jobs) > 0
+

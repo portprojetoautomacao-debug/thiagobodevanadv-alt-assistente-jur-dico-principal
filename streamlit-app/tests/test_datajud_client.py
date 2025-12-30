@@ -6,7 +6,6 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-
 def import_datajud_client():
     """Helper para importar DataJudClient"""
     try:
@@ -17,7 +16,9 @@ def import_datajud_client():
         return None
 
 
+
 class TestDataJudClient:
+
     """Testes do cliente DataJud"""
 
     def test_inicializacao(self):

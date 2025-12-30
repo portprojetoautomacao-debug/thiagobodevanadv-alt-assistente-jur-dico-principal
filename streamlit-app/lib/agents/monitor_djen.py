@@ -70,3 +70,4 @@ class MonitorDJENAgent(BaseAgent):
         except Exception as e:
             logger.error(f"❌ Erro: {e}")
             return {"agentId": self.agent_id, "response": str(e), "status": "failed"}
+
