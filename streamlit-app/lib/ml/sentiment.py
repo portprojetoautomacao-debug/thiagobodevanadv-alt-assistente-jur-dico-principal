@@ -174,6 +174,48 @@ class SentimentAnalyzer:
             logger.error(f"❌ Erro na análise: {str(e)}")
             raise
 
+    # ---------------------------------------------------------------------
+    # API de compatibilidade (usada pelos testes)
+    # ---------------------------------------------------------------------
+    def analisar(self, texto: str) -> Dict:
+        """API estável para análise de sentimento (compatível com os testes)."""
+
+        if not texto or not isinstance(texto, str) or not texto.strip():
+            return {
+                "sentimento": "neutro",
+                "confianca": 0.5,
+                "keywords": [],
+                "entidades": [],
+                "idioma": "pt",
+            }
+
+        texto_limpo = self._limpar_texto(texto)
+        blob = TextBlob(texto_limpo)
+        polaridade = float(blob.sentiment.polarity)
+        subjetividade = float(blob.sentiment.subjectivity)
+
+        if polaridade > 0.1:
+            sentimento = "positivo"
+        elif polaridade < -0.1:
+            sentimento = "negativo"
+        else:
+            sentimento = "neutro"
+
+        keywords = self._extrair_palavras_chave(texto_limpo, top_n=10)
+        entidades = self._detectar_entidades_juridicas(texto)
+
+        return {
+            "sentimento": sentimento,
+            "confianca": self._calcular_confianca_score(polaridade, subjetividade),
+            "keywords": keywords,
+            "entidades": entidades,
+            "idioma": "pt",
+        }
+
+    def analisar_batch(self, textos: List[str]) -> List[Dict]:
+        """Alias compatível com os testes (batch)."""
+        return [self.analisar(t) for t in textos]
+
     def _limpar_texto(self, texto: str) -> str:
         """Limpar e normalizar texto"""
         # Remover quebras de linha excessivas
@@ -270,6 +312,40 @@ class SentimentAnalyzer:
             return "média"
         else:
             return "baixa"
+
+    def _calcular_confianca_score(self, polaridade: float, subjetividade: float) -> float:
+        """Score 0..1 usado pelos testes (não confundir com _calcular_confianca())."""
+        intensidade = min(1.0, abs(float(polaridade)) * 1.25)
+        objetividade = 1.0 - min(1.0, max(0.0, float(subjetividade)))
+        score = (intensidade + objetividade) / 2.0
+        return float(max(0.0, min(1.0, score)))
+
+    def _detectar_entidades_juridicas(self, texto: str) -> List[Dict]:
+        """Detecção simples de entidades jurídicas para atender os testes."""
+
+        entidades: List[Dict] = []
+        t = texto or ""
+
+        # Valores (R$ 10.000,00)
+        for m in re.finditer(r"R\$\s*[\d\.]+,\d{2}", t):
+            entidades.append({"tipo": "valor", "texto": m.group(0)})
+
+        # Artigos (art. 5º, art 7)
+        for m in re.finditer(r"\bart\.?\s*\d+\b", t, flags=re.IGNORECASE):
+            entidades.append({"tipo": "artigo", "texto": m.group(0)})
+
+        # Leis (Lei 8.078)
+        for m in re.finditer(r"\blei\s*(n\.?\s*)?\d+[\./]?\d*\b", t, flags=re.IGNORECASE):
+            entidades.append({"tipo": "lei", "texto": m.group(0)})
+
+        # Partes (autor/réu)
+        lower = t.lower()
+        if any(p in lower for p in ["autor", "requerente"]):
+            entidades.append({"tipo": "partes", "texto": "autor"})
+        if any(p in lower for p in ["réu", "reu", "requerido"]):
+            entidades.append({"tipo": "partes", "texto": "réu"})
+
+        return entidades
 
     def analisar_lote(self, textos: List[str]) -> List[Dict]:
         """

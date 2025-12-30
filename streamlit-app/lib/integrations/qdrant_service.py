@@ -17,14 +17,17 @@ class QdrantService:
         self.collection_name = "jurisprudencia"
         self.client = None
 
-        if self.url and self.api_key:
-            try:
-                self.client = QdrantClient(url=self.url, api_key=self.api_key)
-                logger.info("✅ QdrantService: Conectado")
-            except Exception as e:
-                logger.error(f"❌ QdrantService: Erro de conexão: {e}")
-        else:
-            logger.warning("⚠️ QdrantService: Credenciais não encontradas")
+        if not self.url or not self.api_key:
+            raise ValueError(
+                "QdrantService: QDRANT_URL e QDRANT_API_KEY são obrigatórios e não foram encontrados."
+            )
+
+        try:
+            self.client = QdrantClient(url=self.url, api_key=self.api_key)
+            logger.info("✅ QdrantService: Conectado")
+        except Exception as e:
+            logger.error(f"❌ QdrantService: Erro de conexão: {e}")
+            raise
 
     def upsert(self, documents: List[Dict[str, Any]]):
         """

@@ -72,7 +72,9 @@ class DataJudClient:
         """Salvar dado no cache"""
         self._cache[key] = (data, datetime.now().timestamp())
 
-    def _make_request(self, endpoint: str, params: Optional[Dict] = None, retry: int = 0) -> Optional[Dict]:
+    def _make_request(
+        self, endpoint: str, params: Optional[Dict] = None, retry: int = 0
+    ) -> Optional[Dict]:
         """
         Fazer requisição HTTP com retry automático
 
@@ -96,10 +98,11 @@ class DataJudClient:
 
         except requests.exceptions.HTTPError as e:
             if response.status_code == 429:  # Rate limit
-                logger.warning(f"⚠️ Rate limit atingido, aguardando...")
+                logger.warning("⚠️ Rate limit atingido, aguardando...")
                 time.sleep(self.RETRY_DELAY * (retry + 1))
 
-                if retry < self.MAX_RETRIES:
+                # MAX_RETRIES é o total de tentativas (compatível com os testes)
+                if (retry + 1) < self.MAX_RETRIES:
                     return self._make_request(endpoint, params, retry + 1)
 
             logger.error(f"❌ HTTP Error {response.status_code}: {str(e)}")
@@ -108,7 +111,7 @@ class DataJudClient:
         except requests.exceptions.Timeout:
             logger.warning(f"⚠️ Timeout após {self.TIMEOUT}s")
 
-            if retry < self.MAX_RETRIES:
+            if (retry + 1) < self.MAX_RETRIES:
                 time.sleep(self.RETRY_DELAY)
                 return self._make_request(endpoint, params, retry + 1)
 
@@ -116,6 +119,20 @@ class DataJudClient:
 
         except Exception as e:
             logger.error(f"❌ Erro na requisição: {str(e)}")
+            return None
+
+    def buscar_tribunais(self) -> Optional[Dict]:
+        """Busca metadados de tribunais.
+
+        Implementação compatível com os testes (que fazem patch em `requests.get`).
+        """
+        try:
+            url = f"{self.BASE_URL}/tribunais"
+            response = requests.get(url, timeout=self.TIMEOUT)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            logger.error(f"❌ Erro ao buscar tribunais: {e}")
             return None
 
     def buscar_processo(self, numero_cnj: str, use_cache: bool = True) -> Optional[Dict]:

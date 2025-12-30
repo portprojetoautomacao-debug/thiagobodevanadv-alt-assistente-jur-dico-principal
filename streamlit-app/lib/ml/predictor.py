@@ -6,7 +6,7 @@ Modelo RandomForest para prever probabilidade de sucesso em ações judiciais
 import logging
 import pickle
 from pathlib import Path
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional, Sequence, Tuple
 
 import numpy as np
 import pandas as pd
@@ -67,12 +67,18 @@ class SuccessPredictor:
 
         logger.info("✅ SuccessPredictor inicializado")
 
-    def treinar(self, df: pd.DataFrame, test_size: float = 0.2) -> Dict:
+    def treinar(
+        self,
+        df: pd.DataFrame,
+        y: Optional[Sequence[int]] = None,
+        test_size: float = 0.2,
+    ) -> Dict:
         """
         Treinar modelo com dados históricos
 
         Args:
-            df: DataFrame com colunas das features + 'sucesso'
+            df: DataFrame com colunas das features e (opcionalmente) a coluna 'sucesso'.
+            y: Labels (0/1). Se fornecido, dispensa a coluna 'sucesso' no DataFrame.
             test_size: Proporção de dados para teste
 
         Returns:
@@ -81,15 +87,31 @@ class SuccessPredictor:
         try:
             logger.info("🎓 Treinando modelo de predição de sucesso...")
 
-            # Validar colunas
-            required_cols = self.feature_names + ["sucesso"]
-            missing_cols = [col for col in required_cols if col not in df.columns]
-            if missing_cols:
-                raise ValueError(f"Colunas faltando: {missing_cols}")
+            # Backward-compat: chamada antiga `treinar(df, test_size=0.2)`
+            # (Se alguém passou um float/int como 2º parâmetro, interpretamos como test_size)
+            if y is not None and isinstance(y, (float, int)) and not isinstance(y, bool):
+                test_size = float(y)
+                y = None
+
+            # Validar colunas de features
+            missing_features = [col for col in self.feature_names if col not in df.columns]
+            if missing_features:
+                raise ValueError(f"Colunas faltando: {missing_features}")
+
+            # Labels
+            if y is None:
+                if "sucesso" not in df.columns:
+                    raise ValueError("Coluna 'sucesso' não encontrada e labels 'y' não fornecidos")
+                y_arr = df["sucesso"].values
+            else:
+                if len(y) != len(df):
+                    raise ValueError(
+                        f"Tamanho de y ({len(y)}) diferente do DataFrame ({len(df)})"
+                    )
+                y_arr = np.asarray(list(y))
 
             # Preparar features
             X = df[self.feature_names].copy()
-            y = df["sucesso"].values
 
             # Encoding de variáveis categóricas
             categorical_cols = ["tipo_acao", "tribunal", "complexidade"]
@@ -104,7 +126,7 @@ class SuccessPredictor:
 
             # Split treino/teste
             X_train, X_test, y_train, y_test = train_test_split(
-                X, y, test_size=test_size, random_state=42, stratify=y
+                X, y_arr, test_size=test_size, random_state=42, stratify=y_arr
             )
 
             logger.info(
@@ -135,8 +157,19 @@ class SuccessPredictor:
 
             self.is_trained = True
 
+            # Expor precision/recall no top-level para compatibilidade com testes
+            positive_key = "1" if "1" in report else None
+            precision = (
+                float(report[positive_key]["precision"]) if positive_key else float(report["macro avg"]["precision"])
+            )
+            recall = (
+                float(report[positive_key]["recall"]) if positive_key else float(report["macro avg"]["recall"])
+            )
+
             metrics = {
                 "accuracy": accuracy,
+                "precision": precision,
+                "recall": recall,
                 "cv_scores_mean": cv_scores.mean(),
                 "cv_scores_std": cv_scores.std(),
                 "classification_report": report,
@@ -169,7 +202,9 @@ class SuccessPredictor:
             Dicionário com predição e probabilidade
         """
         if not self.is_trained:
-            raise ValueError("Modelo não foi treinado ainda!")
+            # Para compatibilidade com testes/UX, retornar erro estruturado (sem exception)
+            logger.warning("⚠️ SuccessPredictor.prever: modelo não treinado")
+            return {"error": "Modelo não foi treinado ainda!"}
 
         try:
             # Preparar features
@@ -204,6 +239,8 @@ class SuccessPredictor:
                 "sucesso": bool(predicao),
                 "probabilidade_sucesso": float(probabilidade[1]),
                 "probabilidade_insucesso": float(probabilidade[0]),
+                # Alias para compatibilidade com diferentes consumidores
+                "probabilidade": float(probabilidade[1]),
                 "confianca": (
                     "alta"
                     if max(probabilidade) > 0.8
@@ -220,6 +257,17 @@ class SuccessPredictor:
         except Exception as e:
             logger.error(f"❌ Erro ao fazer predição: {str(e)}")
             raise
+
+    def get_feature_importances(self) -> dict[str, float]:
+        """Retorna as importâncias das features do modelo treinado (compatível com testes)."""
+        if not self.is_trained:
+            return {}
+        try:
+            importancias = [float(x) for x in self.model.feature_importances_.tolist()]
+            return {name: val for name, val in zip(self.feature_names, importancias)}
+        except Exception as e:
+            logger.error(f"Erro ao obter importâncias: {e}")
+            return {}
 
     def salvar(self, filepath: str = "models/success_predictor.pkl"):
         """

@@ -6,24 +6,43 @@ Dependências:
 - apscheduler: pip install apscheduler==3.10.4
 """
 
+import asyncio
 import logging
 import sys
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
 # APScheduler para agendamento de tarefas
-from apscheduler.schedulers.asyncio import AsyncIOScheduler  # type: ignore
+from apscheduler.schedulers.background import BackgroundScheduler  # type: ignore
 from apscheduler.triggers.cron import CronTrigger  # type: ignore
 
 # Adicionar diretório lib ao path para imports
 sys.path.append(str(Path(__file__).parent.parent / "lib"))
 
 logger = logging.getLogger(__name__)
-
 SAO_PAULO_TZ = ZoneInfo("America/Sao_Paulo")
 
-scheduler = AsyncIOScheduler(timezone=SAO_PAULO_TZ)
+def _run_async(coro):
+    """Executa coroutine em contexto síncrono (thread do scheduler)."""
+
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        return asyncio.run(coro)
+    else:
+        # Se houver loop rodando, agendar
+        return asyncio.create_task(coro)
+
+
+    scheduler = BackgroundScheduler(timezone=SAO_PAULO_TZ)
 # Orquestrador será importado quando necessário para evitar dependências circulares
+
+# API pública mínima para compatibilidade com testes legados
+def get_scheduler():
+    """Retorna o scheduler global (útil para diagnósticos/testes)."""
+    if (not scheduler.running) and len(scheduler.get_jobs()) == 0:
+        start_scheduler()
+    return scheduler
 
 
 def _set_djen_heartbeat(payload: dict) -> None:
@@ -158,6 +177,8 @@ async def run_djen_monitor():
                 f"🤖 Mrs. Justin-e processou {result.get('processed', 0)} intimações"
             )
 
+        return {"success": True, "new": new_count, "total_found": total_found}
+
     except Exception as e:
         logger.error(f"❌ CRON: Erro no monitoramento DJEN: {e}")
         from datetime import datetime
@@ -169,6 +190,9 @@ async def run_djen_monitor():
                 "error": str(e),
             }
         )
+        return {"success": False, "error": str(e)}
+
+        return {"success": False, "error": str(e)}
 
 
 def run_datajud_monitor():
@@ -183,6 +207,9 @@ def run_datajud_monitor():
         )
     except Exception as e:
         logger.error(f"❌ CRON: Erro no monitoramento DataJud: {e}")
+        return {"success": False, "error": str(e)}
+
+    return {"success": True}
 
 
 def start_scheduler():
@@ -192,21 +219,28 @@ def start_scheduler():
         # - 00:30: pega o lote assim que o DJEN começa a disponibilizar (a partir de 0h)
         # - 09:00: redundância/recuperação em horário útil
         scheduler.add_job(
-            run_djen_monitor,
+            lambda: _run_async(run_djen_monitor()),
             CronTrigger(hour=0, minute=30, timezone=SAO_PAULO_TZ),
             id="djen_midnight",
             replace_existing=True,
         )
         scheduler.add_job(
-            run_djen_monitor,
+            lambda: _run_async(run_djen_monitor()),
             CronTrigger(hour=9, minute=0, timezone=SAO_PAULO_TZ),
             id="djen_morning",
+            replace_existing=True,
+        )
+        # redundância extra opcional (mantida para compat)
+        scheduler.add_job(
+            lambda: _run_async(run_djen_monitor()),
+            CronTrigger(hour=16, minute=0, timezone=SAO_PAULO_TZ),
+            id="djen_afternoon",
             replace_existing=True,
         )
 
         # DataJud: 1x por dia (02:00)
         scheduler.add_job(
-            run_datajud_monitor,
+            lambda: _run_async(run_datajud_monitor()),
             CronTrigger(hour=2, minute=0),
             id="datajud_night",
             replace_existing=True,
@@ -219,6 +253,7 @@ def start_scheduler():
         logger.info("🚀 Scheduler iniciado com sucesso")
 
 
+<<<<<<< HEAD
 def stop_scheduler():
     """Encerra o agendador de tarefas (best-effort)."""
     try:
@@ -227,3 +262,19 @@ def stop_scheduler():
             logger.info("🛑 Scheduler encerrado")
     except Exception as e:
         logger.warning(f"⚠️ Falha ao encerrar scheduler: {e}")
+=======
+def get_scheduler():
+    """Retorna o scheduler inicializado (compatível com testes)."""
+    if not scheduler.running:
+        start_scheduler()
+    return scheduler
+
+
+# Aliases para compatibilidade com testes/rotas legadas
+async def cron_djen_monitor():
+    return await run_djen_monitor()
+
+
+async def cron_datajud_sync():
+    return await run_datajud_monitor()
+>>>>>>> cf888351e (fix(streamlit-app): estabiliza integrações e compatibilidade dos testes)

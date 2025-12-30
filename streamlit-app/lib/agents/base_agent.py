@@ -90,7 +90,7 @@ class BaseAgent:
 
         # Manter compatibilidade com agentes legados (que usam self.model.generate_content)
         # Projeto padronizado no SDK novo (google-genai).
-        from google import genai as google_genai  # google-genai
+        from google import genai as google_genai  # type: ignore
 
         self._genai_client = google_genai.Client(api_key=self._api_key)
         self.model = _GenAIModelAdapter(self._genai_client, MODEL_NAME)

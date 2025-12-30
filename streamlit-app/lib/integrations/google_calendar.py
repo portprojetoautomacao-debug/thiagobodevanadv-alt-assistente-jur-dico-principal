@@ -120,6 +120,15 @@ class GoogleCalendarService:
 
         return events_result.get("items", [])
 
+    # ------------------------------------------------------------------
+    # Aliases compatíveis com o resto do app/testes
+    # ------------------------------------------------------------------
+    def listar_eventos(
+        self, token_info: Dict[str, Any], max_results: int = 10
+    ) -> List[Dict[str, Any]]:
+        """Alias pt-BR para list_upcoming_events (compatível com testes)."""
+        return self.list_upcoming_events(token_info=token_info, max_results=max_results)
+
     def create_event(
         self, token_info: Dict[str, Any], event_data: Dict[str, Any]
     ) -> Dict[str, Any]:
@@ -129,3 +138,7 @@ class GoogleCalendarService:
         event = service.events().insert(calendarId="primary", body=event_data).execute()
 
         return event
+
+    def criar_evento(self, token_info: Dict[str, Any], event_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Alias pt-BR para create_event (compatível com testes)."""
+        return self.create_event(token_info=token_info, event_data=event_data)
