@@ -13,6 +13,7 @@ email-validator>=2.3.0
 # Database & Cache
 redis>=5.0.0
 upstash-redis>=0.15.0
+langchain-upstash-redis>=0.1.0  # Cache integration
 
 # AI & LangChain
 langchain>=0.3.0
@@ -20,6 +21,8 @@ langchain-google-genai>=4.1.1
 langchain-community>=0.3.0
 google-genai>=1.55.0
 langgraph>=1.0.5
+langgraph-checkpoint>=2.0.0  # Para persistência de estado
+langchain-core>=0.3.0  # Core utilities
 
 # Data Science & ML
 pandas>=2.1.0

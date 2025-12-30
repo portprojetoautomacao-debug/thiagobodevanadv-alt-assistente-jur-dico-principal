@@ -1,0 +1,197 @@
+# Configuração de Deployment para Cenário Médio (Recomendado)
+# 50 requisições/segundo de leitura e escrita
+
+# ====================
+# API Servers
+# ====================
+api:
+  replicas: 3
+  resources:
+    requests:
+      cpu: "1"
+      memory: "2Gi"
+    limits:
+      cpu: "2"
+      memory: "4Gi"
+
+  # Autoscaling opcional para picos
+  autoscaling:
+    enabled: false  # Habilite se tiver picos de tráfego
+    minReplicas: 3
+    maxReplicas: 8
+    targetCPUUtilizationPercentage: 70
+
+# ====================
+# Queue Workers
+# ====================
+queue:
+  enabled: true  # Importante: habilitar workers para produção
+  replicas: 5
+  resources:
+    requests:
+      cpu: "1"
+      memory: "2Gi"
+    limits:
+      cpu: "2"
+      memory: "4Gi"
+
+  autoscaling:
+    enabled: false  # Habilite para picos
+    minReplicas: 5
+    maxReplicas: 12
+    targetCPUUtilizationPercentage: 70
+
+# ====================
+# Configurações do Agent Server
+# ====================
+config:
+  # Jobs por worker - ajustado para assistente I/O bound
+  # Assistente jurídico faz chamadas a APIs (Google AI, busca de dados)
+  numberOfJobsPerWorker: 25
+
+  # Isolar event loops se houver operações bloqueantes
+  bgJobIsolatedLoops: false
+
+  # Timeout padrão para runs (em segundos)
+  defaultRunTimeout: 300  # 5 minutos
+
+  # Tamanho máximo do batch de runs
+  maxBatchSize: 100
+
+# ====================
+# Redis (Cache e Pub/Sub)
+# ====================
+redis:
+  # Para produção, use Redis externo (Upstash, AWS ElastiCache, etc)
+  enabled: true
+  resources:
+    requests:
+      memory: "4Gi"
+    limits:
+      memory: "4Gi"
+
+  # Configurações de persistência
+  persistence:
+    enabled: true
+    size: "10Gi"
+
+  # Configurações de alta disponibilidade (opcional)
+  # sentinel:
+  #   enabled: true
+  #   replicas: 3
+
+# ====================
+# PostgreSQL (Persistência)
+# ====================
+postgres:
+  # Para produção, use PostgreSQL externo (AWS RDS, GCP CloudSQL, etc)
+  enabled: true
+  resources:
+    requests:
+      cpu: "4"
+      memory: "16Gi"
+    limits:
+      cpu: "8"
+      memory: "32Gi"
+
+  # Configurações de persistência
+  persistence:
+    enabled: true
+    size: "100Gi"
+
+  # Backups automáticos
+  backup:
+    enabled: true
+    schedule: "0 2 * * *"  # 2 AM diariamente
+    retention: 7  # 7 dias
+
+  # Read replicas para alta carga de leitura (opcional)
+  # readReplicas: 2
+
+# ====================
+# Configurações de Rede
+# ====================
+ingress:
+  enabled: true
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  hosts:
+    - host: legal-assistant.seudominio.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: legal-assistant-tls
+      hosts:
+        - legal-assistant.seudominio.com
+
+# ====================
+# Segurança
+# ====================
+security:
+  # Políticas de rede
+  networkPolicy:
+    enabled: true
+
+  # Pod security
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 1000
+
+  # Container security
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+
+# ====================
+# Monitoramento
+# ====================
+monitoring:
+  enabled: true
+
+  # Prometheus metrics
+  prometheus:
+    enabled: true
+    port: 9090
+
+  # Grafana dashboards
+  grafana:
+    enabled: true
+
+  # Alertas
+  alerts:
+    enabled: true
+    rules:
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.05
+        for: 5m
+        annotations:
+          summary: "Alta taxa de erros detectada"
+
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        annotations:
+          summary: "Alta latência detectada (p95 > 2s)"
+
+      - alert: QueueBacklog
+        expr: langgraph_queue_size > 1000
+        for: 10m
+        annotations:
+          summary: "Grande backlog na fila de runs"
+
+# ====================
+# Logs
+# ====================
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  format: "json"  # json ou text
+
+  # Agregação de logs (opcional)
+  aggregation:
+    enabled: false
+    # provider: "cloudwatch"  # ou "stackdriver", "elasticsearch"

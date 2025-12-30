@@ -1,10 +1,12 @@
 import logging
 import os
 import socket
+import time
 from urllib.parse import urlparse
-from typing import Any, Dict
+from typing import Any, Callable, Dict, Optional
 
 from langchain_core.chat_history import BaseChatMessageHistory, InMemoryChatMessageHistory
+from langchain_core.runnables.history import RunnableWithMessageHistory
 
 logger = logging.getLogger(__name__)
 
@@ -97,3 +99,133 @@ class MemoryManager:
 
         if session_id in self._local_memory:
             del self._local_memory[session_id]
+
+    def with_message_history(self, runnable, input_messages_key: str = "input", history_messages_key: str = "chat_history"):
+        """
+        Wrapper para criar RunnableWithMessageHistory com LCEL.
+
+        Uso:
+            chain = prompt | llm | output_parser
+            chain_with_history = memory_manager.with_message_history(chain)
+            result = chain_with_history.invoke(
+                {"input": "mensagem"},
+                config={"configurable": {"session_id": "user_123"}}
+            )
+
+        Args:
+            runnable: Cadeia LCEL (prompt | llm | parser)
+            input_messages_key: Key para input no dict
+            history_messages_key: Key para histórico no dict
+
+        Returns:
+            RunnableWithMessageHistory configurado
+        """
+        return RunnableWithMessageHistory(
+            runnable,
+            self.get_session_history,
+            input_messages_key=input_messages_key,
+            history_messages_key=history_messages_key,
+        )
+
+    def create_history_aware_retriever(self, retriever, llm, contextualize_q_prompt):
+        """
+        Cria retriever com consciência de histórico para RAG.
+
+        Args:
+            retriever: Vector store retriever
+            llm: Modelo de linguagem
+            contextualize_q_prompt: Prompt para contextualizar queries
+
+        Returns:
+            History-aware retriever
+        """
+        from langchain.chains import create_history_aware_retriever
+
+        return create_history_aware_retriever(
+            llm,
+            retriever,
+            contextualize_q_prompt
+        )
+
+    def get_session_with_ttl(
+        self,
+        session_id: str,
+        ttl_seconds: int = 3600
+    ) -> BaseChatMessageHistory:
+        """
+        Retorna histórico com TTL automático.
+
+        Args:
+            session_id: ID da sessão
+            ttl_seconds: Tempo de vida em segundos (1h default)
+
+        Returns:
+            Histórico da sessão
+        """
+        history = self.get_session_history(session_id)
+
+        # Registrar tempo de acesso
+        if not hasattr(self, '_session_timestamps'):
+            self._session_timestamps = {}
+
+        self._session_timestamps[session_id] = time.time()
+
+        return history
+
+    def cleanup_expired_sessions(self, ttl_seconds: int = 3600):
+        """
+        Remove sessões expiradas da memória local.
+
+        Args:
+            ttl_seconds: Tempo de vida das sessões
+        """
+        if not hasattr(self, '_session_timestamps'):
+            return
+
+        now = time.time()
+        expired = []
+
+        for session_id, timestamp in self._session_timestamps.items():
+            if now - timestamp > ttl_seconds:
+                expired.append(session_id)
+
+        for session_id in expired:
+            if session_id in self._local_memory:
+                del self._local_memory[session_id]
+            del self._session_timestamps[session_id]
+
+        if expired:
+            logger.info(f"🧹 Limpeza: {len(expired)} sessões expiradas removidas")
+
+    def create_summary_memory(
+        self,
+        llm,
+        max_token_limit: int = 2000
+    ):
+        """
+        Cria memória com sumarização automática.
+
+        Args:
+            llm: Modelo para sumarização
+            max_token_limit: Limite de tokens antes de sumarizar
+
+        Returns:
+            ConversationSummaryBufferMemory
+
+        Usage:
+            memory = manager.create_summary_memory(llm, max_token_limit=2000)
+            chain = ConversationChain(llm=llm, memory=memory)
+        """
+        try:
+            from langchain.memory import ConversationSummaryBufferMemory
+
+            return ConversationSummaryBufferMemory(
+                llm=llm,
+                max_token_limit=max_token_limit,
+                return_messages=True
+            )
+        except ImportError:
+            logger.warning("ConversationSummaryBufferMemory não disponível")
+            return None
+
+

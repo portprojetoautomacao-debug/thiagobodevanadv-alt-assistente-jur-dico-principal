@@ -1,6 +1,9 @@
 """
 Módulo de agentes - ORQUESTRADOR REAL.
 
+IMPORTANTE: Este arquivo mantém compatibilidade com código legado.
+Para novos projetos, use lib.langgraph_orchestrator.LangGraphOrchestrator
+
 Implementa a orquestração dos agentes LangChain reais.
 """
 
@@ -13,17 +16,54 @@ from typing import Any, Dict, List, Optional
 # Then fall back to absolute import (when lib is in sys.path)
 try:
     from .memory_manager import MemoryManager
+    from .langgraph_orchestrator import LangGraphOrchestrator
 except ImportError:
     from memory_manager import MemoryManager
+    from langgraph_orchestrator import LangGraphOrchestrator
 
 logger = logging.getLogger(__name__)
 
 
 class LegalAgentOrchestrator:
-    """Orquestrador de agentes jurídicos."""
+    """
+    Orquestrador de agentes jurídicos (LEGACY).
 
-    def __init__(self):
+    AVISO: Este orquestrador mantém compatibilidade com código antigo.
+    Para melhor performance, resiliência e features avançadas, use:
+
+        from lib.langgraph_orchestrator import LangGraphOrchestrator
+        orchestrator = LangGraphOrchestrator()
+
+    Ou simplesmente:
+        orchestrator = LegalAgentOrchestrator(use_langgraph=True)
+    """
+
+    def __init__(self, use_langgraph: bool = True):
+        """
+        Args:
+            use_langgraph: Se True, usa LangGraph com execução durável (recomendado)
+        """
         logger.info("🤖 Inicializando orquestrador de agentes...")
+
+        self.use_langgraph = use_langgraph
+
+        if use_langgraph:
+            logger.info("✨ Usando LangGraph (execução durável, retry, checkpointing)")
+            self._orchestrator = LangGraphOrchestrator()
+            # Expor métodos do LangGraph
+            self.memory_manager = self._orchestrator.memory_manager
+            self.agents_list = self._orchestrator.agents_list
+            self.loaded_agents = self._orchestrator.loaded_agents
+            self.agents_map = self._orchestrator.agents_map
+        else:
+            logger.warning("⚠️ Usando orquestrador legacy (sem retry, sem checkpointing)")
+            self._init_legacy()
+
+    def _init_legacy(self):
+        """Inicializa orquestrador legacy."""
+        logger.info("🤖 Inicializando orquestrador legacy...")
+
+        self.memory_manager = MemoryManager()
 
         self.memory_manager = MemoryManager()
 
@@ -91,6 +131,18 @@ class LegalAgentOrchestrator:
         self, agent_id: str, task: str, session_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """Executa um agente específico."""
+
+        # Usar LangGraph se habilitado
+        if self.use_langgraph:
+            return await self._orchestrator.execute_agent(agent_id, task, session_id)
+
+        # Legacy path
+        return await self._execute_agent_legacy(agent_id, task, session_id)
+
+    async def _execute_agent_legacy(
+        self, agent_id: str, task: str, session_id: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Execução legacy (sem LangGraph)."""
 
         if agent_id not in self.agents_list:
             return {"success": False, "error": f"Agente {agent_id} não encontrado"}

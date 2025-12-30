@@ -1,0 +1,41 @@
+{
+    "$schema": "https://langgra.ph/schema.json",
+    "dependencies": [
+        "."
+    ],
+    "graphs": {
+        "legal_assistant": {
+            "path": "./lib/langgraph_orchestrator.py:graph",
+            "description": "Assistente jurídico inteligente para análise de processos, geração de documentos e consultas legais"
+        }
+    },
+    "env": ".env",
+    "python_version": "3.11",
+    "image_distro": "wolfi",
+    "checkpointer": {
+        "ttl": {
+            "strategy": "delete",
+            "sweep_interval_minutes": 60,
+            "default_ttl": 43200
+        }
+    },
+    "store": {
+        "ttl": {
+            "refresh_on_read": true,
+            "sweep_interval_minutes": 120,
+            "default_ttl": 10080
+        },
+        "index": {
+            "embed": "openai:text-embedding-3-small",
+            "dims": 1536,
+            "fields": [
+                "$"
+            ]
+        }
+    },
+    "http": {
+        "max_request_size": 10485760,
+        "request_timeout": 300,
+        "disable_mcp": false,
+        "disable_a2a": false
+    }

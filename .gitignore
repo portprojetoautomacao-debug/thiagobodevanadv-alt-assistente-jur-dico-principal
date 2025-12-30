@@ -45,6 +45,10 @@ dist-ssr
 .env.local.backup
 .env.vercel.backup
 
+# LangGraph deployment configs (podem conter secrets)
+deployment-config-*.yaml
+deployment-config-custom-*.yaml
+
 # Test output and coverage
 playwright-report/
 playwright-report/**
