@@ -24,13 +24,6 @@
             "refresh_on_read": true,
             "sweep_interval_minutes": 120,
             "default_ttl": 10080
-        },
-        "index": {
-            "embed": "openai:text-embedding-3-small",
-            "dims": 1536,
-            "fields": [
-                "$"
-            ]
         }
     },
     "http": {
@@ -39,3 +32,4 @@
         "disable_mcp": false,
         "disable_a2a": false
     }
+}

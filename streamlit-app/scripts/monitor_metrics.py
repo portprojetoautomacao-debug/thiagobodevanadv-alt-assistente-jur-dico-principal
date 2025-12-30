@@ -197,7 +197,8 @@ async def main():
     deployment_url = os.getenv("DEPLOYMENT_URL", "http://localhost:2024")
     api_key = os.getenv("LANGSMITH_API_KEY", "")
 
-    if not api_key and "localhost" not in deployment_url:
+    # API key só é obrigatória para deployment remoto
+    if not api_key and "localhost" not in deployment_url and "127.0.0.1" not in deployment_url:
         print("❌ Erro: LANGSMITH_API_KEY não configurada!")
         print("   Configure: export LANGSMITH_API_KEY=sua_chave")
         return

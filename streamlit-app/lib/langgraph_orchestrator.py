@@ -12,17 +12,19 @@ Implementa:
 import asyncio
 import importlib
 import logging
+import sys
+from pathlib import Path
 from typing import Any, Dict, List, Optional, TypedDict, Annotated
 from operator import add
+
+# Adicionar lib ao path
+sys.path.insert(0, str(Path(__file__).parent))
 
 from langgraph.graph import StateGraph, START, END
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import ToolNode
 
-try:
-    from .memory_manager import MemoryManager
-except ImportError:
-    from memory_manager import MemoryManager
+from memory_manager import MemoryManager
 
 logger = logging.getLogger(__name__)
 
@@ -122,8 +124,8 @@ class LangGraphOrchestrator:
         workflow.add_edge("save_memory", END)
         workflow.add_edge("handle_error", END)
 
-        # Compilar com checkpointer
-        return workflow.compile(checkpointer=self.checkpointer)
+        # Compilar sem checkpointer (LangGraph API gerencia automaticamente)
+        return workflow.compile()
 
     async def _load_memory_node(self, state: AgentState) -> AgentState:
         """Carrega histórico da memória."""
