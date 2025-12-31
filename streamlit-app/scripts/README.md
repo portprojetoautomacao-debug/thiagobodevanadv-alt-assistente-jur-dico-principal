@@ -4,6 +4,20 @@ Este diretório contém scripts úteis para operar e monitorar o Agent Server do
 
 ## 📋 Scripts Disponíveis
 
+### 0. bootstrap_langsmith_assistants.py
+
+Cria automaticamente assistants do LangSmith alinhados ao app (`legal_hybrid` e `legal_assistant`) com contexto/metadata padrão.
+
+**Uso:**
+```bash
+cd streamlit-app
+python scripts/bootstrap_langsmith_assistants.py
+```
+
+**Requisitos:**
+- `LANGSMITH_API_KEY` ou `LANGCHAIN_API_KEY`
+- (opcional) `LANGSMITH_PROJECT`/`LANGCHAIN_PROJECT`, `MODEL_TEMPERATURE`, `MAX_COMPLETION_TOKENS`
+
 ### 1. monitor_metrics.py
 
 Monitora métricas do Agent Server em tempo real.

@@ -16,7 +16,7 @@ class FixLangSmithHeadersMiddleware(BaseHTTPMiddleware):
     """
     Middleware que garante que headers UUID enviados ao LangSmith sejam válidos.
     """
-    
+
     async def dispatch(self, request: Request, call_next):
         # Headers que podem conter UUIDs
         uuid_headers = [
@@ -26,7 +26,7 @@ class FixLangSmithHeadersMiddleware(BaseHTTPMiddleware):
             'x-thread-id',
             'x-assistant-id',
         ]
-        
+
         # Validar e corrigir headers UUID
         for header in uuid_headers:
             value = request.headers.get(header)
@@ -40,10 +40,10 @@ class FixLangSmithHeadersMiddleware(BaseHTTPMiddleware):
                     logger.warning(f"Header {header} inválido: {value}, substituindo por {new_uuid}")
                     # Não podemos modificar request.headers diretamente,
                     # então vamos garantir que a resposta tenha UUID válido
-        
+
         # Processar requisição
         response = await call_next(request)
-        
+
         # Garantir que response headers tenham UUIDs válidos
         for header in uuid_headers:
             if header in response.headers:
@@ -51,5 +51,5 @@ class FixLangSmithHeadersMiddleware(BaseHTTPMiddleware):
                     uuid.UUID(response.headers[header])
                 except (ValueError, AttributeError):
                     response.headers[header] = str(uuid.uuid4())
-        
+
         return response

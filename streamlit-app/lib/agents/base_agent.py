@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional
 
 from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_core.runnables import RunnableRetry
+# RunnableRetry removido - não existe na versão atual do langchain_core
 
 # Carregar .env
 load_dotenv()
@@ -60,7 +60,7 @@ class BaseAgent:
         self.role = role
         self.capabilities = capabilities or []
         self.enable_fallback = enable_fallback
-        self.fallback_models = fallback_models or ["gemini-1.5-flash", "gemini-1.5-pro"]
+        self.fallback_models = fallback_models or ["gemini-2.0-flash-exp", "gemini-2.0-flash-thinking-exp"]
 
         # API key pode vir como GEMINI_API_KEY (padrão do projeto) ou GOOGLE_API_KEY (padrão LangChain)
         # Em produção (Render), normalmente não existe .env; só variáveis de ambiente do processo.

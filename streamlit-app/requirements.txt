@@ -13,7 +13,7 @@ email-validator>=2.3.0
 # Database & Cache
 redis>=5.0.0
 upstash-redis>=0.15.0
-langchain-upstash-redis>=0.1.0  # Cache integration
+# langchain-upstash-redis>=0.1.0  # COMENTADO - Pacote não existe no PyPI
 
 # AI & LangChain
 langchain>=0.3.0
