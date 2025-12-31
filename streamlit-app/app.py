@@ -63,41 +63,38 @@ def start_backend():
         return
 
     if not is_port_open("127.0.0.1", 8000):
+        # Se já existe processo registrado e ainda está vivo, não reinicia
+        existing = st.session_state.get("backend_process")
+        if existing is not None and getattr(existing, "poll", lambda: 0)() is None:
+            return
+        
         print("🚀 Iniciando backend FastAPI...")
         script_path = Path(__file__).parent / "backend" / "main.py"
 
         # Inicia o processo em background
-        # Captura stdout/stderr para debug em caso de erro
         process = subprocess.Popen(
             [sys.executable, str(script_path)],
             stdout=subprocess.PIPE,
-
-            # Se já existe processo registrado e ainda está vivo, não reinicia.
-            existing = st.session_state.get("backend_process")
-            if existing is not None and getattr(existing, "poll", lambda: 0)() is None:
-                return
-
-            stderr=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
             text=True,
         )
 
-                log_buffer = deque(maxlen=200)
+        log_buffer = deque(maxlen=200)
 
-                def _drain_output(proc: subprocess.Popen):
-                    try:
-                        if proc.stdout is None:
-                            return
-                        for line in proc.stdout:
-                            log_buffer.append(line.rstrip("\n"))
-                    except Exception:
-                        return
+        def _drain_output(proc: subprocess.Popen):
+            try:
+                if proc.stdout is None:
+                    return
+                for line in proc.stdout:
+                    log_buffer.append(line.rstrip("\n"))
+            except Exception:
+                return
 
         # Aguarda inicialização
         with st.spinner("Iniciando servidor backend..."):
             for _ in range(20):  # Aumentado para 20s
                 # Verifica se o processo morreu
                 if process.poll() is not None:
-                    stderr=subprocess.STDOUT,
                     st.error(
                     bufsize=1,
                         f"❌ Erro fatal ao iniciar backend:\n\nSTDOUT:\n{stdout}\n\nSTDERR:\n{stderr}"
